@@ -2,11 +2,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: white;
+    --background: black;
   }
 }
 
 body {
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto), "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+/* Ensure Noto Sans Arabic font is applied to all text */
+* {
+  font-family: var(--font-noto), "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, Roboto, sans-serif;
 }
