@@ -3,10 +3,23 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const credentials = {
+  Admin0e2: { password: "A@minfw,", route: "/admin" },
+  Client1a3: { password: "C!ientpw4", route: "/client" },
+  Editor2b4: { password: "E#ditorpw5", route: "/editor" },
+  Reviewer3c5: { password: "R$viewerpw6", route: "/reviewer" },
+  Designer4d6: { password: "D%signerpw7", route: "/designer" },
+};
 
 const Login = () => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleLoginClick = () => {
     setShowForm(true);
@@ -14,6 +27,22 @@ const Login = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (credentials[username as keyof typeof credentials]) {
+      const userCreds = credentials[username as keyof typeof credentials];
+      if (userCreds.password === password) {
+        router.push(userCreds.route);
+      } else {
+        setError("كلمة مرور خاطئة");
+      }
+    } else {
+      setError("اسم مستخدم خاطئ");
+    }
   };
 
   return (
@@ -220,19 +249,25 @@ const Login = () => {
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Form fields */}
-            <div className="space-y-6 w-full max-w-sm">
+            <form onSubmit={handleLogin} className="space-y-6 w-full max-w-sm">
               <div>
                 <input
                   type="text"
                   placeholder="اسم المستخدم"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"
+                  required
                 />
               </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="كلمة المرور"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"
+                  required
                 />
                 <button
                   type="button"
@@ -260,10 +295,16 @@ const Login = () => {
                   )}
                 </button>
               </div>
-              <button className="bg-gradient-to-r from-[#434343] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer">
+              {error && (
+                <div className="text-red-400 text-sm text-center">{error}</div>
+              )}
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-[#434343] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer"
+              >
                 الاستمرار
               </button>
-            </div>
+            </form>
           </motion.div>
         </div>
       </div>

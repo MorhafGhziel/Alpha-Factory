@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${notoSansArabic.variable} antialiased`}>
+      <body className={`${notoSansArabic.variable} antialiased text-white`}>
         {children}
       </body>
     </html>
