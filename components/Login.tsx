@@ -6,11 +6,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const credentials = {
-  Admin0e2: { password: "A@minfw,", route: "/admin" },
-  Client1a3: { password: "C!ientpw4", route: "/client" },
-  Editor2b4: { password: "E#ditorpw5", route: "/editor" },
-  Reviewer3c5: { password: "R$viewerpw6", route: "/reviewer" },
-  Designer4d6: { password: "D%signerpw7", route: "/designer" },
+  Admin0e2: { password: "Admin123", route: "/admin" },
+  Client1a3: { password: "Client123", route: "/client" },
+  Editor2b4: { password: "Editor123", route: "/editor" },
+  Reviewer3c5: { password: "Reviewer123", route: "/reviewer" },
+  Designer4d6: { password: "Designer123", route: "/designer" },
 };
 
 const Login = () => {
@@ -38,10 +38,10 @@ const Login = () => {
       if (userCreds.password === password) {
         router.push(userCreds.route);
       } else {
-        setError("كلمة مرور خاطئة");
+        setError("كلمة المرور خاطئة");
       }
     } else {
-      setError("اسم مستخدم خاطئ");
+      setError("اسم المستخدم خاطئ");
     }
   };
 
