@@ -14,7 +14,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen flex">
       {/* Left Sidebar */}
-      <div className="w-18 bg-[#0f0f0f] flex flex-col items-center py-6 space-y-6">
+      <div className="w-20 bg-[#0f0f0f] flex flex-col items-center py-6 space-y-6">
         {/* Profile */}
         <div className="relative group">
           <button
@@ -94,7 +94,7 @@ export default function AdminLayout({
         </div>
       </div>
 
-      <div className="p-13.5 mx-auto">
+      <div className="mx-auto">
         <div className="text-center">{children}</div>
       </div>
     </div>
