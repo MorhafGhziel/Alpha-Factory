@@ -54,7 +54,7 @@ export default function ProfilePage() {
             type="text"
             value="Admin123"
             readOnly
-            className="w-full sm:w-[400px] px-4 sm:px-5 py-2.5 sm:py-3 bg-[#1a1a1a] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
+            className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#1a1a1a] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
           />
           <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-[-7px]">
             <svg
