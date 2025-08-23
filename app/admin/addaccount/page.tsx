@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTeam } from "../layout";
 import { useRouter } from "next/navigation";
 import { AccountData, ClientData } from "../../../types";
+import { motion } from "framer-motion";
 
 interface FormData {
   groupName: string;
@@ -80,19 +81,43 @@ export default function AddAccountPage() {
       {/* Main form container */}
       <div className="mx-auto">
         {/* Header */}
-        <div className="bg-[#0f0f0f] rounded-3xl px-10 py-4 md:mb-23 mb-14 inline-block mx-auto">
+        <motion.div
+          className="bg-[#0f0f0f] rounded-3xl px-10 py-4 md:mb-23 mb-14 inline-block mx-auto"
+          initial={{ y: -50, opacity: 0, scale: 0.8 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            duration: 0.6,
+          }}
+        >
           <h1 className="text-white text-2xl font-semibold text-center">
             اضافة حساب
           </h1>
-        </div>
+        </motion.div>
 
         {/* Form */}
-        <form
+        <motion.form
           onSubmit={handleSubmit}
           className="bg-[#0f0f0f] rounded-3xl p-8 md:max-w-6xl max-w-[320px] mx-auto"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            delay: 0.2,
+            duration: 0.6,
+          }}
         >
           {/* Group Name Input */}
-          <div className="mb-14 flex flex-col items-center">
+          <motion.div
+            className="mb-14 flex flex-col items-center"
+            initial={{ y: -30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
             <input
               type="text"
               placeholder="ادخــــل   اســــــــــــم   المجــــمـــوعة"
@@ -103,16 +128,31 @@ export default function AddAccountPage() {
               }`}
             />
             {groupNameError && (
-              <div className="text-red-500 text-sm mt-2 text-center">
+              <motion.div
+                className="text-red-500 text-sm mt-2 text-center"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 {groupNameError}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
 
           {/* Account Role Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-20">
+          <motion.div
+            className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
             {/* Client Section */}
-            <div className="space-y-4">
+            <motion.div
+              className="space-y-4"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+            >
               <h2 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
                 عميل
               </h2>
@@ -152,10 +192,15 @@ export default function AddAccountPage() {
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
-            </div>
+            </motion.div>
 
             {/* Producer Section */}
-            <div className="space-y-4">
+            <motion.div
+              className="space-y-4"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+            >
               <h2 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
                 ممنتج
               </h2>
@@ -204,10 +249,15 @@ export default function AddAccountPage() {
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
-            </div>
+            </motion.div>
 
             {/* Designer Section */}
-            <div className="space-y-4">
+            <motion.div
+              className="space-y-4"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.9, duration: 0.5 }}
+            >
               <h2 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
                 مصمم
               </h2>
@@ -256,10 +306,15 @@ export default function AddAccountPage() {
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
-            </div>
+            </motion.div>
 
             {/* Reviewer Section */}
-            <div className="space-y-4">
+            <motion.div
+              className="space-y-4"
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 1.0, duration: 0.5 }}
+            >
               <h2 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
                 مُراجع
               </h2>
@@ -308,19 +363,24 @@ export default function AddAccountPage() {
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Continue Button */}
-          <div className="text-center">
+          <motion.div
+            className="text-center"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.1, duration: 0.5 }}
+          >
             <button
               type="submit"
               className="bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer"
             >
               الاستمرار
             </button>
-          </div>
-        </form>
+          </motion.div>
+        </motion.form>
       </div>
     </div>
   );
