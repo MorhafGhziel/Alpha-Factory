@@ -7,6 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function ManageAccountPage() {
   const { teams, deleteTeam } = useTeam();
   const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    teamId: string;
+    teamName: string;
+  } | null>(null);
 
   const toggleTeam = (teamId: string) => {
     const newExpanded = new Set(expandedTeams);
@@ -18,10 +23,19 @@ export default function ManageAccountPage() {
     setExpandedTeams(newExpanded);
   };
 
-  const handleDeleteTeam = (teamId: string) => {
-    if (confirm("هل أنت متأكد من حذف هذه المجموعة؟")) {
-      deleteTeam(teamId);
+  const handleDeleteTeam = (teamId: string, teamName: string) => {
+    setDeleteConfirm({ show: true, teamId, teamName });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm) {
+      deleteTeam(deleteConfirm.teamId);
+      setDeleteConfirm(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   return (
@@ -107,8 +121,8 @@ export default function ManageAccountPage() {
                     </button>
 
                     <button
-                      onClick={() => handleDeleteTeam(team.id)}
-                      className="text-gray-400 hover:text-red-400 transition-colors text-sm"
+                      onClick={() => handleDeleteTeam(team.id, team.name)}
+                      className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm"
                     >
                       حذف الحسابات
                     </button>
@@ -459,6 +473,55 @@ export default function ManageAccountPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div
+            className="fixed inset-0 backdrop-blur-2xl bg-black/20 bg-opacity-50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="bg-[#0f0f0f] rounded-3xl p-8 text-center"
+              initial={{ y: -50, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -50, opacity: 0, scale: 0.9 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.3,
+              }}
+            >
+              <h3 className="text-white text-xl font-semibold mb-4">
+                تأكيد الحذف
+              </h3>
+              <p className="text-gray-300 mb-6">
+                هذا الاجراء غير قابل للتراجع , هل أنت متأكد من حذف المجموعة{" "}
+                <br />
+                {deleteConfirm.teamName}&quot; ؟&quot;
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={confirmDelete}
+                  className="bg-[#E9CF6B] cursor-pointer text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+                >
+                  تأكيد الحذف
+                </button>
+                <button
+                  onClick={cancelDelete}
+                  className="bg-gray-700 cursor-pointer text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
