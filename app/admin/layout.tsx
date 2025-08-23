@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { useState, createContext, useContext } from "react";
+import { motion } from "framer-motion";
 import { TeamGroup } from "../../types";
 import { createNewTeam, removeTeamById, updateTeamById } from "../../utils";
 
@@ -181,9 +182,24 @@ export default function AdminLayout({
         )}
 
         {/* Desktop Sidebar - Only visible on large screens */}
-        <div className="hidden lg:flex w-20 bg-[#0f0f0f] flex-col items-center py-6 space-y-6">
+        <motion.div
+          initial={{ x: -80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            duration: 0.5,
+          }}
+          className="hidden lg:flex w-20 bg-[#0f0f0f] flex-col items-center py-6 space-y-6"
+        >
           {/* Profile */}
-          <div className="relative group">
+          <motion.div
+            className="relative group"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
             <button
               onClick={() => router.push("/admin/profile")}
               className={`p-2 rounded-lg transition-colors cursor-pointer ${
@@ -205,13 +221,23 @@ export default function AdminLayout({
               الملف الشخصي
               <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#222224] border-r border-t border-[#333336] rotate-45"></div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Gray Border */}
-          <div className="w-8 h-px bg-[#222224]"></div>
+          <motion.div
+            className="w-8 h-px bg-[#222224]"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          ></motion.div>
 
           {/* Add Account */}
-          <div className="relative group">
+          <motion.div
+            className="relative group"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+          >
             <button
               onClick={() => router.push("/admin/addaccount")}
               className={`p-2 rounded-lg transition-colors cursor-pointer ${
@@ -233,10 +259,15 @@ export default function AdminLayout({
               اضافة حساب
               <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#222224] border-r border-t border-[#333336] rotate-45"></div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Manage Account */}
-          <div className="relative group">
+          <motion.div
+            className="relative group"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
             <button
               onClick={() => router.push("/admin/manageaccount")}
               className={`p-2 rounded-lg transition-colors cursor-pointer ${
@@ -258,8 +289,8 @@ export default function AdminLayout({
               ادارة الحسابات
               <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#222224] border-r border-t border-[#333336] rotate-45"></div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Main Content */}
         <div className="flex-1">
@@ -270,4 +301,5 @@ export default function AdminLayout({
   );
 }
 
+// Export the hook for use in child components
 export { useTeam };
