@@ -58,18 +58,21 @@ export default function AddAccountPage() {
   };
 
   return (
-    <div className="min-h-screen py-20">
+    <div className="min-h-screen md:py-20 py-10">
       {/* Main form container */}
-      <div className="max-w-6xl mx-auto">
+      <div className="mx-auto">
         {/* Header */}
-        <div className="bg-[#0f0f0f] rounded-3xl px-10 py-4 mb-34 inline-block mx-auto">
+        <div className="bg-[#0f0f0f] rounded-3xl px-10 py-4 md:mb-34 mb-14 inline-block mx-auto">
           <h1 className="text-white text-2xl font-semibold text-center">
             اضافة حساب
           </h1>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-[#0f0f0f] rounded-3xl p-8">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-[#0f0f0f] rounded-3xl p-8 md:max-w-6xl max-w-[320px] mx-auto"
+        >
           {/* Group Name Input */}
           <div className="mb-14 flex justify-center">
             <input
