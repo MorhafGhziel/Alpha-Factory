@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 
 const credentials = {
   Admin0e2: { password: "Admin123", route: "/admin/addaccount" },
-  Client1a3: { password: "C!ientpw4", route: "/client" },
-  Editor2b4: { password: "E#ditorpw5", route: "/editor" },
-  Reviewer3c5: { password: "R$viewerpw6", route: "/reviewer" },
-  Designer4d6: { password: "D%signerpw7", route: "/designer" },
+  Client0e2: { password: "Client123", route: "/client" },
+  Editor0e2: { password: "Editor123", route: "/editor" },
+  Reviewer0e2: { password: "Reviewer123", route: "/reviewer" },
+  Designer0e2: { password: "Designer123", route: "/designer" },
 };
 
 const Login = () => {

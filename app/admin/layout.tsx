@@ -1,12 +1,11 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image";
-import { useState, createContext, useContext } from "react";
-import { motion } from "framer-motion";
+import { createContext, useContext, useState } from "react";
 import { TeamGroup } from "../../types";
 import { createNewTeam, removeTeamById, updateTeamById } from "../../utils";
-import { AnimatePresence } from "framer-motion";
+import Sidebar from "../../components/ui/Sidebar";
+import MobileMenu from "../../components/ui/MobileMenu";
+import Header from "../../components/ui/Header";
 
 interface TeamContextType {
   teams: TeamGroup[];
@@ -30,13 +29,11 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [teams, setTeams] = useState<TeamGroup[]>([]);
 
-  const addTeam = (teamData: Omit<TeamGroup, "id" | "createdAt">) => {
-    const newTeam = createNewTeam(teamData);
+  const addTeam = (team: Omit<TeamGroup, "id" | "createdAt">) => {
+    const newTeam = createNewTeam(team);
     setTeams((prev) => [...prev, newTeam]);
   };
 
@@ -56,279 +53,82 @@ export default function AdminLayout({
     setIsMobileMenuOpen(false);
   };
 
-  const handleNavigation = (path: string) => {
-    router.push(path);
-    closeMobileMenu();
-  };
-
   return (
     <TeamContext.Provider value={{ teams, addTeam, deleteTeam, updateTeam }}>
       <div className="min-h-screen flex">
-        {/* Mobile Header - Only visible on small screens */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0f0f0f] border-b border-[#222224] px-4 py-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-white text-lg font-semibold">Admin Panel</h1>
-            <button
-              onClick={toggleMobileMenu}
-              className="p-2 text-white hover:bg-[#222224] rounded-lg transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isMobileMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
+        <Header
+          title="Admin Panel"
+          isMobileMenuOpen={isMobileMenuOpen}
+          onToggleMenu={toggleMobileMenu}
+        />
 
-        {/* Mobile Menu Overlay */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              className="lg:hidden fixed inset-0 z-40 backdrop-blur-md bg-black/20"
-              onClick={closeMobileMenu}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <motion.div
-                className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#0f0f0f] border-r border-[#222224] p-6"
-                initial={{ x: -256, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -256, opacity: 0 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  duration: 0.4,
-                }}
-              >
-                <div className="space-y-6">
-                  {/* Profile */}
-                  <motion.div
-                    className="text-center"
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1, duration: 0.3 }}
-                  >
-                    <button
-                      onClick={() => handleNavigation("/admin/profile")}
-                      className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-                        pathname === "/admin/profile"
-                          ? "bg-[#222224] text-white"
-                          : "text-gray-300 hover:bg-[#222224] hover:text-white"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Image
-                          src="/icons/Profile.svg"
-                          alt="Profile"
-                          width={24}
-                          height={24}
-                          className="w-auto h-auto"
-                        />
-                        <span className="text-sm">الملف الشخصي</span>
-                      </div>
-                    </button>
-                  </motion.div>
+        <MobileMenu
+          isOpen={isMobileMenuOpen}
+          onClose={closeMobileMenu}
+          items={[
+            {
+              path: "/admin/profile",
+              icon: "/icons/Profile.svg",
+              alt: "Profile",
+              text: "الملف الشخصي",
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              text: "",
+              isBorder: true,
+            },
+            {
+              path: "/admin/addaccount",
+              icon: "/icons/Add.svg",
+              alt: "Add Account",
+              text: "اضافة حساب",
+            },
+            {
+              path: "/admin/manageaccount",
+              icon: "/icons/Manage.svg",
+              alt: "Manage Account",
+              text: "ادارة الحسابات",
+            },
+          ]}
+          animated={false}
+        />
 
-                  {/* Gray Border */}
-                  <motion.div
-                    className="w-full h-px bg-[#222224]"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.2, duration: 0.3 }}
-                  ></motion.div>
-
-                  {/* Add Account */}
-                  <motion.div
-                    className="text-center"
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.3 }}
-                  >
-                    <button
-                      onClick={() => handleNavigation("/admin/addaccount")}
-                      className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-                        pathname === "/admin/addaccount"
-                          ? "bg-[#222224] text-white"
-                          : "text-gray-300 hover:bg-[#222224] hover:text-white"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Image
-                          src="/icons/Add.svg"
-                          alt="Add Account"
-                          width={20}
-                          height={20}
-                          className="w-auto h-auto"
-                        />
-                        <span className="text-sm">اضافة حساب</span>
-                      </div>
-                    </button>
-                  </motion.div>
-
-                  {/* Manage Account */}
-                  <motion.div
-                    className="text-center"
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                  >
-                    <button
-                      onClick={() => handleNavigation("/admin/manageaccount")}
-                      className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-                        pathname === "/admin/manageaccount"
-                          ? "bg-[#222224] text-white"
-                          : "text-gray-300 hover:bg-[#222224] hover:text-white"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Image
-                          src="/icons/Manage.svg"
-                          alt="Manage Account"
-                          width={20}
-                          height={20}
-                          className="w-auto h-auto"
-                        />
-                        <span className="text-sm">ادارة الحسابات</span>
-                      </div>
-                    </button>
-                  </motion.div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Desktop Sidebar - Only visible on large screens */}
-        <motion.div
-          initial={{ x: -80, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 30,
-            duration: 0.5,
-          }}
-          className="hidden lg:flex w-20 bg-[#0f0f0f] flex-col items-center py-6 space-y-6"
-        >
-          {/* Profile */}
-          <motion.div
-            className="relative group"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          >
-            <button
-              onClick={() => router.push("/admin/profile")}
-              className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                pathname === "/admin/profile"
-                  ? "bg-[#222224]"
-                  : "hover:bg-[#222224]"
-              }`}
-            >
-              <Image
-                src="/icons/Profile.svg"
-                alt="Profile"
-                width={34}
-                height={34}
-                className="w-auto h-auto"
-              />
-            </button>
-            {/* Tooltip */}
-            <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-[#222224] text-white text-sm rounded-lg invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-10 shadow-lg border border-[#333336]">
-              الملف الشخصي
-              <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#222224] border-r border-t border-[#333336] rotate-45"></div>
-            </div>
-          </motion.div>
-
-          {/* Gray Border */}
-          <motion.div
-            className="w-8 h-px bg-[#222224]"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
-          ></motion.div>
-
-          {/* Add Account */}
-          <motion.div
-            className="relative group"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
-          >
-            <button
-              onClick={() => router.push("/admin/addaccount")}
-              className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                pathname === "/admin/addaccount"
-                  ? "bg-[#222224]"
-                  : "hover:bg-[#222224]"
-              }`}
-            >
-              <Image
-                src="/icons/Add.svg"
-                alt="Add Account"
-                width={24}
-                height={24}
-                className="w-auto h-auto"
-              />
-            </button>
-            {/* Tooltip */}
-            <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-[#222224] text-white text-sm rounded-lg invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-10 shadow-lg border border-[#333336]">
-              اضافة حساب
-              <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#222224] border-r border-t border-[#333336] rotate-45"></div>
-            </div>
-          </motion.div>
-
-          {/* Manage Account */}
-          <motion.div
-            className="relative group"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          >
-            <button
-              onClick={() => router.push("/admin/manageaccount")}
-              className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                pathname === "/admin/manageaccount"
-                  ? "bg-[#222224]"
-                  : "hover:bg-[#222224]"
-              }`}
-            >
-              <Image
-                src="/icons/Manage.svg"
-                alt="Manage Account"
-                width={24}
-                height={24}
-                className="w-auto h-auto"
-              />
-            </button>
-            {/* Tooltip */}
-            <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-[#222224] text-white text-sm rounded-lg invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-10 shadow-lg border border-[#333336]">
-              ادارة الحسابات
-              <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-2 h-2 bg-[#222224] border-r border-t border-[#333336] rotate-45"></div>
-            </div>
-          </motion.div>
-        </motion.div>
+        <Sidebar
+          items={[
+            {
+              path: "/admin/profile",
+              icon: "/icons/Profile.svg",
+              alt: "Profile",
+              tooltip: "الملف الشخصي",
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              tooltip: "",
+              isBorder: true,
+            },
+            {
+              path: "/admin/addaccount",
+              icon: "/icons/Add.svg",
+              alt: "Add Account",
+              tooltip: "اضافة حساب",
+            },
+            {
+              path: "/admin/manageaccount",
+              icon: "/icons/Manage.svg",
+              alt: "Manage Account",
+              tooltip: "ادارة الحسابات",
+            },
+          ]}
+          width="w-20"
+          bgColor="bg-[#0f0f0f]"
+          iconSize={34}
+          tooltipPosition="left"
+          spacing="space-y-6"
+        />
 
         {/* Main Content */}
         <div className="flex-1">
@@ -339,5 +139,4 @@ export default function AdminLayout({
   );
 }
 
-// Export the hook for use in child components
 export { useTeam };
