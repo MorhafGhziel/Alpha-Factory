@@ -1,28 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { useState } from "react";
 import { TeamGroup } from "../../types";
-import { createNewTeam, removeTeamById, updateTeamById } from "../../utils";
+import { createNewTeam, removeTeamById, TeamContext } from "../../utils";
 import Sidebar from "../../components/ui/Sidebar";
 import MobileMenu from "../../components/ui/MobileMenu";
 import Header from "../../components/ui/Header";
-
-interface TeamContextType {
-  teams: TeamGroup[];
-  addTeam: (team: Omit<TeamGroup, "id" | "createdAt">) => void;
-  deleteTeam: (teamId: string) => void;
-  updateTeam: (teamId: string, updates: Partial<TeamGroup>) => void;
-}
-
-const TeamContext = createContext<TeamContextType | undefined>(undefined);
-
-function useTeam() {
-  const context = useContext(TeamContext);
-  if (context === undefined) {
-    throw new Error("useTeam must be used within a TeamProvider");
-  }
-  return context;
-}
 
 export default function AdminLayout({
   children,
@@ -41,10 +24,6 @@ export default function AdminLayout({
     setTeams((prev) => removeTeamById(prev, teamId));
   };
 
-  const updateTeam = (teamId: string, updates: Partial<TeamGroup>) => {
-    setTeams((prev) => updateTeamById(prev, teamId, updates));
-  };
-
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -54,7 +33,7 @@ export default function AdminLayout({
   };
 
   return (
-    <TeamContext.Provider value={{ teams, addTeam, deleteTeam, updateTeam }}>
+    <TeamContext.Provider value={{ teams, addTeam, deleteTeam }}>
       <div className="min-h-screen flex">
         <Header
           title="Admin Panel"
@@ -138,5 +117,3 @@ export default function AdminLayout({
     </TeamContext.Provider>
   );
 }
-
-export { useTeam };

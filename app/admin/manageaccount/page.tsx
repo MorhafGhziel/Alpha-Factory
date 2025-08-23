@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTeam } from "../layout";
+import { useTeam } from "../../../utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { TeamGroup } from "../../../types";
 
 export default function ManageAccountPage() {
   const { teams, deleteTeam } = useTeam();
@@ -81,7 +82,7 @@ export default function ManageAccountPage() {
           </motion.div>
         ) : (
           <div className="space-y-6">
-            {teams.map((team, index) => (
+            {teams.map((team: TeamGroup, index: number) => (
               <motion.div
                 key={team.id}
                 className="bg-[#0f0f0f] rounded-3xl overflow-hidden"

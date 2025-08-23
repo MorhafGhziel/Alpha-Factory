@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTeam } from "../layout";
+import { useTeam } from "../../../utils";
 import { useRouter } from "next/navigation";
 import { AccountData, ClientData } from "../../../types";
 import { motion } from "framer-motion";
