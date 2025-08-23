@@ -6,6 +6,7 @@ import { useState, createContext, useContext } from "react";
 import { motion } from "framer-motion";
 import { TeamGroup } from "../../types";
 import { createNewTeam, removeTeamById, updateTeamById } from "../../utils";
+import { AnimatePresence } from "framer-motion";
 
 interface TeamContextType {
   teams: TeamGroup[];
@@ -98,88 +99,125 @@ export default function AdminLayout({
         </div>
 
         {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <div
-            className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
-            onClick={closeMobileMenu}
-          >
-            <div className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#0f0f0f] border-r border-[#222224] p-6">
-              <div className="space-y-6">
-                {/* Profile */}
-                <div className="text-center">
-                  <button
-                    onClick={() => handleNavigation("/admin/profile")}
-                    className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-                      pathname === "/admin/profile"
-                        ? "bg-[#222224] text-white"
-                        : "text-gray-300 hover:bg-[#222224] hover:text-white"
-                    }`}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              className="lg:hidden fixed inset-0 z-40 backdrop-blur-md bg-black/20"
+              onClick={closeMobileMenu}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.div
+                className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#0f0f0f] border-r border-[#222224] p-6"
+                initial={{ x: -256, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -256, opacity: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  duration: 0.4,
+                }}
+              >
+                <div className="space-y-6">
+                  {/* Profile */}
+                  <motion.div
+                    className="text-center"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.3 }}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Image
-                        src="/icons/Profile.svg"
-                        alt="Profile"
-                        width={24}
-                        height={24}
-                        className="w-auto h-auto"
-                      />
-                      <span className="text-sm">الملف الشخصي</span>
-                    </div>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => handleNavigation("/admin/profile")}
+                      className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
+                        pathname === "/admin/profile"
+                          ? "bg-[#222224] text-white"
+                          : "text-gray-300 hover:bg-[#222224] hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Image
+                          src="/icons/Profile.svg"
+                          alt="Profile"
+                          width={24}
+                          height={24}
+                          className="w-auto h-auto"
+                        />
+                        <span className="text-sm">الملف الشخصي</span>
+                      </div>
+                    </button>
+                  </motion.div>
 
-                {/* Gray Border */}
-                <div className="w-full h-px bg-[#222224]"></div>
+                  {/* Gray Border */}
+                  <motion.div
+                    className="w-full h-px bg-[#222224]"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                  ></motion.div>
 
-                {/* Add Account */}
-                <div className="text-center">
-                  <button
-                    onClick={() => handleNavigation("/admin/addaccount")}
-                    className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-                      pathname === "/admin/addaccount"
-                        ? "bg-[#222224] text-white"
-                        : "text-gray-300 hover:bg-[#222224] hover:text-white"
-                    }`}
+                  {/* Add Account */}
+                  <motion.div
+                    className="text-center"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.3 }}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Image
-                        src="/icons/Add.svg"
-                        alt="Add Account"
-                        width={20}
-                        height={20}
-                        className="w-auto h-auto"
-                      />
-                      <span className="text-sm">اضافة حساب</span>
-                    </div>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => handleNavigation("/admin/addaccount")}
+                      className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
+                        pathname === "/admin/addaccount"
+                          ? "bg-[#222224] text-white"
+                          : "text-gray-300 hover:bg-[#222224] hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Image
+                          src="/icons/Add.svg"
+                          alt="Add Account"
+                          width={20}
+                          height={20}
+                          className="w-auto h-auto"
+                        />
+                        <span className="text-sm">اضافة حساب</span>
+                      </div>
+                    </button>
+                  </motion.div>
 
-                {/* Manage Account */}
-                <div className="text-center">
-                  <button
-                    onClick={() => handleNavigation("/admin/manageaccount")}
-                    className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-                      pathname === "/admin/manageaccount"
-                        ? "bg-[#222224] text-white"
-                        : "text-gray-300 hover:bg-[#222224] hover:text-white"
-                    }`}
+                  {/* Manage Account */}
+                  <motion.div
+                    className="text-center"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.3 }}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Image
-                        src="/icons/Manage.svg"
-                        alt="Manage Account"
-                        width={20}
-                        height={20}
-                        className="w-auto h-auto"
-                      />
-                      <span className="text-sm">ادارة الحسابات</span>
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => handleNavigation("/admin/manageaccount")}
+                      className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
+                        pathname === "/admin/manageaccount"
+                          ? "bg-[#222224] text-white"
+                          : "text-gray-300 hover:bg-[#222224] hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Image
+                          src="/icons/Manage.svg"
+                          alt="Manage Account"
+                          width={20}
+                          height={20}
+                          className="w-auto h-auto"
+                        />
+                        <span className="text-sm">ادارة الحسابات</span>
+                      </div>
+                    </button>
+                  </motion.div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Desktop Sidebar - Only visible on large screens */}
         <motion.div
