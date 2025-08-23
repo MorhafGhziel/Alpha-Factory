@@ -228,7 +228,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 ${isMobileMenuOpen ? "lg:ml-0" : "lg:ml-20"}`}>
+      <div className="flex-1">
         <div className="text-center pt-16 lg:pt-0">{children}</div>
       </div>
     </div>
