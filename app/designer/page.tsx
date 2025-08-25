@@ -1,23 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function DesignerPage() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    router.push("/");
-  };
+  useEffect(() => {
+    router.push("/designer/dashboard");
+  }, [router]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold mb-8">Designer</h1>
-      <button
-        onClick={handleLogout}
-        className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition duration-200"
-      >
-        Logout
-      </button>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#E9CF6B] mx-auto mb-4"></div>
+        <p className="text-white text-lg">جاري التوجيه إلى لوحة المتابعة...</p>
+      </div>
     </div>
   );
 }
