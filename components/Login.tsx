@@ -89,7 +89,7 @@ const Login = () => {
         <motion.div
           animate={{ y: [-3, 3, -3] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-24 left-1/3 sm:top-32 sm:left-1/4 w-auto h-auto opacity-30"
+          className="absolute top-0 left-1/3 sm:top-32 sm:left-1/4 w-auto h-auto opacity-30"
         >
           <Image
             src="/icons/Genie Lamp.svg"
@@ -103,7 +103,7 @@ const Login = () => {
         <motion.div
           animate={{ y: [3, -3, 3] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-28 right-1/4 sm:top-40 sm:right-1/3 w-auto h-auto opacity-30"
+          className="absolute top-38 right-1/4 hidden md:block sm:top-40 sm:right-1/3 w-auto h-auto opacity-30"
         >
           <Image
             src="/icons/Idea.svg"
@@ -117,7 +117,7 @@ const Login = () => {
         <motion.div
           animate={{ y: [-4, 4, -4] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-24 left-8 sm:bottom-32 sm:left-16 w-auto h-auto opacity-30"
+          className="absolute bottom-30 left-8 sm:bottom-32 sm:left-16 w-auto h-auto opacity-30"
         >
           <Image
             src="/icons/Document.svg"
@@ -131,7 +131,7 @@ const Login = () => {
         <motion.div
           animate={{ y: [4, -4, 4] }}
           transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-16 right-1/3 sm:bottom-20 sm:right-1/4 w-auto h-auto opacity-30"
+          className="absolute bottom-16 right-1/3 sm:bottom-20 sm:left-[1000px] w-auto h-auto opacity-30"
         >
           <Image
             src="/icons/WinRAR.svg"
@@ -145,7 +145,7 @@ const Login = () => {
         <motion.div
           animate={{ y: [-6, 6, -6] }}
           transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-12 left-2/3 sm:bottom-16 sm:left-2/3 w-auto h-auto opacity-30"
+          className="absolute bottom-30 left-2/3 sm:bottom-[340px] sm:left-[1400px] w-auto h-auto opacity-30"
         >
           <Image
             src="/icons/Clock.svg"
