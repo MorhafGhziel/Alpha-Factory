@@ -4,6 +4,10 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 export default function EditorCommunityPage() {
+  const handleTelegramClick = () => {
+    window.open("https://t.me/AlphaFactoryNet", "_blank");
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center space-y-30 py-20">
       <motion.div
@@ -46,6 +50,7 @@ export default function EditorCommunityPage() {
       </motion.div>
 
       <motion.button
+        onClick={handleTelegramClick}
         className="px-10 bg-gradient-to-r from-[#E9CF6B] to-[#C48929] text-[#1B1A18] font-bold text-[20px] rounded-full border border-yellow-400/30 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 relative z-10 cursor-pointer"
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
