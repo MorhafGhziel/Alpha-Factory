@@ -5,7 +5,7 @@ import Sidebar from "../../components/ui/Sidebar";
 import MobileMenu from "../../components/ui/MobileMenu";
 import Header from "../../components/ui/Header";
 
-export default function ReviewerLayout({
+export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export default function ReviewerLayout({
   return (
     <div className="min-h-screen flex">
       <Header
-        title="Reviewer Panel"
+        title="Client Panel"
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMenu={toggleMobileMenu}
       />
@@ -33,7 +33,7 @@ export default function ReviewerLayout({
         onClose={closeMobileMenu}
         items={[
           {
-            path: "/reviewer/profile",
+            path: "/client/profile",
             icon: "/icons/Profile.svg",
             alt: "Profile",
             text: "الملف الشخصي",
@@ -46,16 +46,28 @@ export default function ReviewerLayout({
             isBorder: true,
           },
           {
-            path: "/reviewer/tracking-board",
-            icon: "/icons/Adjust.svg",
+            path: "/client/dashboard",
+            icon: "/icons/Manage.svg",
             alt: "Dashboard",
+            text: "لوحة التحكم",
+          },
+          {
+            path: "/client/tracking-board",
+            icon: "/icons/Adjust.svg",
+            alt: "Tracking Board",
             text: "لوحة المتابعة",
           },
           {
-            path: "/reviewer/community",
+            path: "/client/community",
             icon: "/icons/News.svg",
             alt: "Community",
             text: "المجتمع",
+          },
+          {
+            path: "/client/comingsoon",
+            icon: "/icons/Plus.svg",
+            alt: "Comingsoon",
+            text: "قريباً",
           },
         ]}
         animated={true}
@@ -64,7 +76,7 @@ export default function ReviewerLayout({
       <Sidebar
         items={[
           {
-            path: "/reviewer/profile",
+            path: "/client/profile",
             icon: "/icons/Profile.svg",
             alt: "Profile",
             tooltip: "الملف الشخصي",
@@ -77,16 +89,28 @@ export default function ReviewerLayout({
             isBorder: true,
           },
           {
-            path: "/reviewer/tracking-board",
-            icon: "/icons/Adjust.svg",
+            path: "/client/dashboard",
+            icon: "/icons/Manage.svg",
             alt: "Dashboard",
+            tooltip: "لوحة التحكم",
+          },
+          {
+            path: "/client/tracking-board",
+            icon: "/icons/Adjust.svg",
+            alt: "Tracking Board",
             tooltip: "لوحة المتابعة",
           },
           {
-            path: "/reviewer/community",
+            path: "/client/community",
             icon: "/icons/News.svg",
             alt: "Community",
             tooltip: "المجتمع",
+          },
+          {
+            path: "/client/comingsoon",
+            icon: "/icons/Plus.svg",
+            alt: "Comingsoon",
+            tooltip: "قريباً",
           },
         ]}
       />

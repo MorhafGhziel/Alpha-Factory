@@ -46,10 +46,10 @@ export default function DesignerLayout({
             isBorder: true,
           },
           {
-            path: "/designer/dashboard",
+            path: "/designer/tracking-board",
             icon: "/icons/Adjust.svg",
             alt: "Dashboard",
-            text: "لوحة التحكم",
+            text: "لوحة المتابعة",
           },
           {
             path: "/designer/community",
@@ -77,10 +77,10 @@ export default function DesignerLayout({
             isBorder: true,
           },
           {
-            path: "/designer/dashboard",
+            path: "/designer/tracking-board",
             icon: "/icons/Adjust.svg",
             alt: "Dashboard",
-            tooltip: "لوحة التحكم",
+            tooltip: "لوحة المتابعة",
           },
           {
             path: "/designer/community",

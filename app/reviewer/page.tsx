@@ -7,7 +7,7 @@ export default function ReviewerPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/reviewer/dashboard");
+    router.push("/reviewer/tracking-board");
   }, [router]);
 
   return (

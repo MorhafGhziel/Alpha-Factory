@@ -7,7 +7,7 @@ export default function EditorPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/editor/dashboard");
+    router.push("/editor/tracking-board");
   }, [router]);
 
   return (

@@ -46,10 +46,10 @@ export default function EditorLayout({
             isBorder: true,
           },
           {
-            path: "/editor/dashboard",
+            path: "/editor/tracking-board",
             icon: "/icons/Adjust.svg",
             alt: "Dashboard",
-            text: "لوحة التحكم",
+            text: "لوحة المتابعة",
           },
           {
             path: "/editor/community",
@@ -77,10 +77,10 @@ export default function EditorLayout({
             isBorder: true,
           },
           {
-            path: "/editor/dashboard",
+            path: "/editor/tracking-board",
             icon: "/icons/Adjust.svg",
             alt: "Dashboard",
-            tooltip: "لوحة التحكم",
+            tooltip: "لوحة المتابعة",
           },
           {
             path: "/editor/community",

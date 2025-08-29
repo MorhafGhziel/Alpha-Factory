@@ -7,7 +7,7 @@ export default function DesignerPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/designer/dashboard");
+    router.push("/designer/tracking-board");
   }, [router]);
 
   return (
