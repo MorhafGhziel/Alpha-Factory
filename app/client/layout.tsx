@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "../../components/ui/Sidebar";
 import MobileMenu from "../../components/ui/MobileMenu";
 import Header from "../../components/ui/Header";
+import ComingSoonModal from "../../components/ComingSoonModal";
 
 export default function ClientLayout({
   children,
@@ -11,6 +12,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -18,6 +20,14 @@ export default function ClientLayout({
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const openComingSoonModal = () => {
+    setIsComingSoonModalOpen(true);
+  };
+
+  const closeComingSoonModal = () => {
+    setIsComingSoonModalOpen(false);
   };
 
   return (
@@ -64,10 +74,11 @@ export default function ClientLayout({
             text: "المجتمع",
           },
           {
-            path: "/client/comingsoon",
+            path: "",
             icon: "/icons/Plus.svg",
-            alt: "Comingsoon",
+            alt: "Coming Soon",
             text: "قريباً",
+            onClick: openComingSoonModal,
           },
         ]}
         animated={true}
@@ -107,10 +118,11 @@ export default function ClientLayout({
             tooltip: "المجتمع",
           },
           {
-            path: "/client/comingsoon",
+            path: "",
             icon: "/icons/Plus.svg",
-            alt: "Comingsoon",
+            alt: "Coming Soon",
             tooltip: "قريباً",
+            onClick: openComingSoonModal,
           },
         ]}
       />
@@ -119,6 +131,12 @@ export default function ClientLayout({
       <div className="flex-1">
         <div className="text-center pt-16 lg:pt-0">{children}</div>
       </div>
+
+      {/* Coming Soon Modal */}
+      <ComingSoonModal
+        isOpen={isComingSoonModalOpen}
+        onClose={closeComingSoonModal}
+      />
     </div>
   );
 }

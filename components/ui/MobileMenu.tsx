@@ -10,6 +10,7 @@ export interface MobileMenuItem {
   alt: string;
   text: string;
   isBorder?: boolean;
+  onClick?: () => void;
 }
 
 interface MobileMenuProps {
@@ -36,8 +37,12 @@ export default function MobileMenu({
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleNavigation = (path: string) => {
-    router.push(path);
+  const handleNavigation = (item: MobileMenuItem) => {
+    if (item.onClick) {
+      item.onClick();
+    } else if (item.path) {
+      router.push(item.path);
+    }
     onClose();
   };
 
@@ -65,12 +70,18 @@ export default function MobileMenu({
         }
       : {};
 
+    const isActive = item.path && pathname === item.path;
+
     return (
-      <Wrapper key={item.path} className="text-center" {...wrapperProps}>
+      <Wrapper
+        key={item.path || index}
+        className="text-center"
+        {...wrapperProps}
+      >
         <button
-          onClick={() => handleNavigation(item.path)}
+          onClick={() => handleNavigation(item)}
           className={`w-full p-3 rounded-lg transition-colors cursor-pointer text-left ${
-            pathname === item.path
+            isActive
               ? "bg-[#222224] text-white"
               : "text-gray-300 hover:bg-[#222224] hover:text-white"
           }`}

@@ -10,6 +10,7 @@ export interface SidebarItem {
   alt: string;
   tooltip: string;
   isBorder?: boolean;
+  onClick?: () => void;
 }
 
 interface SidebarProps {
@@ -37,12 +38,22 @@ export default function Sidebar({
       return <div key={`border-${index}`} className="w-8 h-px bg-[#222224]" />;
     }
 
+    const handleClick = () => {
+      if (item.onClick) {
+        item.onClick();
+      } else if (item.path) {
+        router.push(item.path);
+      }
+    };
+
+    const isActive = item.path && pathname === item.path;
+
     return (
-      <div key={item.path} className="relative group">
+      <div key={item.path || index} className="relative group">
         <button
-          onClick={() => router.push(item.path)}
+          onClick={handleClick}
           className={`w-12 h-12 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
-            pathname === item.path ? "bg-[#222224]" : "hover:bg-[#222224]"
+            isActive ? "bg-[#222224]" : "hover:bg-[#222224]"
           }`}
         >
           <Image
