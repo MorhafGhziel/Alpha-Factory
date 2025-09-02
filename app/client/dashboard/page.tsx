@@ -66,27 +66,27 @@ export default function ClientDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen text-white px-8 py-16">
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen text-white px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
           <div className="flex-1"></div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={openRequestImprovementModal}
-              className="cursor-pointer text-[20px] bg-[#0F0F0F] text-white px-24 py-2 rounded-xl hover:bg-[#333336] transition-colors"
+              className="cursor-pointer text-sm sm:text-base lg:text-[20px] bg-[#0F0F0F] text-white px-6 sm:px-12 lg:px-24 py-2 sm:py-3 rounded-xl hover:bg-[#333336] transition-colors w-full sm:w-auto"
             >
               طلــــب تحــــسيــــن
             </button>
             <button
               onClick={openAddProjectModal}
-              className="cursor-pointer text-[20px] bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black px-24 py-2 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-colors"
+              className="cursor-pointer text-sm sm:text-base lg:text-[20px] bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black px-6 sm:px-12 lg:px-24 py-2 sm:py-3 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-colors w-full sm:w-auto"
             >
               مشــــــــــــــــروع جـــــــديد
             </button>
           </div>
         </div>
 
-        <div className="flex gap-4 mb-6 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-6 w-full">
           <SummaryCard
             icon="/icons/CheckedUserMale.svg"
             iconAlt="Person"
@@ -132,11 +132,11 @@ export default function ClientDashboardPage() {
         </div>
       </div>
 
-      <div className="flex gap-5 items-center mb-8 bg-[#101010] p-4 rounded-2xl">
-        <div className="relative">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch sm:items-center mb-6 sm:mb-8 bg-[#101010] p-3 sm:p-4 rounded-2xl">
+        <div className="relative flex-shrink-0">
           <button
             onClick={toggleFilterDropdown}
-            className="bg-[#0B0B0B] text-white cursor-pointer px-4 py-2 rounded-3xl flex items-center gap-2 hover:bg-[#333336] transition-colors whitespace-nowrap"
+            className="bg-[#0B0B0B] text-white cursor-pointer px-3 sm:px-4 py-2 rounded-3xl flex items-center gap-2 hover:bg-[#333336] transition-colors whitespace-nowrap w-full sm:w-auto justify-center sm:justify-start"
           >
             <svg
               className={`w-4 h-4 transition-transform ${
@@ -153,7 +153,7 @@ export default function ClientDashboardPage() {
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-            {selectedFilter}
+            <span className="text-sm sm:text-base">{selectedFilter}</span>
           </button>
 
           {isFilterDropdownOpen && (
@@ -228,14 +228,14 @@ export default function ClientDashboardPage() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 bg-[#0B0B0B] px-4 py-2 rounded-3xl flex-1">
+        <div className="flex items-center gap-2 bg-[#0B0B0B] px-3 sm:px-4 py-2 rounded-3xl flex-1 min-w-0">
           <input
             type="text"
             placeholder="...البحث في المشاريع"
-            className="bg-transparent text-white placeholder-[#747474] outline-none flex-1 text-right"
+            className="bg-transparent text-white placeholder-[#747474] outline-none flex-1 text-right text-sm sm:text-base min-w-0"
           />
           <svg
-            className="w-6 h-6 text-[#747474]"
+            className="w-5 h-5 sm:w-6 sm:h-6 text-[#747474] flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -251,45 +251,60 @@ export default function ClientDashboardPage() {
       </div>
 
       <div>
-        <h2 className="text-[40px] font-bold text-white mb-6 text-right">
+        <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-white mb-4 sm:mb-6 text-right">
           المـــــشــاريع
         </h2>
 
         {projects.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-gray-400 text-lg mb-4">لا توجد مشاريع بعد</div>
-            <div className="text-gray-500 text-sm">
+          <div className="text-center py-12 sm:py-16">
+            <div className="text-gray-400 text-base sm:text-lg mb-4">
+              لا توجد مشاريع بعد
+            </div>
+            <div className="text-gray-500 text-sm sm:text-base">
               اضغط على &quot;مشروع جديد&quot; لإضافة مشروعك الأول
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-8" style={{ direction: "rtl" }}>
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+            style={{ direction: "rtl" }}
+          >
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-[#0F0F0F] p-4 rounded-lg w-80"
+                className="bg-[#0F0F0F] p-3 sm:p-4 rounded-lg w-full"
               >
-                <div className="mb-4">
-                  <div className="text-white font-semibold text-lg text-right">
+                <div className="mb-3 sm:mb-4">
+                  <div className="text-white font-semibold text-base sm:text-lg text-right break-words">
                     {project.title}
                   </div>
                 </div>
 
-                <div className="space-y-3 text-right">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-300">التاريخ:</span>
-                    <span className="text-white">{project.date}</span>
+                <div className="space-y-2 sm:space-y-3 text-right">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-gray-300 text-sm sm:text-base">
+                      التاريخ:
+                    </span>
+                    <span className="text-white text-sm sm:text-base">
+                      {project.date}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-300">النوع:</span>
-                    <span className="text-[#E9CF6B]">{project.type}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-gray-300 text-sm sm:text-base">
+                      النوع:
+                    </span>
+                    <span className="text-[#E9CF6B] text-sm sm:text-base break-words">
+                      {project.type}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-300">حالة التصوير:</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-gray-300 text-sm sm:text-base">
+                      حالة التصوير:
+                    </span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${
                         project.filmingStatus === "تم الانتـــهاء مــنه"
                           ? "bg-green-500 text-white"
                           : "bg-red-500 text-white"
@@ -300,18 +315,22 @@ export default function ClientDashboardPage() {
                   </div>
 
                   {project.fileLinks && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-300">الملفات:</span>
-                      <span className="text-white text-sm truncate">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-300 text-sm sm:text-base">
+                        الملفات:
+                      </span>
+                      <span className="text-white text-xs sm:text-sm break-all">
                         {project.fileLinks}
                       </span>
                     </div>
                   )}
 
                   {project.notes && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-300">ملاحظة:</span>
-                      <span className="text-white text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-300 text-sm sm:text-base">
+                        ملاحظة:
+                      </span>
+                      <span className="text-white text-xs sm:text-sm break-words">
                         {project.notes}
                       </span>
                     </div>
@@ -321,18 +340,6 @@ export default function ClientDashboardPage() {
             ))}
           </div>
         )}
-      </div>
-
-      <div className="fixed bottom-0 right-0 w-32 h-32 pointer-events-none">
-        <svg viewBox="0 0 128 128" className="w-full h-full">
-          <path
-            d="M128 128 Q 64 64 0 128"
-            stroke="#3B82F6"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.3"
-          />
-        </svg>
       </div>
 
       <AddProjectModal
