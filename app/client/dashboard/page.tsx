@@ -3,6 +3,7 @@
 import { useState } from "react";
 import SummaryCard from "../../../components/ui/SummaryCard";
 import AddProjectModal from "../../../components/ui/AddProjectModal";
+import RequestImprovementModal from "../../../components/ui/RequestImprovementModal";
 
 interface Project {
   id: string;
@@ -16,6 +17,8 @@ interface Project {
 
 export default function ClientDashboardPage() {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+  const [isRequestImprovementModalOpen, setIsRequestImprovementModalOpen] =
+    useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("جميع الحالات");
@@ -26,6 +29,14 @@ export default function ClientDashboardPage() {
 
   const closeAddProjectModal = () => {
     setIsAddProjectModalOpen(false);
+  };
+
+  const openRequestImprovementModal = () => {
+    setIsRequestImprovementModalOpen(true);
+  };
+
+  const closeRequestImprovementModal = () => {
+    setIsRequestImprovementModalOpen(false);
   };
 
   const handleAddProject = (projectData: Omit<Project, "id">) => {
@@ -46,13 +57,24 @@ export default function ClientDashboardPage() {
     setIsFilterDropdownOpen(false);
   };
 
+  const handleRequestImprovement = (improvementData: {
+    title: string;
+    description: string;
+  }) => {
+    console.log("Improvement request:", improvementData);
+    closeRequestImprovementModal();
+  };
+
   return (
     <div className="min-h-screen text-white px-8 py-16">
       <div className="mb-8">
         <div className="flex justify-between items-center mb-8">
           <div className="flex-1"></div>
           <div className="flex gap-4">
-            <button className="cursor-pointer text-[20px] bg-[#0F0F0F] text-white px-24 py-2 rounded-xl hover:bg-[#333336] transition-colors">
+            <button
+              onClick={openRequestImprovementModal}
+              className="cursor-pointer text-[20px] bg-[#0F0F0F] text-white px-24 py-2 rounded-xl hover:bg-[#333336] transition-colors"
+            >
               طلــــب تحــــسيــــن
             </button>
             <button
@@ -317,6 +339,12 @@ export default function ClientDashboardPage() {
         isOpen={isAddProjectModalOpen}
         onClose={closeAddProjectModal}
         onAddProject={handleAddProject}
+      />
+
+      <RequestImprovementModal
+        isOpen={isRequestImprovementModalOpen}
+        onClose={closeRequestImprovementModal}
+        onSubmit={handleRequestImprovement}
       />
     </div>
   );
