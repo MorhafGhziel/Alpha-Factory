@@ -209,7 +209,7 @@ const Login = () => {
                   scale: { duration: 0.2 },
                 }}
               >
-                {/* Lightning effect overlay */}
+                {/* Lightning effect overla */}
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                   initial={{ x: "-100%" }}
