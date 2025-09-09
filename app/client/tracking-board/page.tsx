@@ -7,10 +7,21 @@ export default function ClientTrackingBoardPage() {
   const [selectedTypes, setSelectedTypes] = useState<{ [key: number]: string }>(
     {}
   );
+  const [selectedEditMode, setSelectedEditMode] = useState<{
+    [key: number]: string;
+  }>({});
   const [selectedFilmingStatus, setSelectedFilmingStatus] = useState<{
     [key: number]: string;
   }>({});
-
+  const [selectedReviewMode, setSelectedReviewMode] = useState<{
+    [key: number]: string;
+  }>({});
+  const [selectedDesignMode, setSelectedDesignMode] = useState<{
+    [key: number]: string;
+  }>({});
+  const [selectedVerificationMode, setSelectedVerificationMode] = useState<{
+    [key: number]: string;
+  }>({});
   const projectTypes = [
     "فيديوهات طويلة",
     "فيديوهات قصيرة",
@@ -19,6 +30,21 @@ export default function ClientTrackingBoardPage() {
 
   const filmingStatusOptions = ["لم يتم الانتهاء منه", "تم الانتهاء منه"];
 
+  const EditModeOptions = ["لم يبدأ", "قيد التنفيذ", "تم الانتهاء منه"];
+
+  const ReviewModeOptions = ["تمت المراجعة", "في الانتظار"];
+
+  const DesignModeOptions = ["تم الانتهاء منه", "في الانتظار"];
+
+  const VerificationModeOptions = [
+    "متميز",
+    "ممتاز",
+    "جيد جدًا",
+    "جيد",
+    "قيد التطوير",
+    "لا شيء",
+  ];
+
   const handleTypeChange = (rowIndex: number, type: string) => {
     setSelectedTypes((prev) => ({
       ...prev,
@@ -26,10 +52,34 @@ export default function ClientTrackingBoardPage() {
     }));
   };
 
+  const handleEditModeChange = (rowIndex: number, mode: string) => {
+    setSelectedEditMode((prev) => ({
+      ...prev,
+      [rowIndex]: mode,
+    }));
+  };
   const handleFilmingStatusChange = (rowIndex: number, status: string) => {
     setSelectedFilmingStatus((prev) => ({
       ...prev,
       [rowIndex]: status,
+    }));
+  };
+  const handleReviewModeChange = (rowIndex: number, mode: string) => {
+    setSelectedReviewMode((prev) => ({
+      ...prev,
+      [rowIndex]: mode,
+    }));
+  };
+  const handleDesignModeChange = (rowIndex: number, mode: string) => {
+    setSelectedDesignMode((prev) => ({
+      ...prev,
+      [rowIndex]: mode,
+    }));
+  };
+  const handleVerificationModeChange = (rowIndex: number, mode: string) => {
+    setSelectedVerificationMode((prev) => ({
+      ...prev,
+      [rowIndex]: mode,
     }));
   };
   return (
@@ -122,7 +172,35 @@ export default function ClientTrackingBoardPage() {
                       />
                     </td>
                     <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
+                      <CustomDropdown
+                        options={EditModeOptions}
+                        placeholder="وضع التحرير"
+                        selectedValue={selectedEditMode[index] || ""}
+                        onSelect={(value) => handleEditModeChange(index, value)}
+                      />
+                    </td>
+                    <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
+                      <CustomDropdown
+                        options={ReviewModeOptions}
+                        placeholder="المراجعة"
+                        selectedValue={selectedReviewMode[index] || ""}
+                        onSelect={(value) =>
+                          handleReviewModeChange(index, value)
+                        }
+                      />
+                    </td>
+                    <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
                       ###
+                    </td>
+                    <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
+                      <CustomDropdown
+                        options={DesignModeOptions}
+                        placeholder="حالة التصميم	"
+                        selectedValue={selectedDesignMode[index] || ""}
+                        onSelect={(value) =>
+                          handleDesignModeChange(index, value)
+                        }
+                      />
                     </td>
                     <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
                       ###
@@ -131,16 +209,14 @@ export default function ClientTrackingBoardPage() {
                       ###
                     </td>
                     <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
-                      ###
-                    </td>
-                    <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
-                      ###
-                    </td>
-                    <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
-                      ###
-                    </td>
-                    <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
-                      ###
+                      <CustomDropdown
+                        options={VerificationModeOptions}
+                        placeholder="التوثيق"
+                        selectedValue={selectedVerificationMode[index] || ""}
+                        onSelect={(value) =>
+                          handleVerificationModeChange(index, value)
+                        }
+                      />
                     </td>
                   </tr>
                 ))}
