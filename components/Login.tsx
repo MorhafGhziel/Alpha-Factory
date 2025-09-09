@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { authClient } from "../src/lib/auth-client";
 
 const credentials = {
   Admin0e2: { password: "Admin123", route: "/admin/addaccount" },
@@ -29,19 +30,38 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
+    // First try the hardcoded credentials
     if (credentials[username as keyof typeof credentials]) {
       const userCreds = credentials[username as keyof typeof credentials];
       if (userCreds.password === password) {
         router.push(userCreds.route);
+        return;
       } else {
         setError("كلمة المرور خاطئة");
+        return;
       }
-    } else {
-      setError("اسم المستخدم خاطئ");
+    }
+
+    // If no hardcoded credentials match, try auth client
+    try {
+      const { error } = await authClient.signUp.email({
+        email: username,
+        password,
+        name: username.split('@')[0], // Use part before @ as name
+        callbackURL: "/",
+      });
+      
+      if (error) {
+        setError(error.message || "حدث خطأ ما");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError("حدث خطأ في تسجيل الدخول");
     }
   };
 
@@ -249,11 +269,11 @@ const Login = () => {
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Form fields */}
-            <form onSubmit={handleLogin} className="space-y-6 w-full max-w-sm">
+            <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
               <div>
                 <input
                   type="text"
-                  placeholder="اسم المستخدم"
+                  placeholder="البريد الإلكتروني"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"
