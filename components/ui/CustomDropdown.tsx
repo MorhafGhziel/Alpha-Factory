@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 interface CustomDropdownProps {
   options: string[];
@@ -23,8 +24,18 @@ export default function CustomDropdown({
   optionClassName = "",
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const toggleDropdown = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
     setIsOpen(!isOpen);
   };
 
@@ -33,9 +44,29 @@ export default function CustomDropdown({
     setIsOpen(false);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
     <div className={`relative ${className}`}>
       <button
+        ref={buttonRef}
         onClick={toggleDropdown}
         className={`w-full bg-[#0B0B0B] cursor-pointer hover:bg-[#333336] transition-all duration-300 text-white px-4 py-2 rounded-full focus:outline-none flex items-center justify-between min-w-[200px] ${buttonClassName}`}
       >
@@ -74,8 +105,15 @@ export default function CustomDropdown({
               duration: 0.25,
               ease: "easeOut",
             }}
-            className="absolute top-full left-0 right-0 mt-2 bg-[#222224] rounded-3xl shadow-2xl z-[9999] origin-top"
-            style={{ zIndex: 9999 }}
+            className="absolute top-full left-0 right-0 mt-2 bg-[#222224] rounded-3xl shadow-2xl origin-top"
+            style={{
+              zIndex: 99999,
+              position: "fixed",
+              top: `${position.top}px`,
+              left: `${position.left}px`,
+              width: `${position.width}px`,
+              minWidth: "200px",
+            }}
           >
             <div className="p-4">
               <div className="space-y-2">

@@ -27,15 +27,18 @@ export default function AddProjectModal({
   const [isFilmingStatusOpen, setIsFilmingStatusOpen] =
     useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
-  const [date, setDate] = useState<string>("");
   const [fileLinks, setFileLinks] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const handleSubmit = () => {
-    if (!title || !projectType || !filmingStatus) {
+    if (!title || !projectType || !filmingStatus || !startDate || !endDate) {
       alert("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
+
+    const dateRange = `${startDate} - ${endDate}`;
 
     onAddProject({
       title,
@@ -43,15 +46,16 @@ export default function AddProjectModal({
       filmingStatus,
       fileLinks,
       notes,
-      date: date || new Date().toLocaleDateString("ar-SA"),
+      date: dateRange,
     });
 
     setTitle("");
-    setDate("");
     setProjectType("");
     setFilmingStatus("");
     setFileLinks("");
     setNotes("");
+    setStartDate("");
+    setEndDate("");
   };
 
   return (
@@ -98,14 +102,34 @@ export default function AddProjectModal({
             </div>
 
             <div className="space-y-10">
-              <div>
-                <input
-                  type="text"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none text-right"
-                  placeholder="التاريخ"
-                />
+              <div className="space-y-4">
+                <div className="text-center text-white text-lg font-medium">
+                  فترة المشروع
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 text-right">
+                      تاريخ البداية
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 text-right">
+                      تاريخ النهاية
+                    </label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>

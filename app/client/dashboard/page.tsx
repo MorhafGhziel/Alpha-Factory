@@ -4,24 +4,16 @@ import { useState } from "react";
 import SummaryCard from "../../../components/ui/SummaryCard";
 import AddProjectModal from "../../../components/ui/AddProjectModal";
 import RequestImprovementModal from "../../../components/ui/RequestImprovementModal";
-
-interface Project {
-  id: string;
-  title: string;
-  type: string;
-  filmingStatus: string;
-  fileLinks: string;
-  notes: string;
-  date: string;
-}
+import { useProjects, Project } from "../../../contexts/ProjectContext";
 
 export default function ClientDashboardPage() {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
   const [isRequestImprovementModalOpen, setIsRequestImprovementModalOpen] =
     useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("جميع الحالات");
+
+  const { projects, addProject } = useProjects();
 
   const openAddProjectModal = () => {
     setIsAddProjectModalOpen(true);
@@ -40,11 +32,7 @@ export default function ClientDashboardPage() {
   };
 
   const handleAddProject = (projectData: Omit<Project, "id">) => {
-    const newProject: Project = {
-      ...projectData,
-      id: Date.now().toString(),
-    };
-    setProjects([...projects, newProject]);
+    addProject(projectData);
     closeAddProjectModal();
   };
 
@@ -157,13 +145,13 @@ export default function ClientDashboardPage() {
           </button>
 
           {isFilterDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 bg-[#0B0B0B] rounded-xl  z-10 min-w-[200px]">
+            <div className="absolute top-full left-0 mt-2 bg-[#0F0F0F] rounded-xl  z-10 min-w-[200px]">
               <div className="p-2">
                 <div
                   onClick={() => selectFilter("جميع الحالات")}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${
+                  className={`flex items-center gap-2 px-3 py-1 rounded-3xl cursor-pointer text-center justify-center ${
                     selectedFilter === "جميع الحالات"
-                      ? "bg-yellow-500 text-black"
+                      ? "bg-[#0B0B0B] text-[#EAD06C]"
                       : "text-white hover:bg-[#333336]"
                   }`}
                 >
@@ -186,9 +174,9 @@ export default function ClientDashboardPage() {
                 </div>
                 <div
                   onClick={() => selectFilter("في الانتظار")}
-                  className={`px-3 py-2 rounded-lg cursor-pointer ${
+                  className={`px-3 py-1 rounded-3xl cursor-pointer text-center justify-center ${
                     selectedFilter === "في الانتظار"
-                      ? "bg-yellow-500 text-black"
+                      ? "bg-[#0B0B0B] text-[#EAD06C]"
                       : "text-white hover:bg-[#333336]"
                   }`}
                 >
@@ -196,9 +184,9 @@ export default function ClientDashboardPage() {
                 </div>
                 <div
                   onClick={() => selectFilter("قيد التقدم")}
-                  className={`px-3 py-2 rounded-lg cursor-pointer ${
+                  className={`px-3 py-1 rounded-3xl cursor-pointer text-center justify-center ${
                     selectedFilter === "قيد التقدم"
-                      ? "bg-yellow-500 text-black"
+                      ? "bg-[#0B0B0B] text-[#EAD06C]"
                       : "text-white hover:bg-[#333336]"
                   }`}
                 >
@@ -206,9 +194,9 @@ export default function ClientDashboardPage() {
                 </div>
                 <div
                   onClick={() => selectFilter("مكتمل")}
-                  className={`px-3 py-2 rounded-lg cursor-pointer ${
+                  className={`px-3 py-1 rounded-3xl cursor-pointer text-center justify-center ${
                     selectedFilter === "مكتمل"
-                      ? "bg-yellow-500 text-black"
+                      ? "bg-[#0B0B0B] text-[#EAD06C]"
                       : "text-white hover:bg-[#333336]"
                   }`}
                 >
@@ -216,9 +204,9 @@ export default function ClientDashboardPage() {
                 </div>
                 <div
                   onClick={() => selectFilter("مراجعة")}
-                  className={`px-3 py-2 rounded-lg cursor-pointer ${
+                  className={`px-3 py-1 rounded-3xl cursor-pointer text-center justify-center ${
                     selectedFilter === "مراجعة"
-                      ? "bg-yellow-500 text-black"
+                      ? "bg-[#0B0B0B] text-[#EAD06C]"
                       : "text-white hover:bg-[#333336]"
                   }`}
                 >
@@ -311,6 +299,38 @@ export default function ClientDashboardPage() {
                       }`}
                     >
                       {project.filmingStatus}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-gray-300 text-sm sm:text-base">
+                      حالة التحرير:
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${
+                        project.editMode === "تم الانتهاء منه"
+                          ? "bg-green-500 text-white"
+                          : project.editMode === "قيد التنفيذ"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-gray-500 text-white"
+                      }`}
+                    >
+                      {project.editMode || "لم يبدأ"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-gray-300 text-sm sm:text-base">
+                      المراجعة:
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${
+                        project.reviewMode === "تمت المراجعة"
+                          ? "bg-green-500 text-white"
+                          : "bg-orange-500 text-white"
+                      }`}
+                    >
+                      {project.reviewMode || "في الانتظار"}
                     </span>
                   </div>
 
