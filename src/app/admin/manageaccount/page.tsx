@@ -1,37 +1,141 @@
 "use client";
 
-import { useState } from "react";
-import { useTeam } from "../../../utils";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TeamGroup } from "../../../types";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
+  createdAt: string;
+  emailVerified: boolean;
+}
 
 export default function ManageAccountPage() {
-  const { teams, deleteTeam } = useTeam();
-  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<{
+    id: string;
+    field: 'name' | 'email';
+    value: string;
+  } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     show: boolean;
-    teamId: string;
-    teamName: string;
+    userId: string;
+    userName: string;
   } | null>(null);
 
-  const toggleTeam = (teamId: string) => {
-    const newExpanded = new Set(expandedTeams);
-    if (newExpanded.has(teamId)) {
-      newExpanded.delete(teamId);
-    } else {
-      newExpanded.add(teamId);
+  // Auto-hide messages after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      return () => clearTimeout(timer);
     }
-    setExpandedTeams(newExpanded);
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/users');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      const data = await response.json();
+      setUsers(data.users);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteTeam = (teamId: string, teamName: string) => {
-    setDeleteConfirm({ show: true, teamId, teamName });
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleEditStart = (userId: string, field: 'name' | 'email', currentValue: string) => {
+    setEditingUser({ id: userId, field, value: currentValue });
   };
 
-  const confirmDelete = () => {
-    if (deleteConfirm) {
-      deleteTeam(deleteConfirm.teamId);
+  const handleEditSave = async () => {
+    if (!editingUser) return;
+
+    try {
+      const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          [editingUser.field]: editingUser.value,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update user');
+      }
+
+      const data = await response.json();
+      
+      // Update the user in the local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === editingUser.id ? data.user : user
+        )
+      );
+      
+      setEditingUser(null);
+      setError(null);
+      setSuccessMessage(`تم تحديث ${editingUser.field === 'name' ? 'الاسم' : 'البريد الإلكتروني'} بنجاح`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingUser(null);
+  };
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    setDeleteConfirm({ show: true, userId, userName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      const response = await fetch(`/api/admin/users/${deleteConfirm.userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+
+      // Remove user from local state
+      setUsers(prevUsers => 
+        prevUsers.filter(user => user.id !== deleteConfirm.userId)
+      );
+      
       setDeleteConfirm(null);
+      setError(null);
+      setSuccessMessage('تم حذف الحساب بنجاح');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
 
@@ -58,7 +162,47 @@ export default function ManageAccountPage() {
         </h1>
       </motion.div>
 
-      {/* Teams Container */}
+      {/* Error Message */}
+      {error && (
+        <motion.div
+          className="max-w-6xl mx-auto px-4 mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200 flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-300 hover:text-red-100 ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <motion.div
+          className="max-w-6xl mx-auto px-4 mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="bg-green-900/50 border border-green-500 rounded-lg p-4 text-green-200 flex items-center justify-between">
+            <span>{successMessage}</span>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-300 hover:text-green-100 ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Users Container */}
       <motion.div
         className="max-w-6xl mx-auto px-4"
         initial={{ y: 50, opacity: 0 }}
@@ -71,20 +215,29 @@ export default function ManageAccountPage() {
           duration: 0.6,
         }}
       >
-        {teams.length === 0 ? (
+        {loading ? (
           <motion.div
             className="text-center text-gray-400 text-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            لا توجد مجموعات بعد. قم بإنشاء مجموعة جديدة من صفحة إضافة الحساب.
+            جاري تحميل الحسابات...
+          </motion.div>
+        ) : users.length === 0 ? (
+          <motion.div
+            className="text-center text-gray-400 text-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            لا توجد حسابات بعد.
           </motion.div>
         ) : (
           <div className="space-y-6">
-            {teams.map((team: TeamGroup, index: number) => (
+            {users.map((user: User, index: number) => (
               <motion.div
-                key={team.id}
+                key={user.id}
                 className="bg-[#0f0f0f] rounded-3xl overflow-hidden"
                 initial={{ y: 50, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -96,379 +249,180 @@ export default function ManageAccountPage() {
                   duration: 0.6,
                 }}
               >
-                {/* Team Header - Always Visible */}
+                {/* User Card */}
                 <div className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-[#E9CF6B] rounded-full flex items-center justify-center">
+                        <span className="text-black font-bold text-lg">
+                          {user.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-[#E9CF6B] text-lg font-semibold">
+                          {user.name}
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                          {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'No Role'}
+                        </p>
+                      </div>
+                    </div>
                     <button
-                      onClick={() => toggleTeam(team.id)}
-                      className="flex cursor-pointer items-center space-x-3 text-[#E9CF6B] text-lg font-semibold hover:text-white transition-colors"
+                      onClick={() => handleDeleteUser(user.id, user.name)}
+                      className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
                     >
-                      <svg
-                        className={`w-5 h-5 transition-transform duration-200 ${
-                          expandedTeams.has(team.id) ? "" : "rotate-180"
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                      <span> {team.name}</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteTeam(team.id, team.name)}
-                      className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm"
-                    >
-                      حذف الحسابات
+                      حذف الحساب
                     </button>
                   </div>
-                </div>
 
-                {/* Team Details - Collapsible */}
-                <AnimatePresence>
-                  {expandedTeams.has(team.id) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Name Field */}
                     <motion.div
-                      className="px-6 pb-6 overflow-hidden"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{
-                        height: 0,
-                        opacity: 0,
-                        transition: {
-                          height: { duration: 0.3, ease: "easeInOut" },
-                          opacity: { duration: 0.2, ease: "easeInOut" },
-                        },
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                        duration: 0.4,
-                      }}
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.3 + index * 0.05, duration: 0.2 }}
                     >
-                      <motion.div
-                        className="grid grid-cols-1 lg:grid-cols-4 gap-6"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{
-                          opacity: 0,
-                          y: -10,
-                          transition: { duration: 0.2, ease: "easeInOut" },
-                        }}
-                        transition={{ delay: 0.1, duration: 0.3 }}
-                      >
-                        {/* Client Section */}
-                        <motion.div
-                          className="space-y-3"
-                          initial={{ x: -30, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.2, duration: 0.3 }}
+                      <div className="flex items-center justify-between">
+                        <div className="text-gray-400 text-sm mb-1">الاسم:</div>
+                        <button
+                          onClick={() => handleEditStart(user.id, 'name', user.name)}
+                          className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
                         >
-                          <h3 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
-                            عميل
-                          </h3>
-                          <div className="space-y-2">
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.3, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Name:{" "}
-                                <span className="text-gray-200">
-                                  {team.client.name}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.4, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Number:{" "}
-                                <span className="text-gray-200">
-                                  {team.client.number}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.5, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Username:{" "}
-                                <span className="text-gray-200">
-                                  {team.client.username}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.6, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Password:{" "}
-                                <span className="text-gray-200">
-                                  {team.client.password}
-                                </span>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-
-                        {/* Producer Section */}
-                        <motion.div
-                          className="space-y-3"
-                          initial={{ x: -30, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.3, duration: 0.3 }}
-                        >
-                          <h3 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
-                            ممنتج
-                          </h3>
-                          <div className="space-y-2">
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.4, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Name:{" "}
-                                <span className="text-gray-200">
-                                  {team.producer.name}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.5, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Token:{" "}
-                                <span className="text-gray-200">
-                                  {team.producer.token}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.6, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                CHAT_ID:{" "}
-                                <span className="text-gray-200">
-                                  {team.producer.chatId}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.7, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Username:{" "}
-                                <span className="text-gray-200">
-                                  {team.producer.username}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.8, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Password:{" "}
-                                <span className="text-gray-200">
-                                  {team.producer.password}
-                                </span>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-
-                        {/* Designer Section */}
-                        <motion.div
-                          className="space-y-3"
-                          initial={{ x: -30, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.4, duration: 0.3 }}
-                        >
-                          <h3 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
-                            مصمم
-                          </h3>
-                          <div className="space-y-2">
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.5, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Name:{" "}
-                                <span className="text-gray-200">
-                                  {team.designer.name}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.6, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Token:{" "}
-                                <span className="text-gray-200">
-                                  {team.designer.token}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.7, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                CHAT_ID:{" "}
-                                <span className="text-gray-200">
-                                  {team.designer.chatId}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.8, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Username:{" "}
-                                <span className="text-gray-200">
-                                  {team.designer.username}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.9, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Password:{" "}
-                                <span className="text-gray-200">
-                                  {team.designer.password}
-                                </span>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-
-                        {/* Reviewer Section */}
-                        <motion.div
-                          className="space-y-3"
-                          initial={{ x: -30, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.5, duration: 0.3 }}
-                        >
-                          <h3 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
-                            مُراجع
-                          </h3>
-                          <div className="space-y-2">
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.6, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Name:{" "}
-                                <span className="text-gray-200">
-                                  {team.reviewer.name}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.7, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Token:{" "}
-                                <span className="text-gray-200">
-                                  {team.reviewer.token}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.8, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                CHAT_ID:{" "}
-                                <span className="text-gray-200">
-                                  {team.reviewer.chatId}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.9, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Username:{" "}
-                                <span className="text-gray-200">
-                                  {team.reviewer.username}
-                                </span>
-                              </div>
-                            </motion.div>
-                            <motion.div
-                              className="bg-[#0B0B0B] rounded-lg px-3 py-2"
-                              initial={{ scale: 0.9, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 1.0, duration: 0.2 }}
-                            >
-                              <div className="text-gray-400 text-sm">
-                                Password:{" "}
-                                <span className="text-gray-200">
-                                  {team.reviewer.password}
-                                </span>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      </motion.div>
+                          تعديل
+                        </button>
+                      </div>
+                      {editingUser?.id === user.id && editingUser?.field === 'name' ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={editingUser.value}
+                            onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
+                            className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleEditSave();
+                              if (e.key === 'Escape') handleEditCancel();
+                            }}
+                          />
+                          <button
+                            onClick={handleEditSave}
+                            className="text-green-400 hover:text-green-300 text-xs"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={handleEditCancel}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-gray-200 text-sm">{user.name}</div>
+                      )}
                     </motion.div>
-                  )}
-                </AnimatePresence>
+
+                    {/* Email Field */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.4 + index * 0.05, duration: 0.2 }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="text-gray-400 text-sm mb-1">البريد الإلكتروني:</div>
+                        <button
+                          onClick={() => handleEditStart(user.id, 'email', user.email)}
+                          className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
+                        >
+                          تعديل
+                        </button>
+                      </div>
+                      {editingUser?.id === user.id && editingUser?.field === 'email' ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="email"
+                            value={editingUser.value}
+                            onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
+                            className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleEditSave();
+                              if (e.key === 'Escape') handleEditCancel();
+                            }}
+                          />
+                          <button
+                            onClick={handleEditSave}
+                            className="text-green-400 hover:text-green-300 text-xs"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={handleEditCancel}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-gray-200 text-sm">{user.email}</div>
+                      )}
+                    </motion.div>
+
+                    {/* Role Field - Read Only */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.5 + index * 0.05, duration: 0.2 }}
+                    >
+                      <div className="text-gray-400 text-sm mb-1">الدور:</div>
+                      <div className="text-gray-200 text-sm">
+                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'لا يوجد دور'}
+                      </div>
+                    </motion.div>
+
+                    {/* Created Date - Read Only */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.6 + index * 0.05, duration: 0.2 }}
+                    >
+                      <div className="text-gray-400 text-sm mb-1">تاريخ الإنشاء:</div>
+                      <div className="text-gray-200 text-sm">
+                        {new Date(user.createdAt).toLocaleDateString('ar-EG')}
+                      </div>
+                    </motion.div>
+
+                    {/* Email Verified Status */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.7 + index * 0.05, duration: 0.2 }}
+                    >
+                      <div className="text-gray-400 text-sm mb-1">حالة التحقق:</div>
+                      <div className={`text-sm ${user.emailVerified ? 'text-green-400' : 'text-red-400'}`}>
+                        {user.emailVerified ? 'محقق' : 'غير محقق'}
+                      </div>
+                    </motion.div>
+
+                    {/* User ID - Read Only */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.8 + index * 0.05, duration: 0.2 }}
+                    >
+                      <div className="text-gray-400 text-sm mb-1">معرف المستخدم:</div>
+                      <div className="text-gray-200 text-xs font-mono break-all">
+                        {user.id}
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -501,9 +455,9 @@ export default function ManageAccountPage() {
                 تأكيد الحذف
               </h3>
               <p className="text-gray-300 mb-6">
-                هذا الاجراء غير قابل للتراجع , هل أنت متأكد من حذف المجموعة{" "}
+                هذا الاجراء غير قابل للتراجع , هل أنت متأكد من حذف الحساب{" "}
                 <br />
-                {deleteConfirm.teamName}&quot; ؟&quot;
+                &quot;{deleteConfirm.userName}&quot; ؟
               </p>
               <div className="flex justify-center space-x-4">
                 <button
