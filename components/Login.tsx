@@ -48,17 +48,16 @@ const Login = () => {
 
     // If no hardcoded credentials match, try auth client
     try {
-      const { error } = await authClient.signUp.email({
+      const { error } = await authClient.signIn.email({
         email: username,
         password,
-        name: username.split('@')[0], // Use part before @ as name
-        callbackURL: "/",
+        callbackURL: "/admin",
       });
       
       if (error) {
         setError(error.message || "حدث خطأ ما");
       } else {
-        router.push("/dashboard");
+        router.push("/admin");
       }
     } catch (err) {
       setError("حدث خطأ في تسجيل الدخول");

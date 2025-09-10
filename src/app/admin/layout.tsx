@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { TeamGroup } from "../../types";
-import { createNewTeam, removeTeamById, TeamContext } from "../../utils";
-import Sidebar from "../../components/ui/Sidebar";
-import MobileMenu from "../../components/ui/MobileMenu";
-import Header from "../../components/ui/Header";
+import { TeamGroup } from "@/src/types";
+import { createNewTeam, removeTeamById, TeamContext } from "@/src/utils";
+import Sidebar from "@/components/ui/Sidebar";
+import MobileMenu from "@/components/ui/MobileMenu";
+import Header from "@/components/ui/Header";
 
 export default function AdminLayout({
   children,
