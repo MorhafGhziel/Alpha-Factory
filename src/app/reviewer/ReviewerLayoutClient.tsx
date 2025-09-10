@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "../../components/ui/Sidebar";
-import MobileMenu from "../../components/ui/MobileMenu";
-import Header from "../../components/ui/Header";
+import Sidebar from "@/components/ui/Sidebar";
+import MobileMenu from "@/components/ui/MobileMenu";
+import Header from "@/components/ui/Header";
 
 export default function ReviewerLayoutClient({
   children,

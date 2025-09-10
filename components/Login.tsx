@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "../src/lib/auth-client";
+import { User } from "../src/lib/auth";
+import { getRoleDashboardPath } from "../src/lib/auth-middleware";
 
 const credentials = {
   Admin0e2: { password: "Admin123", route: "/admin/addaccount" },
@@ -14,13 +16,14 @@ const credentials = {
   Designer0e2: { password: "Designer123", route: "/designer" },
 };
 
-const Login = () => {
+const Login = ( user: User ) => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+
 
   const handleLoginClick = () => {
     setShowForm(true);
@@ -48,16 +51,22 @@ const Login = () => {
 
     // If no hardcoded credentials match, try auth client
     try {
-      const { error } = await authClient.signIn.email({
+      const { data, error } = await authClient.signIn.email({
         email: username,
         password,
-        callbackURL: "/admin",
+        callbackURL: "/api/auth/callback", // This will be handled by the auth callback
       });
-      
+
       if (error) {
         setError(error.message || "حدث خطأ ما");
+      } else if (data?.user && "role" in data.user) {
+        // If we have user data with role, redirect immediately
+        const dashboardPath = getRoleDashboardPath((data.user as any).role);
+        router.push(dashboardPath);
       } else {
-        router.push("/admin");
+        // If no role info yet, let the auth callback handle it
+        // The server-side callback will redirect based on role
+        router.refresh();
       }
     } catch (err) {
       setError("حدث خطأ في تسجيل الدخول");

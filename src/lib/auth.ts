@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./prisma";
+import { getRoleDashboardPath } from "./auth-middleware";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -13,8 +14,29 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        required: false,
+        input: false,
       },
     },
   },
+  callbacks: {
+    after: [
+      {
+        matcher(context: { type: string }) {
+          return context.type === "credential";
+        },
+        handler: async (ctx: {
+          user: { role: string };
+          redirect: (arg0: string) => any;
+        }) => {
+          if (ctx.user?.role) {
+            const dashboardPath = getRoleDashboardPath(ctx.user.role);
+            return ctx.redirect(dashboardPath);
+          }
+        },
+      },
+    ],
+  },
 });
+
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.Session.user;
