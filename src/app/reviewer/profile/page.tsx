@@ -2,8 +2,35 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { authClient } from "../../../lib/auth-client";
+import { useEffect, useState } from "react";
 
 export default function ReviewerProfilePage() {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getSession = async () => {
+      try {
+        const sessionData = await authClient.getSession();
+        setSession(sessionData);
+      } catch (error) {
+        console.error("Error fetching session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getSession();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen flex flex-col items-center md:justify-center space-y-6 sm:space-y-8 px-4 sm:px-0 py-20 md:py-0">
       {/* Profile Picture */}
@@ -69,11 +96,11 @@ export default function ReviewerProfilePage() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <p className="text-white text-xs sm:text-sm mb-3 sm:mb-4 flex justify-end">
-            اسم المستخدم
+          البريد الاكتروني
           </p>
           <input
             type="text"
-            value="Reviewer0e2"
+            value={session?.data?.user?.email || "No email available"}
             readOnly
             className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#222224] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
           />
@@ -96,11 +123,11 @@ export default function ReviewerProfilePage() {
           transition={{ delay: 0.8, duration: 0.5 }}
         >
           <p className="text-white text-xs sm:text-sm mb-3 sm:mb-4 flex justify-end">
-            كلمة المرور
+            الدور
           </p>
           <input
             type="text"
-            value="Reviewer123"
+            value={session?.data?.user?.role || "No role available"}
             readOnly
             className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#1a1a1a] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
           />
