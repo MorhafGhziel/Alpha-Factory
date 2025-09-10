@@ -92,7 +92,7 @@ export default function AddAccountPage() {
           password: user.password,
           name: user.name,
           role: user.role, // Pass role as additional field
-        });
+        } as any); // Cast to any to bypass TypeScript types issue
 
         if (signUpResult.error) {
           throw new Error(`فشل في إنشاء حساب ${user.name}: ${signUpResult.error.message}`);
