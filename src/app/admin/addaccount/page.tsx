@@ -1,30 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { useTeam } from "../../../utils";
 import { useRouter } from "next/navigation";
-import { AccountData, ClientData } from "../../../types";
 import { motion } from "framer-motion";
+import { authClient } from "@/src/lib/auth-client";
+
+interface UserFormData {
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+  role: string;
+}
 
 interface FormData {
   groupName: string;
-  client: ClientData;
-  producer: AccountData;
-  designer: AccountData;
-  reviewer: AccountData;
+  client: UserFormData;
+  editor: UserFormData;
+  designer: UserFormData;
+  reviewer: UserFormData;
 }
 
 export default function AddAccountPage() {
-  const { addTeam } = useTeam();
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     groupName: "",
-    client: { name: "", number: "", username: "", password: "" },
-    producer: { name: "", token: "", chatId: "", username: "", password: "" },
-    designer: { name: "", token: "", chatId: "", username: "", password: "" },
-    reviewer: { name: "", token: "", chatId: "", username: "", password: "" },
+    client: { name: "", email: "", username: "", password: "", role: "client" },
+    editor: { name: "", email: "", username: "", password: "", role: "editor" },
+    designer: { name: "", email: "", username: "", password: "", role: "designer" },
+    reviewer: { name: "", email: "", username: "", password: "", role: "reviewer" },
   });
   const [groupNameError, setGroupNameError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleInputChange = (
     section: keyof Omit<FormData, "groupName">,
@@ -51,29 +59,54 @@ export default function AddAccountPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError("");
 
     // Validate group name
     if (!formData.groupName.trim()) {
       setGroupNameError("اسم المجموعة مطلوب");
+      setIsSubmitting(false);
       return;
     }
 
     // Clear any previous errors
     setGroupNameError("");
 
-    // Create the team
-    addTeam({
-      name: formData.groupName,
-      client: formData.client,
-      producer: formData.producer,
-      designer: formData.designer,
-      reviewer: formData.reviewer,
-    });
+    // Validate that all users have required fields
+    const users = [formData.client, formData.editor, formData.designer, formData.reviewer];
+    for (const user of users) {
+      if (!user.name || !user.email || !user.username || !user.password) {
+        setSubmitError("جميع الحقول مطلوبة لكل مستخدم");
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
-    // Redirect to manage accounts page
-    router.push("/admin/manageaccount");
+    try {
+      // Create users one by one using authClient.signUp.email
+      for (const user of users) {
+        const signUpResult = await authClient.signUp.email({
+          email: user.email,
+          password: user.password,
+          name: user.name,
+          role: user.role, // Pass role as additional field
+        });
+
+        if (signUpResult.error) {
+          throw new Error(`فشل في إنشاء حساب ${user.name}: ${signUpResult.error.message}`);
+        }
+      }
+
+      // Success - redirect to manage accounts page
+      router.push("/admin/manageaccount");
+    } catch (error) {
+      console.error("Error creating accounts:", error);
+      setSubmitError(error instanceof Error ? error.message : "حدث خطأ في إنشاء الحسابات");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,6 +172,20 @@ export default function AddAccountPage() {
             )}
           </motion.div>
 
+          {/* Submit Error Display */}
+          {submitError && (
+            <motion.div
+              className="mb-6 flex justify-center"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="bg-red-500/20 border border-red-500 text-red-400 px-4 py-2 rounded-lg text-center max-w-md">
+                {submitError}
+              </div>
+            </motion.div>
+          )}
+
           {/* Account Role Sections */}
           <motion.div
             className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-30"
@@ -166,11 +213,11 @@ export default function AddAccountPage() {
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
-                type="text"
-                placeholder="Number"
-                value={formData.client.number}
+                type="email"
+                placeholder="Email"
+                value={formData.client.email}
                 onChange={(e) =>
-                  handleInputChange("client", "number", e.target.value)
+                  handleInputChange("client", "email", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
@@ -194,7 +241,7 @@ export default function AddAccountPage() {
               />
             </motion.div>
 
-            {/* Producer Section */}
+            {/* Editor Section */}
             <motion.div
               className="space-y-4"
               initial={{ x: -50, opacity: 0 }}
@@ -202,50 +249,41 @@ export default function AddAccountPage() {
               transition={{ delay: 0.8, duration: 0.5 }}
             >
               <h2 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
-                ممنتج
+                محرر
               </h2>
               <input
                 type="text"
                 placeholder="Name"
-                value={formData.producer.name}
+                value={formData.editor.name}
                 onChange={(e) =>
-                  handleInputChange("producer", "name", e.target.value)
+                  handleInputChange("editor", "name", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
-                type="text"
-                placeholder="Token"
-                value={formData.producer.token}
+                type="email"
+                placeholder="Email"
+                value={formData.editor.email}
                 onChange={(e) =>
-                  handleInputChange("producer", "token", e.target.value)
-                }
-                className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
-              />
-              <input
-                type="text"
-                placeholder="CHAT_ID"
-                value={formData.producer.chatId}
-                onChange={(e) =>
-                  handleInputChange("producer", "chatId", e.target.value)
+                  handleInputChange("editor", "email", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
                 type="text"
                 placeholder="Username"
-                value={formData.producer.username}
+                value={formData.editor.username}
                 onChange={(e) =>
-                  handleInputChange("producer", "username", e.target.value)
+                  handleInputChange("editor", "username", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
                 type="password"
                 placeholder="Password"
-                value={formData.producer.password}
+                value={formData.editor.password}
                 onChange={(e) =>
-                  handleInputChange("producer", "password", e.target.value)
+                  handleInputChange("editor", "password", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
@@ -271,20 +309,11 @@ export default function AddAccountPage() {
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
-                type="text"
-                placeholder="Token"
-                value={formData.designer.token}
+                type="email"
+                placeholder="Email"
+                value={formData.designer.email}
                 onChange={(e) =>
-                  handleInputChange("designer", "token", e.target.value)
-                }
-                className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
-              />
-              <input
-                type="text"
-                placeholder="CHAT_ID"
-                value={formData.designer.chatId}
-                onChange={(e) =>
-                  handleInputChange("designer", "chatId", e.target.value)
+                  handleInputChange("designer", "email", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
@@ -328,20 +357,11 @@ export default function AddAccountPage() {
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
-                type="text"
-                placeholder="Token"
-                value={formData.reviewer.token}
+                type="email"
+                placeholder="Email"
+                value={formData.reviewer.email}
                 onChange={(e) =>
-                  handleInputChange("reviewer", "token", e.target.value)
-                }
-                className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
-              />
-              <input
-                type="text"
-                placeholder="CHAT_ID"
-                value={formData.reviewer.chatId}
-                onChange={(e) =>
-                  handleInputChange("reviewer", "chatId", e.target.value)
+                  handleInputChange("reviewer", "email", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
@@ -375,9 +395,10 @@ export default function AddAccountPage() {
           >
             <button
               type="submit"
-              className="bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              الاستمرار
+              {isSubmitting ? "جاري الإنشاء..." : "الاستمرار"}
             </button>
           </motion.div>
         </motion.form>

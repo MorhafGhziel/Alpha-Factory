@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import SummaryCard from "../../../components/ui/SummaryCard";
-import AddProjectModal from "../../../components/ui/AddProjectModal";
-import RequestImprovementModal from "../../../components/ui/RequestImprovementModal";
+import SummaryCard from "@/components/ui/SummaryCard";
+import AddProjectModal from "@/components/ui/AddProjectModal";
+import RequestImprovementModal from "@/components/ui/RequestImprovementModal";
 
 interface Project {
   id: string;
