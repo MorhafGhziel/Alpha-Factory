@@ -11,9 +11,9 @@ export default async function AdminLayout({
   const user = session?.user;
   if (!user) {
     unauthorized();
-  } else{
-    console.log(session)
-  }
+  } else if (user.role !== "admin") {
+    unauthorized();
+  } 
 
   return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }
