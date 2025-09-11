@@ -207,7 +207,7 @@ export default function AddAccountPage() {
             <div className="text-center mb-4">
               <h3 className="text-[#E9CF6B] text-lg font-semibold mb-2">مجموعة التليجرام</h3>
               <p className="text-gray-400 text-sm">
-                ادخل Chat ID للمجموعة المخصصة لهذا المشروع (اختياري)
+                ادخل Chat ID للمجموعة المخصصة لهذا المشروع 
               </p>
             </div>
             <input
@@ -217,9 +217,7 @@ export default function AddAccountPage() {
               onChange={(e) => handleTelegramChatIdChange(e.target.value)}
               className="w-auto min-w-[310px] bg-[#0B0B0B] text-white placeholder-[#A9A9A9] rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
             />
-            <div className="text-gray-500 text-xs mt-2 text-center max-w-md">
-              إذا تركت هذا الحقل فارغاً، سيتم استخدام المجموعة الافتراضية
-            </div>
+         
           </motion.div>
 
           {/* Submit Error Display */}
