@@ -45,6 +45,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   const updateProject = (id: string, updates: Partial<Project>) => {
+    console.log("Updating project:", id, updates); // Debug log
     setProjects((prev) =>
       prev.map((project) =>
         project.id === id ? { ...project, ...updates } : project

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createPortal } from "react-dom";
 
 interface CustomDropdownProps {
   options: string[];
@@ -40,6 +39,7 @@ export default function CustomDropdown({
   };
 
   const handleSelect = (value: string) => {
+    console.log("Dropdown selecting:", value); // Debug log
     onSelect(value);
     setIsOpen(false);
   };
@@ -48,7 +48,8 @@ export default function CustomDropdown({
     const handleClickOutside = (event: MouseEvent) => {
       if (
         buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
+        !buttonRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest("[data-dropdown-options]")
       ) {
         setIsOpen(false);
       }
@@ -106,6 +107,7 @@ export default function CustomDropdown({
               ease: "easeOut",
             }}
             className="absolute top-full left-0 right-0 mt-2 bg-[#222224] rounded-3xl shadow-2xl origin-top"
+            data-dropdown-options
             style={{
               zIndex: 99999,
               position: "fixed",
