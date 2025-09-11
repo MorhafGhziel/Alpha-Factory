@@ -46,6 +46,7 @@ export default function ClientDashboardPage() {
   };
 
   const handleRequestImprovement = (improvementData: {
+    projectId: string;
     title: string;
     description: string;
     department: string;

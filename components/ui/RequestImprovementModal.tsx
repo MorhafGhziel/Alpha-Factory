@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useProjects } from "@/contexts/ProjectContext";
+import CustomDropdown from "./CustomDropdown";
 
 interface RequestImprovementModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (improvementData: {
+    projectId: string;
     title: string;
     description: string;
     department: string;
@@ -18,23 +21,31 @@ export default function RequestImprovementModal({
   onClose,
   onSubmit,
 }: RequestImprovementModalProps) {
-  const [title, setTitle] = useState<string>("");
+  const { projects } = useProjects();
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [department, setDepartment] = useState<string>("");
 
   const handleSubmit = () => {
-    if (!title || !description || !department) {
+    if (!selectedProjectId || !description || !department) {
       alert("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
+    const selectedProject = projects.find((p) => p.id === selectedProjectId);
+    if (!selectedProject) {
+      alert("المشروع المحدد غير موجود");
+      return;
+    }
+
     onSubmit({
-      title,
+      projectId: selectedProjectId,
+      title: selectedProject.title,
       description,
       department,
     });
 
-    setTitle("");
+    setSelectedProjectId("");
     setDescription("");
     setDepartment("");
   };
@@ -111,13 +122,31 @@ export default function RequestImprovementModal({
                 </div>
               </div>
               <div>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none text-right"
-                  placeholder="عنوان المشروع"
-                />
+                <div className="text-white text-right mb-3 text-sm">
+                  اختر المشروع:
+                </div>
+                {projects.length === 0 ? (
+                  <div className="w-full bg-[#0B0B0B] text-gray-400 px-4 py-3 rounded-xl text-center border border-[#333336]">
+                    لا توجد مشاريع متاحة. قم بإنشاء مشروع جديد أولاً.
+                  </div>
+                ) : (
+                  <CustomDropdown
+                    options={projects.map((project) => project.title)}
+                    placeholder="اختر مشروع من القائمة"
+                    selectedValue={
+                      projects.find((p) => p.id === selectedProjectId)?.title ||
+                      ""
+                    }
+                    onSelect={(selectedTitle) => {
+                      const project = projects.find(
+                        (p) => p.title === selectedTitle
+                      );
+                      if (project) {
+                        setSelectedProjectId(project.id);
+                      }
+                    }}
+                  />
+                )}
               </div>
 
               <div>
