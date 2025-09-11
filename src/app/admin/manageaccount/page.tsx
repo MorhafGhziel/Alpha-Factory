@@ -12,8 +12,15 @@ interface User {
   emailVerified: boolean;
 }
 
+interface Group {
+  id: string;
+  name: string;
+  createdAt: string;
+  users: User[];
+}
+
 export default function ManageAccountPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -43,16 +50,16 @@ export default function ManageAccountPage() {
     }
   }, [error]);
 
-  // Fetch users from API
-  const fetchUsers = async () => {
+  // Fetch groups from API
+  const fetchGroups = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/users');
+      const response = await fetch('/api/admin/groups');
       if (!response.ok) {
-        throw new Error('Failed to fetch users');
+        throw new Error('Failed to fetch groups');
       }
       const data = await response.json();
-      setUsers(data.users);
+      setGroups(data.groups);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -62,7 +69,7 @@ export default function ManageAccountPage() {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchGroups();
   }, []);
 
   const handleEditStart = (userId: string, field: 'name' | 'email', currentValue: string) => {
@@ -91,10 +98,13 @@ export default function ManageAccountPage() {
       const data = await response.json();
       
       // Update the user in the local state
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.id === editingUser.id ? data.user : user
-        )
+      setGroups(prevGroups => 
+        prevGroups.map(group => ({
+          ...group,
+          users: group.users.map(user => 
+            user.id === editingUser.id ? data.user : user
+          )
+        }))
       );
       
       setEditingUser(null);
@@ -127,8 +137,11 @@ export default function ManageAccountPage() {
       }
 
       // Remove user from local state
-      setUsers(prevUsers => 
-        prevUsers.filter(user => user.id !== deleteConfirm.userId)
+      setGroups(prevGroups => 
+        prevGroups.map(group => ({
+          ...group,
+          users: group.users.filter(user => user.id !== deleteConfirm.userId)
+        })).filter(group => group.users.length > 0) // Remove empty groups
       );
       
       setDeleteConfirm(null);
@@ -222,22 +235,22 @@ export default function ManageAccountPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            جاري تحميل الحسابات...
+            جاري تحميل المجموعات...
           </motion.div>
-        ) : users.length === 0 ? (
+        ) : groups.length === 0 ? (
           <motion.div
             className="text-center text-gray-400 text-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            لا توجد حسابات بعد.
+            لا توجد مجموعات بعد.
           </motion.div>
         ) : (
-          <div className="space-y-6">
-            {users.map((user: User, index: number) => (
+          <div className="space-y-8">
+            {groups.map((group: Group, groupIndex: number) => (
               <motion.div
-                key={user.id}
+                key={group.id}
                 className="bg-[#0f0f0f] rounded-3xl overflow-hidden"
                 initial={{ y: 50, opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -245,43 +258,65 @@ export default function ManageAccountPage() {
                   type: "spring",
                   stiffness: 300,
                   damping: 30,
-                  delay: 0.3 + index * 0.1,
+                  delay: 0.3 + groupIndex * 0.1,
                   duration: 0.6,
                 }}
               >
-                {/* User Card */}
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-[#E9CF6B] rounded-full flex items-center justify-center">
-                        <span className="text-black font-bold text-lg">
-                          {user.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="text-[#E9CF6B] text-lg font-semibold">
-                          {user.name}
-                        </h3>
-                        <p className="text-gray-400 text-sm">
-                          {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'No Role'}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteUser(user.id, user.name)}
-                      className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
-                    >
-                      حذف الحساب
-                    </button>
-                  </div>
+                {/* Group Header */}
+                <div className="bg-[#E9CF6B] px-6 py-4">
+                  <h2 className="text-black text-xl font-bold text-center">
+                    مجموعة: {group.name}
+                  </h2>
+                  <p className="text-black/70 text-sm text-center mt-1">
+                    تاريخ الإنشاء: {new Date(group.createdAt).toLocaleDateString('ar-EG')}
+                  </p>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Users in Group */}
+                <div className="p-6 space-y-6">
+                  {group.users.map((user: User, userIndex: number) => (
+                    <motion.div
+                      key={user.id}
+                      className="bg-[#1a1a1a] rounded-2xl p-4"
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{
+                        delay: 0.4 + groupIndex * 0.1 + userIndex * 0.05,
+                        duration: 0.3,
+                      }}
+                    >
+                      {/* User Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-[#E9CF6B] rounded-full flex items-center justify-center">
+                            <span className="text-black font-bold text-sm">
+                              {user.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-[#E9CF6B] text-lg font-semibold">
+                              {user.name}
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                              {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'No Role'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
+                        >
+                          حذف الحساب
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Name Field */}
                     <motion.div
                       className="bg-[#0B0B0B] rounded-lg px-4 py-3"
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.3 + index * 0.05, duration: 0.2 }}
+                      transition={{ delay: 0.3 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="text-gray-400 text-sm mb-1">الاسم:</div>
@@ -328,7 +363,7 @@ export default function ManageAccountPage() {
                       className="bg-[#0B0B0B] rounded-lg px-4 py-3"
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.4 + index * 0.05, duration: 0.2 }}
+                      transition={{ delay: 0.4 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="text-gray-400 text-sm mb-1">البريد الإلكتروني:</div>
@@ -375,7 +410,7 @@ export default function ManageAccountPage() {
                       className="bg-[#0B0B0B] rounded-lg px-4 py-3"
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.5 + index * 0.05, duration: 0.2 }}
+                      transition={{ delay: 0.5 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
                     >
                       <div className="text-gray-400 text-sm mb-1">الدور:</div>
                       <div className="text-gray-200 text-sm">
@@ -388,7 +423,7 @@ export default function ManageAccountPage() {
                       className="bg-[#0B0B0B] rounded-lg px-4 py-3"
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.6 + index * 0.05, duration: 0.2 }}
+                      transition={{ delay: 0.6 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
                     >
                       <div className="text-gray-400 text-sm mb-1">تاريخ الإنشاء:</div>
                       <div className="text-gray-200 text-sm">
@@ -401,7 +436,7 @@ export default function ManageAccountPage() {
                       className="bg-[#0B0B0B] rounded-lg px-4 py-3"
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.7 + index * 0.05, duration: 0.2 }}
+                      transition={{ delay: 0.7 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
                     >
                       <div className="text-gray-400 text-sm mb-1">حالة التحقق:</div>
                       <div className={`text-sm ${user.emailVerified ? 'text-green-400' : 'text-red-400'}`}>
@@ -414,14 +449,16 @@ export default function ManageAccountPage() {
                       className="bg-[#0B0B0B] rounded-lg px-4 py-3"
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.8 + index * 0.05, duration: 0.2 }}
+                      transition={{ delay: 0.8 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
                     >
                       <div className="text-gray-400 text-sm mb-1">معرف المستخدم:</div>
                       <div className="text-gray-200 text-xs font-mono break-all">
                         {user.id}
                       </div>
                     </motion.div>
-                  </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             ))}

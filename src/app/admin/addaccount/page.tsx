@@ -85,18 +85,22 @@ export default function AddAccountPage() {
     }
 
     try {
-      // Create users one by one using authClient.signUp.email
-      for (const user of users) {
-        const signUpResult = await authClient.signUp.email({
-          email: user.email,
-          password: user.password,
-          name: user.name,
-          role: user.role, // Pass role as additional field
-        } as any); // Cast to any to bypass TypeScript types issue
+      // Create group and users using our custom API
+      const response = await fetch('/api/admin/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          groupName: formData.groupName,
+          users: users,
+        }),
+      });
 
-        if (signUpResult.error) {
-          throw new Error(`فشل في إنشاء حساب ${user.name}: ${signUpResult.error.message}`);
-        }
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'فشل في إنشاء المجموعة والحسابات');
       }
 
       // Success - redirect to manage accounts page
