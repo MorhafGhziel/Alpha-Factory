@@ -58,18 +58,23 @@ export default function ClientDashboardPage() {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
           <div className="flex-1"></div>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full sm:w-auto">
             <button
               onClick={openRequestImprovementModal}
-              className="cursor-pointer text-sm sm:text-base lg:text-[20px] bg-[#0F0F0F] text-white px-6 sm:px-12 lg:px-24 py-2 sm:py-3 rounded-xl hover:bg-[#333336] transition-colors w-full sm:w-auto"
+              className="group relative cursor-pointer text-sm sm:text-base lg:text-[20px] font-bold bg-[#0F0F0F] text-white px-8 sm:px-16 lg:px-24 py-3 sm:py-4 rounded-2xl border border-[#333336] hover:bg-[#1a1a1a] hover:border-[#555555] hover:shadow-lg hover:shadow-black/50 transition-all duration-300 w-full sm:w-auto transform hover:scale-105 active:scale-95"
             >
-              طلــــب تحــــسيــــن
+              <span className="relative z-10">طلــــب تحــــسيــــن</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
             </button>
             <button
               onClick={openAddProjectModal}
-              className="cursor-pointer text-sm sm:text-base lg:text-[20px] bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black px-6 sm:px-12 lg:px-24 py-2 sm:py-3 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-colors w-full sm:w-auto"
+              className="group relative cursor-pointer text-sm sm:text-base lg:text-[20px] font-bold bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black px-8 sm:px-16 lg:px-24 py-3 sm:py-4 rounded-2xl hover:from-[#F5D76E] hover:to-[#D4A02A] hover:shadow-xl hover:shadow-yellow-500/25 transition-all duration-300 w-full sm:w-auto transform hover:scale-105 active:scale-95"
             >
-              مشــــــــــــــــروع جـــــــديد
+              <span className="relative z-10">
+                مشــــــــــــــــروع جـــــــديد
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-300/20 to-orange-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
             </button>
           </div>
         </div>
