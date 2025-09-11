@@ -40,7 +40,7 @@ To get your admin chat ID:
 
 1. Create a group and add your bot as admin
 2. Send a message to the group
-3. Visit: `https://api.telegram.org/bot8347449773:AAHuVTtK0B39xXOKr9Vsblu4VkJbhl9aVwg/getUpdates`
+3. Visit: `https://api.telegram.org/bot{BOT_TOKEN}/getUpdates`
 4. Look for the `chat.id` in the response
 
 ### 4. Bot Permissions
