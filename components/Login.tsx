@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { authClient } from "../src/lib/auth-client";
+import { User } from "../src/lib/auth";
+import { getRoleDashboardPath } from "../src/lib/auth-middleware";
 
 const credentials = {
   Admin0e2: { password: "Admin123", route: "/admin/addaccount" },
@@ -13,13 +16,14 @@ const credentials = {
   Designer0e2: { password: "Designer123", route: "/designer" },
 };
 
-const Login = () => {
+const Login = ( user: User ) => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+
 
   const handleLoginClick = () => {
     setShowForm(true);
@@ -29,19 +33,43 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
+    // First try the hardcoded credentials
     if (credentials[username as keyof typeof credentials]) {
       const userCreds = credentials[username as keyof typeof credentials];
       if (userCreds.password === password) {
         router.push(userCreds.route);
+        return;
       } else {
         setError("كلمة المرور خاطئة");
+        return;
       }
-    } else {
-      setError("اسم المستخدم خاطئ");
+    }
+
+    // If no hardcoded credentials match, try auth client
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email: username,
+        password,
+        callbackURL: "/api/auth/callback", // This will be handled by the auth callback
+      });
+
+      if (error) {
+        setError(error.message || "حدث خطأ ما");
+      } else if (data?.user && "role" in data.user) {
+        // If we have user data with role, redirect immediately
+        const dashboardPath = getRoleDashboardPath((data.user as any).role);
+        router.push(dashboardPath);
+      } else {
+        // If no role info yet, let the auth callback handle it
+        // The server-side callback will redirect based on role
+        router.refresh();
+      }
+    } catch (err) {
+      setError("حدث خطأ في تسجيل الدخول");
     }
   };
 
@@ -209,7 +237,7 @@ const Login = () => {
                   scale: { duration: 0.2 },
                 }}
               >
-                {/* Lightning effect overlay */}
+                {/* Lightning effect overla */}
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                   initial={{ x: "-100%" }}
@@ -249,11 +277,11 @@ const Login = () => {
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Form fields */}
-            <form onSubmit={handleLogin} className="space-y-6 w-full max-w-sm">
+            <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
               <div>
                 <input
                   type="text"
-                  placeholder="اسم المستخدم"
+                  placeholder="البريد الإلكتروني"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"
