@@ -7,6 +7,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  username: string | null;
   role: string | null;
   createdAt: string;
   emailVerified: boolean;
@@ -403,6 +404,19 @@ export default function ManageAccountPage() {
                       ) : (
                         <div className="text-gray-200 text-sm">{user.email}</div>
                       )}
+                    </motion.div>
+
+                    {/* Username Field - Read Only */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.45 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
+                    >
+                      <div className="text-gray-400 text-sm mb-1">اسم المستخدم:</div>
+                      <div className="text-gray-200 text-sm font-mono bg-[#1a1a1a] px-2 py-1 rounded">
+                        {user.username || 'غير محدد'}
+                      </div>
                     </motion.div>
 
                     {/* Role Field - Read Only */}

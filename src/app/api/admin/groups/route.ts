@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 import { auth } from "../../../../lib/auth";
-import { authClient } from "../../../../lib/auth-client";
+import { generateCredentials } from "../../../../utils/credentials";
+import { sendCredentialsEmails } from "../../../../lib/email";
 
 interface UserData {
   name: string;
   email: string;
-  username: string;
-  password: string;
   role: string;
 }
 
@@ -40,15 +39,9 @@ export async function POST(req: NextRequest) {
 
     // Validate that all users have required fields
     for (const user of users) {
-      if (
-        !user.name ||
-        !user.email ||
-        !user.username ||
-        !user.password ||
-        !user.role
-      ) {
+      if (!user.name || !user.email || !user.role) {
         return NextResponse.json(
-          { error: "All user fields are required" },
+          { error: "Name, email, and role are required for all users" },
           { status: 400 }
         );
       }
@@ -67,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (existingEmails.length > 0) {
       return NextResponse.json(
         {
-          error: `Email(s) already exist: ${existingEmails
+          error: `البريد الإلكتروني مستخدم مسبقاً: ${existingEmails
             .map((u) => u.email)
             .join(", ")}`,
         },
@@ -75,15 +68,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // First, create all users using better-auth (outside transaction)
+    // Generate credentials and create users
     const createdUserIds: string[] = [];
+    const usersWithCredentials: Array<{
+      name: string;
+      email: string;
+      username: string;
+      password: string;
+      role: string;
+      groupName: string;
+    }> = [];
 
     try {
       for (const userData of users) {
+        // Generate random username and password
+        const { username, password } = generateCredentials(
+          userData.name,
+          userData.role
+        );
+
         const signUpResult = await auth.api.signUpEmail({
           body: {
             email: userData.email,
-            password: userData.password,
+            password: password,
             name: userData.name,
             role: userData.role,
           },
@@ -94,6 +101,16 @@ export async function POST(req: NextRequest) {
         }
 
         createdUserIds.push(signUpResult.user.id);
+
+        // Store credentials for email sending
+        usersWithCredentials.push({
+          name: userData.name,
+          email: userData.email,
+          username: username,
+          password: password,
+          role: userData.role,
+          groupName: groupName,
+        });
       }
     } catch (userCreationError) {
       // If user creation fails partway through, clean up any created users
@@ -123,17 +140,16 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Update all users with groupId in batch
-        await tx.user.updateMany({
-          where: {
-            id: {
-              in: createdUserIds,
+        // Update each user with groupId and username individually
+        for (let i = 0; i < createdUserIds.length; i++) {
+          await tx.user.update({
+            where: { id: createdUserIds[i] },
+            data: {
+              groupId: group.id,
+              username: usersWithCredentials[i].username,
             },
-          },
-          data: {
-            groupId: group.id,
-          },
-        });
+          });
+        }
 
         // Fetch the updated users
         const updatedUsers = await tx.user.findMany({
@@ -146,6 +162,7 @@ export async function POST(req: NextRequest) {
             id: true,
             name: true,
             email: true,
+            username: true,
             role: true,
             createdAt: true,
             emailVerified: true,
@@ -159,10 +176,27 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    // Send credentials emails to all users
+    const emailResults = await sendCredentialsEmails(usersWithCredentials);
+
+    console.log(
+      `Email sending results: ${emailResults.successful} successful, ${emailResults.failed} failed`
+    );
+
     return NextResponse.json({
       message: "Group and users created successfully",
       group: result.group,
       users: result.users,
+      credentials: usersWithCredentials.map((u) => ({
+        email: u.email,
+        username: u.username,
+        password: u.password,
+        role: u.role,
+      })),
+      emailResults: {
+        successful: emailResults.successful,
+        failed: emailResults.failed,
+      },
     });
   } catch (error) {
     console.error("Error creating group and users:", error);
@@ -197,6 +231,7 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true,
             email: true,
+            username: true,
             role: true,
             createdAt: true,
             emailVerified: true,

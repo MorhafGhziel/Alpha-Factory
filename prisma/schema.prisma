@@ -20,6 +20,7 @@ model User {
   email         String
   emailVerified Boolean   @default(false)
   image         String?
+  username      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
@@ -28,6 +29,7 @@ model User {
   groupId       String?
   group         Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
   @@unique([email])
+  @@unique([username])
   @@map("user")
 }
 
