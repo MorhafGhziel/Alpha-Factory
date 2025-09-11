@@ -48,8 +48,10 @@ export default function ClientDashboardPage() {
   const handleRequestImprovement = (improvementData: {
     title: string;
     description: string;
+    department: string;
   }) => {
     console.log("Improvement request:", improvementData);
+    // Here you can add logic to send the request to the appropriate department
     closeRequestImprovementModal();
   };
 
