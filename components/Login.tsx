@@ -16,7 +16,11 @@ const credentials = {
   Designer0e2: { password: "Designer123", route: "/designer" },
 };
 
-const Login = ( user: User ) => {
+interface LoginProps {
+  user?: User;
+}
+
+const Login = ({ user }: LoginProps = {}) => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");

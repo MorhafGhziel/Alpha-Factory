@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomDropdown from "@/components/ui/CustomDropdown";
-import { useProjects } from "../../../contexts/ProjectContext";
+import { useProjects } from "@/contexts/ProjectContext";
 
 export default function ClientTrackingBoardPage() {
   const { projects, updateProject } = useProjects();

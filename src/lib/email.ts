@@ -9,6 +9,7 @@ interface UserCredentials {
   password: string;
   role: string;
   groupName: string;
+  telegramInviteLink?: string;
 }
 
 /**
@@ -168,6 +169,39 @@ function createCredentialsEmailTemplate(user: UserCredentials): string {
                     <div class="credential-value">${user.password}</div>
                 </div>
             </div>
+
+            ${
+              user.telegramInviteLink
+                ? `
+            <div class="credentials-box" style="background: linear-gradient(135deg, #2196F3, #1976D2); border: none;">
+                <h3 style="color: white; text-align: center; margin-bottom: 20px;">📱 انضم إلى مجموعة التليجرام</h3>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <p style="color: white; margin-bottom: 15px;">انضم إلى مجموعة فريق العمل على التليجرام للحصول على:</p>
+                    <ul style="color: white; text-align: right; margin: 15px 0; padding-right: 20px;">
+                        <li>تحديثات فورية عن المشروع</li>
+                        <li>إشعارات إنجاز المهام</li>
+                        <li>التواصل المباشر مع الفريق</li>
+                        <li>تنبيهات مهمة من الإدارة</li>
+                    </ul>
+                    
+                    <a href="${user.telegramInviteLink}" 
+                       style="display: inline-block; background: white; color: #1976D2; padding: 12px 30px; 
+                              border-radius: 25px; text-decoration: none; font-weight: bold; 
+                              margin: 15px 0; font-size: 16px;">
+                        🚀 انضم إلى المجموعة الآن
+                    </a>
+                    
+                    <p style="color: white; font-size: 14px; margin-top: 15px;">
+                        أو انسخ الرابط: <br>
+                        <code style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; 
+                                     word-break: break-all; font-size: 12px;">${user.telegramInviteLink}</code>
+                    </p>
+                </div>
+            </div>
+            `
+                : ""
+            }
 
             <div class="warning">
                 <strong>⚠️ تنبيه أمني مهم</strong><br>
