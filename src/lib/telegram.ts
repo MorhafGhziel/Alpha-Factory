@@ -34,7 +34,8 @@ export interface TelegramUser {
  */
 export async function createTelegramGroup(
   groupName: string,
-  users: TelegramUser[]
+  users: TelegramUser[],
+  chatId?: string
 ): Promise<TelegramGroupResult> {
   if (!bot) {
     return {
@@ -45,27 +46,27 @@ export async function createTelegramGroup(
   }
 
   try {
+    // Use provided chatId or fallback to admin chat ID
+    const targetChatId = chatId || process.env.ADMIN_TELEGRAM_CHAT_ID!;
+
+    if (!targetChatId) {
+      throw new Error("No chat ID provided and ADMIN_TELEGRAM_CHAT_ID not set");
+    }
+
     // Create the group with a descriptive name
     const telegramGroupName = `Alpha Factory - ${groupName}`;
 
-    // Since we can't directly create groups via Bot API, we'll use a different approach
-    // We'll create a channel first, then convert it to a supergroup
-    const chat = await bot.createChatInviteLink(
-      process.env.ADMIN_TELEGRAM_CHAT_ID!,
-      {
-        name: telegramGroupName,
-        creates_join_request: false,
-      }
-    );
-
-    // For now, we'll simulate group creation by creating an invite link to an existing group
-    // In a real implementation, you would need to:
-    // 1. Have the bot create a group (requires different approach)
-    // 2. Or have a pre-existing group where the bot is admin
+    // Create invite link for the specific group
+    const chat = await bot.createChatInviteLink(targetChatId, {
+      name: telegramGroupName,
+      member_limit: users.length + 2, // Team members + admin buffer
+      creates_join_request: false,
+      expire_date: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year expiry
+    });
 
     const result: TelegramGroupResult = {
       success: true,
-      chatId: process.env.ADMIN_TELEGRAM_CHAT_ID!, // This would be the actual group chat ID
+      chatId: targetChatId,
       inviteLink: chat.invite_link,
     };
 

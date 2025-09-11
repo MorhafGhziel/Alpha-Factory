@@ -13,6 +13,7 @@ interface UserFormData {
 
 interface FormData {
   groupName: string;
+  telegramChatId: string;
   client: UserFormData;
   editor: UserFormData;
   designer: UserFormData;
@@ -23,6 +24,7 @@ export default function AddAccountPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     groupName: "",
+    telegramChatId: "",
     client: { name: "", email: "", role: "client" },
     editor: { name: "", email: "", role: "editor" },
     designer: { name: "", email: "", role: "designer" },
@@ -40,7 +42,7 @@ export default function AddAccountPage() {
   }>>([]);
 
   const handleInputChange = (
-    section: keyof Omit<FormData, "groupName">,
+    section: keyof Omit<FormData, "groupName" | "telegramChatId">,
     field: string,
     value: string
   ) => {
@@ -62,6 +64,13 @@ export default function AddAccountPage() {
     if (value.trim()) {
       setGroupNameError("");
     }
+  };
+
+  const handleTelegramChatIdChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      telegramChatId: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,6 +108,7 @@ export default function AddAccountPage() {
         body: JSON.stringify({
           groupName: formData.groupName,
           users: users,
+          telegramChatId: formData.telegramChatId || undefined, // Only send if not empty
         }),
       });
 
@@ -185,6 +195,31 @@ export default function AddAccountPage() {
                 {groupNameError}
               </motion.div>
             )}
+          </motion.div>
+
+          {/* Telegram Chat ID Input */}
+          <motion.div
+            className="mb-14 flex flex-col items-center"
+            initial={{ y: -30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            <div className="text-center mb-4">
+              <h3 className="text-[#E9CF6B] text-lg font-semibold mb-2">مجموعة التليجرام</h3>
+              <p className="text-gray-400 text-sm">
+                ادخل Chat ID للمجموعة المخصصة لهذا المشروع (اختياري)
+              </p>
+            </div>
+            <input
+              type="text"
+              placeholder="مثال: -1001234567890"
+              value={formData.telegramChatId}
+              onChange={(e) => handleTelegramChatIdChange(e.target.value)}
+              className="w-auto min-w-[310px] bg-[#0B0B0B] text-white placeholder-[#A9A9A9] rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
+            />
+            <div className="text-gray-500 text-xs mt-2 text-center max-w-md">
+              إذا تركت هذا الحقل فارغاً، سيتم استخدام المجموعة الافتراضية
+            </div>
           </motion.div>
 
           {/* Submit Error Display */}

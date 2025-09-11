@@ -17,6 +17,7 @@ interface UserData {
 interface CreateGroupRequest {
   groupName: string;
   users: UserData[];
+  telegramChatId?: string; // Optional specific chat ID for this group
 }
 
 // POST - Create a new group with users
@@ -31,7 +32,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { groupName, users }: CreateGroupRequest = await req.json();
+    const { groupName, users, telegramChatId }: CreateGroupRequest =
+      await req.json();
 
     // Validate input
     if (!groupName || !users || users.length === 0) {
@@ -144,7 +146,8 @@ export async function POST(req: NextRequest) {
           name: u.name,
           email: u.email,
           role: u.role,
-        }))
+        })),
+        telegramChatId // Pass the specific chat ID if provided
       );
 
       if (telegramResult.success) {
