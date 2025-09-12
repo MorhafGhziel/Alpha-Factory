@@ -32,8 +32,45 @@ export default function AddProjectModal({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
+  const calculateProjectDuration = (videoType: string): number => {
+    switch (videoType) {
+      case "فيــــــــــــــديوهــــات طـــــــويلة":
+        return 365;
+      case "فيــــــــــــــديوهــــات قـــــصيرة":
+        return 90;
+      case "إعلانات / مقاطع فيديو ترويجية":
+        return 30;
+      default:
+        return 90;
+    }
+  };
+
+  const calculateProjectDates = (
+    videoType: string
+  ): { startDate: string; endDate: string } => {
+    if (!videoType) return { startDate: "", endDate: "" };
+
+    const today = new Date();
+    const start = new Date(today);
+    const duration = calculateProjectDuration(videoType);
+    const end = new Date(today);
+    end.setDate(today.getDate() + duration);
+
+    return {
+      startDate: start.toISOString().split("T")[0],
+      endDate: end.toISOString().split("T")[0],
+    };
+  };
+
+  const handleProjectTypeChange = (type: string) => {
+    setProjectType(type);
+    const dates = calculateProjectDates(type);
+    setStartDate(dates.startDate);
+    setEndDate(dates.endDate);
+  };
+
   const handleSubmit = () => {
-    if (!title || !projectType || !filmingStatus || !startDate || !endDate) {
+    if (!title || !projectType || !filmingStatus || !startDate) {
       alert("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
@@ -103,21 +140,10 @@ export default function AddProjectModal({
 
             <div className="space-y-10">
               <div className="space-y-4">
-                <div className="text-center text-white text-lg font-medium">
-                  فترة المشروع
+                <div className="text-sm text-gray-500 text-right">
+                  اختر نوع الفيديو لتغيير المدة تلقائياً
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2 text-right">
-                      تاريخ البداية
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right"
-                    />
-                  </div>
                   <div>
                     <label className="block text-gray-400 text-sm mb-2 text-right">
                       تاريخ النهاية
@@ -125,8 +151,19 @@ export default function AddProjectModal({
                     <input
                       type="date"
                       value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 text-right"
+                      readOnly
+                      className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none text-right cursor-not-allowed opacity-70"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 text-right">
+                      تاريخ البداية
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      readOnly
+                      className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none text-right cursor-not-allowed opacity-70"
                     />
                   </div>
                 </div>
@@ -203,7 +240,7 @@ export default function AddProjectModal({
                                 ease: "easeOut",
                               }}
                               onClick={() => {
-                                setProjectType(
+                                handleProjectTypeChange(
                                   "فيــــــــــــــديوهــــات طـــــــويلة"
                                 );
                                 setIsProjectTypeOpen(false);
@@ -222,7 +259,7 @@ export default function AddProjectModal({
                                 ease: "easeOut",
                               }}
                               onClick={() => {
-                                setProjectType(
+                                handleProjectTypeChange(
                                   "فيــــــــــــــديوهــــات قـــــصيرة"
                                 );
                                 setIsProjectTypeOpen(false);
@@ -241,7 +278,9 @@ export default function AddProjectModal({
                                 ease: "easeOut",
                               }}
                               onClick={() => {
-                                setProjectType("إعلانات / مقاطع فيديو ترويجية");
+                                handleProjectTypeChange(
+                                  "إعلانات / مقاطع فيديو ترويجية"
+                                );
                                 setIsProjectTypeOpen(false);
                               }}
                               className="w-full bg-[#0B0B0B] text-[#E9CF6B] px-4 py-3 rounded-lg text-center hover:bg-[#333336] transition-colors"
