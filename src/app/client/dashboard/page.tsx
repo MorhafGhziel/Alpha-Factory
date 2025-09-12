@@ -64,14 +64,14 @@ export default function ClientDashboardPage() {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full sm:w-auto">
             <button
               onClick={openRequestImprovementModal}
-              className="group relative cursor-pointer text-sm sm:text-base lg:text-[20px] font-bold bg-[#0F0F0F] text-white px-8 sm:px-16 lg:px-24 py-3 sm:py-4 rounded-2xl border border-[#333336] hover:bg-[#1a1a1a] hover:border-[#555555] hover:shadow-lg hover:shadow-black/50 transition-all duration-300 w-full sm:w-auto transform hover:scale-105 active:scale-95"
+              className="group relative cursor-pointer text-sm sm:text-base lg:text-lg font-bold bg-[#0F0F0F] text-white px-6 sm:px-12 lg:px-16 py-2.5 sm:py-2 rounded-2xl border border-[#333336] hover:bg-[#1a1a1a] hover:border-[#555555] hover:shadow-lg hover:shadow-black/50 transition-all duration-300 w-full sm:w-auto transform hover:scale-105 active:scale-95"
             >
               <span className="relative z-10">طلــــب تحــــسيــــن</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
             </button>
             <button
               onClick={openAddProjectModal}
-              className="group relative cursor-pointer text-sm sm:text-base lg:text-[20px] font-bold bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black px-8 sm:px-16 lg:px-24 py-3 sm:py-4 rounded-2xl hover:from-[#F5D76E] hover:to-[#D4A02A] hover:shadow-xl hover:shadow-yellow-500/25 transition-all duration-300 w-full sm:w-auto transform hover:scale-105 active:scale-95"
+              className="group relative cursor-pointer text-sm sm:text-base lg:text-lg font-bold bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black px-6 sm:px-12 lg:px-16 py-2.5 sm:py-2 rounded-2xl hover:from-[#F5D76E] hover:to-[#D4A02A] hover:shadow-xl hover:shadow-yellow-500/25 transition-all duration-300 w-full sm:w-auto transform hover:scale-105 active:scale-95"
             >
               <span className="relative z-10">
                 مشــــــــــــــــروع جـــــــديد
