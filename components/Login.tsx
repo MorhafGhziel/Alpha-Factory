@@ -20,14 +20,13 @@ interface LoginProps {
   user?: User;
 }
 
-const Login = ({ user }: LoginProps = {}) => {
+const Login = ({}: LoginProps = {}) => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
-
 
   const handleLoginClick = () => {
     setShowForm(true);
@@ -65,14 +64,16 @@ const Login = ({ user }: LoginProps = {}) => {
         setError(error.message || "حدث خطأ ما");
       } else if (data?.user && "role" in data.user) {
         // If we have user data with role, redirect immediately
-        const dashboardPath = getRoleDashboardPath((data.user as any).role);
+        const dashboardPath = getRoleDashboardPath(
+          (data.user as { role: string }).role
+        );
         router.push(dashboardPath);
       } else {
         // If no role info yet, let the auth callback handle it
         // The server-side callback will redirect based on role
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("حدث خطأ في تسجيل الدخول");
     }
   };
