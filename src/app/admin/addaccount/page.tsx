@@ -34,12 +34,14 @@ export default function AddAccountPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
-  const [generatedCredentials, setGeneratedCredentials] = useState<Array<{
-    email: string;
-    username: string;
-    password: string;
-    role: string;
-  }>>([]);
+  const [generatedCredentials, setGeneratedCredentials] = useState<
+    Array<{
+      email: string;
+      username: string;
+      password: string;
+      role: string;
+    }>
+  >([]);
 
   const handleInputChange = (
     section: keyof Omit<FormData, "groupName" | "telegramChatId">,
@@ -89,7 +91,12 @@ export default function AddAccountPage() {
     setGroupNameError("");
 
     // Validate that all users have required fields
-    const users = [formData.client, formData.editor, formData.designer, formData.reviewer];
+    const users = [
+      formData.client,
+      formData.editor,
+      formData.designer,
+      formData.reviewer,
+    ];
     for (const user of users) {
       if (!user.name || !user.email) {
         setSubmitError("الاسم والبريد الإلكتروني مطلوبان لكل مستخدم");
@@ -100,10 +107,10 @@ export default function AddAccountPage() {
 
     try {
       // Create group and users using our custom API
-      const response = await fetch('/api/admin/groups', {
-        method: 'POST',
+      const response = await fetch("/api/admin/groups", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           groupName: formData.groupName,
@@ -115,7 +122,7 @@ export default function AddAccountPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'فشل في إنشاء المجموعة والحسابات');
+        throw new Error(data.error || "فشل في إنشاء المجموعة والحسابات");
       }
 
       // Show credentials modal with generated passwords
@@ -128,7 +135,9 @@ export default function AddAccountPage() {
       }
     } catch (error) {
       console.error("Error creating accounts:", error);
-      setSubmitError(error instanceof Error ? error.message : "حدث خطأ في إنشاء الحسابات");
+      setSubmitError(
+        error instanceof Error ? error.message : "حدث خطأ في إنشاء الحسابات"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -205,9 +214,11 @@ export default function AddAccountPage() {
             transition={{ delay: 0.5, duration: 0.5 }}
           >
             <div className="text-center mb-4">
-              <h3 className="text-[#E9CF6B] text-lg font-semibold mb-2">مجموعة التليجرام</h3>
+              <h3 className="text-[#E9CF6B] text-lg font-semibold mb-2">
+                مجموعة التليجرام
+              </h3>
               <p className="text-gray-400 text-sm">
-                ادخل Chat ID للمجموعة المخصصة لهذا المشروع 
+                ادخل Chat ID للمجموعة المخصصة لهذا المشروع
               </p>
             </div>
             <input
@@ -217,7 +228,6 @@ export default function AddAccountPage() {
               onChange={(e) => handleTelegramChatIdChange(e.target.value)}
               className="w-auto min-w-[310px] bg-[#0B0B0B] text-white placeholder-[#A9A9A9] rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
             />
-         
           </motion.div>
 
           {/* Submit Error Display */}
@@ -261,6 +271,15 @@ export default function AddAccountPage() {
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
+                type="text"
+                placeholder="Username"
+                value={formData.client.name}
+                onChange={(e) =>
+                  handleInputChange("client", "name", e.target.value)
+                }
+                className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
+              />
+              <input
                 type="email"
                 placeholder="Email"
                 value={formData.client.email}
@@ -283,7 +302,7 @@ export default function AddAccountPage() {
               </h2>
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Username"
                 value={formData.editor.name}
                 onChange={(e) =>
                   handleInputChange("editor", "name", e.target.value)
@@ -313,7 +332,7 @@ export default function AddAccountPage() {
               </h2>
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Username"
                 value={formData.designer.name}
                 onChange={(e) =>
                   handleInputChange("designer", "name", e.target.value)
@@ -343,7 +362,7 @@ export default function AddAccountPage() {
               </h2>
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Username"
                 value={formData.reviewer.name}
                 onChange={(e) =>
                   handleInputChange("reviewer", "name", e.target.value)
@@ -400,18 +419,26 @@ export default function AddAccountPage() {
                   🎉 تم إنشاء الحسابات بنجاح!
                 </h2>
                 <p className="text-gray-300">
-                  إليك بيانات الدخول لجميع المستخدمين. احتفظ بهذه المعلومات في مكان آمن.
+                  إليك بيانات الدخول لجميع المستخدمين. احتفظ بهذه المعلومات في
+                  مكان آمن.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {generatedCredentials.map((cred, index) => (
-                  <div key={index} className="bg-[#1a1a1a] rounded-2xl p-4 border border-[#333]">
+                  <div
+                    key={index}
+                    className="bg-[#1a1a1a] rounded-2xl p-4 border border-[#333]"
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[#E9CF6B] font-semibold capitalize">
-                        {cred.role === 'client' ? 'عميل' : 
-                         cred.role === 'editor' ? 'محرر' :
-                         cred.role === 'designer' ? 'مصمم' : 'مُراجع'}
+                        {cred.role === "client"
+                          ? "عميل"
+                          : cred.role === "editor"
+                          ? "محرر"
+                          : cred.role === "designer"
+                          ? "مصمم"
+                          : "مُراجع"}
                       </span>
                       <div className="w-8 h-8 bg-[#E9CF6B] rounded-full flex items-center justify-center">
                         <span className="text-black font-bold text-sm">
@@ -419,22 +446,28 @@ export default function AddAccountPage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div>
-                        <label className="text-gray-400 text-xs">البريد الإلكتروني:</label>
+                        <label className="text-gray-400 text-xs">
+                          البريد الإلكتروني:
+                        </label>
                         <div className="bg-[#0B0B0B] text-gray-200 text-sm p-2 rounded font-mono">
                           {cred.email}
                         </div>
                       </div>
                       <div>
-                        <label className="text-gray-400 text-xs">اسم المستخدم:</label>
+                        <label className="text-gray-400 text-xs">
+                          اسم المستخدم:
+                        </label>
                         <div className="bg-[#0B0B0B] text-gray-200 text-sm p-2 rounded font-mono">
                           {cred.username}
                         </div>
                       </div>
                       <div>
-                        <label className="text-gray-400 text-xs">كلمة المرور:</label>
+                        <label className="text-gray-400 text-xs">
+                          كلمة المرور:
+                        </label>
                         <div className="bg-[#0B0B0B] text-green-400 text-sm p-2 rounded font-mono font-bold">
                           {cred.password}
                         </div>
@@ -447,11 +480,14 @@ export default function AddAccountPage() {
               <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 mb-6">
                 <div className="flex items-center mb-2">
                   <span className="text-red-400 text-lg mr-2">⚠️</span>
-                  <span className="text-red-300 font-semibold">تنبيه أمني مهم</span>
+                  <span className="text-red-300 font-semibold">
+                    تنبيه أمني مهم
+                  </span>
                 </div>
                 <p className="text-red-200 text-sm">
-                  هذه هي المرة الوحيدة التي ستظهر فيها كلمات المرور. تم إرسالها أيضاً عبر البريد الإلكتروني لكل مستخدم.
-                  يُنصح بحفظ هذه المعلومات في مكان آمن.
+                  هذه هي المرة الوحيدة التي ستظهر فيها كلمات المرور. تم إرسالها
+                  أيضاً عبر البريد الإلكتروني لكل مستخدم. يُنصح بحفظ هذه
+                  المعلومات في مكان آمن.
                 </p>
               </div>
 
@@ -467,11 +503,14 @@ export default function AddAccountPage() {
                 </button>
                 <button
                   onClick={() => {
-                    const credentialsText = generatedCredentials.map(cred => 
-                      `${cred.role}: ${cred.email} | ${cred.username} | ${cred.password}`
-                    ).join('\n');
+                    const credentialsText = generatedCredentials
+                      .map(
+                        (cred) =>
+                          `${cred.role}: ${cred.email} | ${cred.username} | ${cred.password}`
+                      )
+                      .join("\n");
                     navigator.clipboard.writeText(credentialsText);
-                    alert('تم نسخ البيانات إلى الحافظة!');
+                    alert("تم نسخ البيانات إلى الحافظة!");
                   }}
                   className="bg-gray-700 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
                 >

@@ -6,6 +6,7 @@ import { authClient } from "../../../lib/auth-client";
 import { useEffect, useState } from "react";
 
 export default function ClientProfilePage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -88,7 +89,7 @@ export default function ClientProfilePage() {
           duration: 0.6,
         }}
       >
-        {/* Account Name Input */}
+        {/* Name Input */}
         <motion.div
           className="relative"
           initial={{ x: -30, opacity: 0 }}
@@ -96,7 +97,34 @@ export default function ClientProfilePage() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <p className="text-white text-xs sm:text-sm mb-3 sm:mb-4 flex justify-end">
-          البريد الاكتروني
+            الاسم
+          </p>
+          <input
+            type="text"
+            value="Abdullah"
+            readOnly
+            className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#222224] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
+          />
+          <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-[-7px]">
+            <svg
+              className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </div>
+        </motion.div>
+
+        {/* Email Input */}
+        <motion.div
+          className="relative"
+          initial={{ x: -30, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+        >
+          <p className="text-white text-xs sm:text-sm mb-3 sm:mb-4 flex justify-end">
+            البريد الاكتروني
           </p>
           <input
             type="text"
@@ -115,7 +143,7 @@ export default function ClientProfilePage() {
           </div>
         </motion.div>
 
-        {/* Password Input */}
+        {/* Role Input */}
         <motion.div
           className="relative"
           initial={{ x: -30, opacity: 0 }}
