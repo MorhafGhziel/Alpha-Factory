@@ -66,14 +66,6 @@ export default function ClientProfilePage() {
             className="md:w-20 w-16 h-auto sm:w-24"
           />
         </motion.div>
-        <motion.span
-          className="text-gray-400 text-xs sm:text-sm text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-        >
-          تغيير صورة الملف الشخصي
-        </motion.span>
       </motion.div>
 
       {/* Input Fields */}
