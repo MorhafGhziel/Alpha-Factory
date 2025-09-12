@@ -18,6 +18,9 @@ interface Group {
   name: string;
   createdAt: string;
   users: User[];
+  telegramInviteLink?: string;
+  telegramGroupName?: string;
+  telegramChatId?: string;
 }
 
 export default function ManageAccountPage() {
@@ -272,6 +275,61 @@ export default function ManageAccountPage() {
                     تاريخ الإنشاء: {new Date(group.createdAt).toLocaleDateString('ar-EG')}
                   </p>
                 </div>
+
+                {/* Telegram Group Section */}
+                {group.telegramInviteLink && (
+                  <motion.div
+                    className="bg-[#1a1a1a] mx-6 mt-6 rounded-2xl p-4"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{
+                      delay: 0.2 + groupIndex * 0.1,
+                      duration: 0.3,
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-[#0088cc] rounded-full flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16l-1.61 7.59c-.12.56-.44.7-.9.43l-2.46-1.81-1.19 1.14c-.13.13-.24.24-.5.24l.18-2.51 4.62-4.18c.2-.18-.04-.28-.32-.1L9.74 13.8l-2.45-.77c-.53-.16-.54-.53.11-.79L19.24 7.4c.44-.16.83.11.69.76z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-[#0088cc] text-lg font-semibold">
+                            مجموعة تيليجرام
+                          </h3>
+                          <p className="text-gray-400 text-sm">
+                            {group.telegramGroupName || `Alpha Factory - ${group.name}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
+                      <div className="text-gray-400 text-sm mb-2">رابط الانضمام:</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[#0088cc] text-sm font-mono bg-[#1a1a1a] px-3 py-2 rounded flex-1 mr-3 break-all">
+                          {group.telegramInviteLink}
+                        </div>
+                      
+                      </div>
+                      
+                      <div className="mt-3">
+                        <a
+                          href={group.telegramInviteLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-2 bg-[#E9CF6B] hover:bg-yellow-600 text-black px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16l-1.61 7.59c-.12.56-.44.7-.9.43l-2.46-1.81-1.19 1.14c-.13.13-.24.24-.5.24l.18-2.51 4.62-4.18c.2-.18-.04-.28-.32-.1L9.74 13.8l-2.45-.77c-.53-.16-.54-.53.11-.79L19.24 7.4c.44-.16.83.11.69.76z"/>
+                          </svg>
+                          <span>انضم للمجموعة</span>
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Users in Group */}
                 <div className="p-6 space-y-6">

@@ -5,8 +5,9 @@ import { auth } from "../../../../../lib/auth";
 // UPDATE user
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Check if user is authenticated and is admin
     const session = await auth.api.getSession({
@@ -18,7 +19,7 @@ export async function PUT(
     }
 
     const { email, name } = await req.json();
-    const userId = params.id;
+    const userId = id;
 
     // Validate input
     if (!email && !name) {
@@ -78,8 +79,9 @@ export async function PUT(
 // DELETE user
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Check if user is authenticated and is admin
     const session = await auth.api.getSession({
@@ -90,7 +92,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = params.id;
+    const userId = id;
 
     // Prevent admin from deleting themselves
     if (session.user.id === userId) {

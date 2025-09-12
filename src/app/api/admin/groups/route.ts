@@ -3,6 +3,10 @@ import prisma from "../../../../lib/prisma";
 import { auth } from "../../../../lib/auth";
 import { generateCredentials } from "../../../../utils/credentials";
 import { sendCredentialsEmails } from "../../../../lib/email";
+import {
+  createTelegramGroup,
+  isTelegramConfigured,
+} from "../../../../lib/telegram";
 
 interface UserData {
   name: string;
@@ -13,6 +17,7 @@ interface UserData {
 interface CreateGroupRequest {
   groupName: string;
   users: UserData[];
+  telegramChatId?: string; // Optional specific chat ID for this group
 }
 
 // POST - Create a new group with users
@@ -27,7 +32,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { groupName, users }: CreateGroupRequest = await req.json();
+    const { groupName, users, telegramChatId }: CreateGroupRequest =
+      await req.json();
 
     // Validate input
     if (!groupName || !users || users.length === 0) {
@@ -130,13 +136,44 @@ export async function POST(req: NextRequest) {
       throw userCreationError;
     }
 
+    // Create Telegram group if configured
+    let telegramResult = null;
+    if (isTelegramConfigured()) {
+      console.log("Creating Telegram group...");
+      telegramResult = await createTelegramGroup(
+        groupName,
+        usersWithCredentials.map((u) => ({
+          name: u.name,
+          email: u.email,
+          role: u.role,
+        })),
+        telegramChatId // Pass the specific chat ID if provided
+      );
+
+      if (telegramResult.success) {
+        console.log(
+          "Telegram group created successfully:",
+          telegramResult.chatId
+        );
+      } else {
+        console.error("Failed to create Telegram group:", telegramResult.error);
+      }
+    } else {
+      console.log("Telegram bot not configured, skipping group creation");
+    }
+
     // Now create group and associate users in a fast transaction
     const result = await prisma.$transaction(
       async (tx) => {
-        // Create the group
+        // Create the group with Telegram information
         const group = await tx.group.create({
           data: {
             name: groupName,
+            telegramChatId: telegramResult?.chatId || null,
+            telegramInviteLink: telegramResult?.inviteLink || null,
+            telegramGroupName: telegramResult?.success
+              ? `Alpha Factory - ${groupName}`
+              : null,
           },
         });
 
@@ -172,12 +209,18 @@ export async function POST(req: NextRequest) {
         return { group, users: updatedUsers };
       },
       {
-        timeout: 10000, // 10 seconds timeout for safety
+        timeout: 15000, // 15 seconds timeout for safety (increased due to Telegram API)
       }
     );
 
+    // Update users with Telegram invite link for email
+    const usersWithTelegram = usersWithCredentials.map((user) => ({
+      ...user,
+      telegramInviteLink: telegramResult?.inviteLink || undefined,
+    }));
+
     // Send credentials emails to all users
-    const emailResults = await sendCredentialsEmails(usersWithCredentials);
+    const emailResults = await sendCredentialsEmails(usersWithTelegram);
 
     console.log(
       `Email sending results: ${emailResults.successful} successful, ${emailResults.failed} failed`
@@ -196,6 +239,13 @@ export async function POST(req: NextRequest) {
       emailResults: {
         successful: emailResults.successful,
         failed: emailResults.failed,
+      },
+      telegram: {
+        configured: isTelegramConfigured(),
+        groupCreated: telegramResult?.success || false,
+        chatId: telegramResult?.chatId || null,
+        inviteLink: telegramResult?.inviteLink || null,
+        error: telegramResult?.error || null,
       },
     });
   } catch (error) {

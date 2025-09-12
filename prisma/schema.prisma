@@ -79,11 +79,14 @@ model Verification {
 }
 
 model Group {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users     User[]
+  id                String   @id @default(cuid())
+  name              String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  users             User[]
+  telegramChatId    String?  // Telegram group chat ID
+  telegramInviteLink String? // Telegram group invite link
+  telegramGroupName String?  // Telegram group name
 
   @@map("group")
 }
