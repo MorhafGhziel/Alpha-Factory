@@ -41,6 +41,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       designMode: "في الانتظار",
       verificationMode: "لا شيء",
     };
+    console.log("Adding new project:", newProject);
     setProjects((prev) => [...prev, newProject]);
   };
 

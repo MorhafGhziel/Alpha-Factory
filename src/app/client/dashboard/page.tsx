@@ -15,6 +15,36 @@ export default function ClientDashboardPage() {
 
   const { projects, addProject } = useProjects();
 
+  // Function to check if a project is fully documented (completed all stages)
+  const isProjectDocumented = (project: Project) => {
+    return (
+      project.filmingStatus === "تم الانتهاء منه" &&
+      project.editMode === "تم الانتهاء منه" &&
+      project.reviewMode === "تمت المراجعة" &&
+      project.designMode === "تم الانتهاء منه" &&
+      project.verificationMode &&
+      project.verificationMode !== "لا شيء" &&
+      project.verificationMode !== "قيد التطوير"
+    );
+  };
+
+  // Count documented projects
+  const documentedProjectsCount = projects.filter(isProjectDocumented).length;
+
+  // Count projects in different stages
+  const projectsInReview = projects.filter(
+    (p) => p.reviewMode === "في الانتظار"
+  ).length;
+  const completedDesigns = projects.filter(
+    (p) => p.designMode === "تم الانتهاء منه"
+  ).length;
+  const completedEdits = projects.filter(
+    (p) => p.editMode === "تم الانتهاء منه"
+  ).length;
+  const completedFilming = projects.filter(
+    (p) => p.filmingStatus === "تم الانتهاء منه"
+  ).length;
+
   const openAddProjectModal = () => {
     setIsAddProjectModalOpen(true);
   };
@@ -87,37 +117,31 @@ export default function ClientDashboardPage() {
             icon="/icons/CheckedUserMale.svg"
             iconAlt="Person"
             title="المشاريع الموثقة"
-            value={projects.length}
+            value={documentedProjectsCount}
           />
           <SummaryCard
             icon="/icons/Eye.svg"
             iconAlt="Eye"
             title="بانتظار المراجعة"
-            value={
-              projects.filter((p) => p.filmingStatus === "لم يتم الانتهاء منه")
-                .length
-            }
+            value={projectsInReview}
           />
           <SummaryCard
             icon="/icons/PaintPalette.svg"
             iconAlt="Palette"
             title="التصاميم المكتملة"
-            value={
-              projects.filter((p) => p.filmingStatus === "تم الانتـــهاء مــنه")
-                .length
-            }
+            value={completedDesigns}
           />
           <SummaryCard
             icon="/icons/VideoTrimming.svg"
             iconAlt="Scissors"
             title="المشاريع المحررة"
-            value="0"
+            value={completedEdits}
           />
           <SummaryCard
             icon="/icons/Documentary.svg"
             iconAlt="Camera"
             title="المشاريع المصورة"
-            value="0"
+            value={completedFilming}
           />
           <SummaryCard
             icon="/icons/Video.svg"
