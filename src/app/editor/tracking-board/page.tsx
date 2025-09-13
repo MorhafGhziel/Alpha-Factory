@@ -47,6 +47,29 @@ export default function EditorDashboardPage() {
     }
   };
 
+  // Update project review links
+  const updateProjectReviewLinks = async (projectId: string, reviewLinks: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reviewLinks }),
+      });
+
+      if (response.ok) {
+        await fetchProjects(); // Refresh projects
+      } else {
+        const errorData = await response.json();
+        alert(`فشل في تحديث روابط المراجعة: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating project review links:", error);
+      alert("حدث خطأ أثناء تحديث روابط المراجعة");
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -172,7 +195,7 @@ export default function EditorDashboardPage() {
                           defaultValue={project.reviewLinks || ""}
                           onBlur={(e) => {
                             if (e.target.value !== (project.reviewLinks || "")) {
-                              updateProjectStatus(project.id, project.editMode);
+                              updateProjectReviewLinks(project.id, e.target.value);
                             }
                           }}
                         />
