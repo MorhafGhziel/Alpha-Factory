@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import prisma from "../../../../lib/prisma";
-import { notifyAdmin, sendProjectUpdate } from "../../../../lib/telegram";
+import {
+  notifyAdmin,
+  sendProjectUpdate,
+  sendProjectStatusUpdate,
+} from "../../../../lib/telegram";
 
 interface UpdateProjectRequest {
   title?: string;
@@ -195,64 +199,29 @@ export async function PUT(
       },
     });
 
-    // Send Telegram notifications for status changes
-    if (existingProject.group?.telegramChatId) {
-      let notificationSent = false;
+    // Send detailed Telegram notifications for any changes
+    if (
+      existingProject.group?.telegramChatId &&
+      Object.keys(updates).length > 0
+    ) {
+      // Send notification for each changed field
+      for (const [fieldName, newValue] of Object.entries(updates)) {
+        if (fieldName === "startDate" || fieldName === "endDate") continue; // Skip date objects
 
-      // Check for completion status changes and notify admin
-      if (
-        updateData.editMode === "تم الانتهاء منه" &&
-        existingProject.editMode !== "تم الانتهاء منه"
-      ) {
-        await notifyAdmin(
-          existingProject.group.telegramChatId,
-          user.name,
-          user.role || "unknown",
-          "تحرير الفيديو",
-          existingProject.title
-        );
-        notificationSent = true;
-      }
+        const oldValue = (existingProject as any)[fieldName];
 
-      if (
-        updateData.designMode === "تم الانتهاء منه" &&
-        existingProject.designMode !== "تم الانتهاء منه"
-      ) {
-        await notifyAdmin(
-          existingProject.group.telegramChatId,
-          user.name,
-          user.role || "unknown",
-          "التصميم",
-          existingProject.title
-        );
-        notificationSent = true;
-      }
-
-      if (
-        updateData.reviewMode === "تمت المراجعة" &&
-        existingProject.reviewMode !== "تمت المراجعة"
-      ) {
-        await notifyAdmin(
-          existingProject.group.telegramChatId,
-          user.name,
-          user.role || "unknown",
-          "المراجعة",
-          existingProject.title
-        );
-        notificationSent = true;
-      }
-
-      // Send general project update if no specific completion notification was sent
-      if (!notificationSent && Object.keys(updates).length > 0) {
-        const updateMessage = `تم تحديث المشروع بواسطة ${
-          user.name
-        } (${getRoleInArabic(user.role || "")})`;
-        await sendProjectUpdate(
-          existingProject.group.telegramChatId,
-          "تحديث المشروع",
-          updateMessage,
-          existingProject.title
-        );
+        // Only notify if the value actually changed
+        if (oldValue !== newValue) {
+          await sendProjectStatusUpdate(existingProject.group.telegramChatId, {
+            projectTitle: existingProject.title,
+            updatedBy: user.name || "Unknown User",
+            userRole: user.role || "unknown",
+            fieldName: fieldName,
+            oldValue: String(oldValue || "غير محدد"),
+            newValue: String(newValue || "غير محدد"),
+            fieldNameArabic: getFieldNameInArabic(fieldName),
+          });
+        }
       }
     }
 
@@ -352,4 +321,23 @@ function getRoleInArabic(role: string): string {
     admin: "مدير",
   };
   return roleMap[role] || role;
+}
+
+// Helper function to get field name in Arabic
+function getFieldNameInArabic(fieldName: string): string {
+  const fieldMap: { [key: string]: string } = {
+    filmingStatus: "حالة التصوير",
+    editMode: "حالة التحرير",
+    designMode: "حالة التصميم",
+    reviewMode: "حالة المراجعة",
+    verificationMode: "تقييم المشروع",
+    reviewLinks: "روابط المراجعة",
+    designLinks: "روابط التصميم",
+    fileLinks: "ملفات المشروع",
+    notes: "الملاحظات",
+    title: "عنوان المشروع",
+    type: "نوع المشروع",
+    date: "تاريخ المشروع",
+  };
+  return fieldMap[fieldName] || fieldName;
 }

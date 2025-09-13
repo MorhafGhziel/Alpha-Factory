@@ -29,6 +29,29 @@ export default function ClientTrackingBoardPage() {
     fetchProjects();
   }, []);
 
+  // Update filming status
+  const updateFilmingStatus = async (projectId: string, filmingStatus: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filmingStatus }),
+      });
+
+      if (response.ok) {
+        await fetchProjects(); // Refresh projects
+      } else {
+        const errorData = await response.json();
+        alert(`فشل في تحديث حالة التصوير: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating filming status:", error);
+      alert("حدث خطأ أثناء تحديث حالة التصوير");
+    }
+  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -83,9 +106,14 @@ export default function ClientTrackingBoardPage() {
                 <div className="grid grid-cols-1 gap-3">
                   <div className="bg-[#0B0B0B] rounded-lg p-3">
                     <div className="text-gray-400 text-xs mb-2">حالة التصوير</div>
-                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs text-white ${getStatusColor(project.filmingStatus)}`}>
-                      {getStatusText(project.filmingStatus)}
-                    </div>
+                    <select
+                      value={project.filmingStatus}
+                      onChange={(e) => updateFilmingStatus(project.id, e.target.value)}
+                      className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(project.filmingStatus)}`}
+                    >
+                      <option value="لم يتم الانتهاء منه">لم يتم الانتهاء منه</option>
+                      <option value="تم الانتـــهاء مــنه">تم الانتـــهاء مــنه</option>
+                    </select>
                   </div>
 
                   <div className="bg-[#0B0B0B] rounded-lg p-3">
@@ -127,7 +155,7 @@ export default function ClientTrackingBoardPage() {
                     </div>
                   )}
 
-                  {(project.fileLinks || project.reviewLinks || project.designLinks) && (
+                  {project.filmingStatus === "تم الانتـــهاء مــنه" && (project.fileLinks || project.reviewLinks || project.designLinks) && (
                     <div className="bg-[#0B0B0B] rounded-lg p-3">
                       <div className="text-gray-400 text-xs mb-2">الروابط المتاحة</div>
                       <div className="space-y-1">
@@ -236,9 +264,14 @@ export default function ClientTrackingBoardPage() {
                         {project.date}
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(project.filmingStatus)}`}>
-                          {getStatusText(project.filmingStatus)}
-                        </span>
+                        <select
+                          value={project.filmingStatus}
+                          onChange={(e) => updateFilmingStatus(project.id, e.target.value)}
+                          className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(project.filmingStatus)}`}
+                        >
+                          <option value="لم يتم الانتهاء منه">لم يتم الانتهاء منه</option>
+                          <option value="تم الانتـــهاء مــنه">تم الانتـــهاء مــنه</option>
+                        </select>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(project.editMode)}`}>
@@ -274,29 +307,33 @@ export default function ClientTrackingBoardPage() {
                         )}
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <div className="flex flex-col gap-1">
-                          {project.fileLinks && (
-                            <a href={project.fileLinks} target="_blank" rel="noopener noreferrer" 
-                               className="text-blue-400 hover:text-blue-300 text-xs underline">
-                              ملفات
-                            </a>
-                          )}
-                          {project.reviewLinks && (
-                            <a href={project.reviewLinks} target="_blank" rel="noopener noreferrer" 
-                               className="text-blue-400 hover:text-blue-300 text-xs underline">
-                              مراجعة
-                            </a>
-                          )}
-                          {project.designLinks && (
-                            <a href={project.designLinks} target="_blank" rel="noopener noreferrer" 
-                               className="text-blue-400 hover:text-blue-300 text-xs underline">
-                              تصميم
-                            </a>
-                          )}
-                          {!project.fileLinks && !project.reviewLinks && !project.designLinks && (
-                            <span className="text-gray-500 text-xs">لا توجد</span>
-                          )}
-                        </div>
+                        {project.filmingStatus === "تم الانتـــهاء مــنه" ? (
+                          <div className="flex flex-col gap-1">
+                            {project.fileLinks && (
+                              <a href={project.fileLinks} target="_blank" rel="noopener noreferrer" 
+                                 className="text-blue-400 hover:text-blue-300 text-xs underline">
+                                ملفات
+                              </a>
+                            )}
+                            {project.reviewLinks && (
+                              <a href={project.reviewLinks} target="_blank" rel="noopener noreferrer" 
+                                 className="text-blue-400 hover:text-blue-300 text-xs underline">
+                                مراجعة
+                              </a>
+                            )}
+                            {project.designLinks && (
+                              <a href={project.designLinks} target="_blank" rel="noopener noreferrer" 
+                                 className="text-blue-400 hover:text-blue-300 text-xs underline">
+                                تصميم
+                              </a>
+                            )}
+                            {!project.fileLinks && !project.reviewLinks && !project.designLinks && (
+                              <span className="text-gray-500 text-xs">لا توجد</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-500 text-xs">في انتظار التصوير</span>
+                        )}
                       </td>
                     </tr>
                   ))
