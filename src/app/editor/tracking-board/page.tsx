@@ -26,6 +26,15 @@ export default function EditorDashboardPage() {
 
   // Update project status
   const updateProjectStatus = async (projectId: string, editMode: string) => {
+    // Find the project to check if it has review links
+    const project = projects.find(p => p.id === projectId);
+    
+    // If trying to mark as done but no review links, show error
+    if (editMode === "تم الانتهاء منه" && !project?.reviewLinks) {
+      alert("يجب إضافة روابط المراجعة قبل تغيير حالة التحرير إلى 'تم الانتهاء منه'");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",

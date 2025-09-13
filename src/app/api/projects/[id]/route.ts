@@ -161,6 +161,36 @@ export async function PUT(
       );
     }
 
+    // Validate edit mode update - cannot mark as done without review links
+    if (
+      updateData.editMode === "تم الانتهاء منه" &&
+      !existingProject.reviewLinks &&
+      !updateData.reviewLinks
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "يجب إضافة روابط المراجعة قبل تغيير حالة التحرير إلى 'تم الانتهاء منه'",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate design mode update - cannot mark as done without design links
+    if (
+      updateData.designMode === "تم الانتهاء منه" &&
+      !existingProject.designLinks &&
+      !updateData.designLinks
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "يجب إضافة روابط التصميم قبل تغيير وضع التصميم إلى 'تم الانتهاء منه'",
+        },
+        { status: 400 }
+      );
+    }
+
     // Check permissions based on user role
     const canUpdate =
       user.role === "admin" ||

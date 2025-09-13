@@ -26,6 +26,15 @@ export default function DesignerTrackingBoardPage() {
 
   // Update project status
   const updateProjectStatus = async (projectId: string, updates: Partial<Project>) => {
+    // Find the project to check if it has design links
+    const project = projects.find(p => p.id === projectId);
+    
+    // If trying to mark design as done but no design links, show error
+    if (updates.designMode === "تم الانتهاء منه" && !project?.designLinks && !updates.designLinks) {
+      alert("يجب إضافة روابط التصميم قبل تغيير وضع التصميم إلى 'تم الانتهاء منه'");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
