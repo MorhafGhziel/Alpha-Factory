@@ -23,6 +23,12 @@ model User {
   accounts      Account[]
   sessions      Session[]
   group         Group?    @relation(fields: [groupId], references: [id])
+  
+  // Project relations
+  clientProjects    Project[] @relation("ClientProjects")
+  editorProjects    Project[] @relation("EditorProjects")
+  designerProjects  Project[] @relation("DesignerProjects")
+  reviewerProjects  Project[] @relation("ReviewerProjects")
 
   @@map("user")
 }
@@ -72,14 +78,57 @@ model Verification {
 }
 
 model Group {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   name               String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
   telegramChatId     String?
   telegramGroupName  String?
   telegramInviteLink String?
   users              User[]
+  projects           Project[]
 
   @@map("group")
+}
+
+model Project {
+  id                 String   @id @default(cuid())
+  title              String
+  type               String
+  filmingStatus      String
+  fileLinks          String?
+  notes              String?
+  date               String
+  startDate          DateTime?
+  endDate            DateTime?
+  
+  // Progress tracking fields
+  editMode           String   @default("لم يبدأ")
+  reviewMode         String   @default("في الانتظار")
+  designMode         String   @default("في الانتظار")
+  verificationMode   String   @default("لا شيء")
+  
+  // Links for different stages
+  reviewLinks        String?
+  designLinks        String?
+  documentation      String?
+  
+  // Relations
+  clientId           String
+  client             User     @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
+  groupId            String?
+  group              Group?   @relation(fields: [groupId], references: [id])
+  
+  // Assignment tracking
+  editorId           String?
+  editor             User?    @relation("EditorProjects", fields: [editorId], references: [id])
+  designerId         String?
+  designer           User?    @relation("DesignerProjects", fields: [designerId], references: [id])
+  reviewerId         String?
+  reviewer           User?    @relation("ReviewerProjects", fields: [reviewerId], references: [id])
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("project")
 }

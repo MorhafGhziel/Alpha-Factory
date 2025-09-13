@@ -192,6 +192,53 @@ export async function sendProjectUpdate(
 }
 
 /**
+ * Send new project notification to the team
+ */
+export async function sendNewProjectNotification(
+  chatId: string,
+  projectData: {
+    title: string;
+    type: string;
+    filmingStatus: string;
+    date: string;
+    clientName: string;
+    notes?: string;
+    fileLinks?: string;
+  }
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    const message = `🎬 **مشروع جديد متاح للعمل!**
+
+📋 **العنوان:** ${projectData.title}
+🎥 **النوع:** ${projectData.type}
+📅 **التاريخ:** ${projectData.date}
+📸 **حالة التصوير:** ${projectData.filmingStatus}
+👤 **العميل:** ${projectData.clientName}
+
+${projectData.notes ? `📝 **ملاحظات:** ${projectData.notes}` : ""}
+${projectData.fileLinks ? `🔗 **الملفات:** ${projectData.fileLinks}` : ""}
+
+🚀 **الفريق جاهز للبدء في العمل!**
+⏰ **تم الإنشاء:** ${new Date().toLocaleString("ar-EG")}
+
+استخدم الأوامر التالية:
+/status - لعرض حالة المشروع
+/team - لعرض أعضاء الفريق`;
+
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error sending new project notification:", error);
+    return false;
+  }
+}
+
+/**
  * Handle bot commands
  */
 export function setupBotCommands(): void {
