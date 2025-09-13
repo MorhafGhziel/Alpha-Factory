@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { authClient } from "@/src/lib/auth-client";
 
 interface UserFormData {
   name: string;

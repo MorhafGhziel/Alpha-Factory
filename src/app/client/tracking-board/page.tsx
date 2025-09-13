@@ -2,10 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { Project } from "../../../types";
+import CustomDropdown from "../../../../components/ui/CustomDropdown";
+import TextEditModal from "../../../../components/ui/TextEditModal";
 
 export default function ClientTrackingBoardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filmingFilesModal, setFilmingFilesModal] = useState<{
+    isOpen: boolean;
+    projectId: string;
+    currentContent: string;
+  }>({
+    isOpen: false,
+    projectId: "",
+    currentContent: "",
+  });
+
+  const [notesModal, setNotesModal] = useState<{
+    isOpen: boolean;
+    projectId: string;
+    currentContent: string;
+  }>({
+    isOpen: false,
+    projectId: "",
+    currentContent: "",
+  });
 
   // Fetch projects from API
   const fetchProjects = async () => {
@@ -93,25 +114,127 @@ export default function ClientTrackingBoardPage() {
     switch (status) {
       case "تم الانتهاء منه":
       case "تمت المراجعة":
-        return "bg-green-500";
+        return "bg-green-600 text-white border border-green-500";
       case "قيد التنفيذ":
-        return "bg-yellow-500";
+        return "bg-[#EAD06C] text-black border border-[#F4D03F]";
       case "في الانتظار":
-        return "bg-orange-500";
+        return "bg-orange-600 text-white border border-orange-500";
       case "لم يبدأ":
-        return "bg-gray-500";
+        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
       default:
-        return "bg-gray-500";
+        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
+    }
+  };
+
+  const getFilmingStatusColor = (status: string) => {
+    switch (status) {
+      case "تم الانتـــهاء مــنه":
+        return "bg-green-600 text-white border border-green-500";
+      case "لم يتم الانتهاء منه":
+        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
+      default:
+        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
     }
   };
 
   const getStatusText = (status: string) => {
     return status || "غير محدد";
   };
+
+  // Handle filming files modal
+  const openFilmingFilesModal = (projectId: string, currentContent: string) => {
+    setFilmingFilesModal({
+      isOpen: true,
+      projectId,
+      currentContent: currentContent || "",
+    });
+  };
+
+  const closeFilmingFilesModal = () => {
+    setFilmingFilesModal({
+      isOpen: false,
+      projectId: "",
+      currentContent: "",
+    });
+  };
+
+  const saveFilmingFiles = async (content: string) => {
+    if (filmingFilesModal.projectId) {
+      await updateFileLinks(filmingFilesModal.projectId, content);
+    }
+  };
+
+  // Handle notes modal
+  const openNotesModal = (projectId: string, currentContent: string) => {
+    setNotesModal({
+      isOpen: true,
+      projectId,
+      currentContent: currentContent || "",
+    });
+  };
+
+  const closeNotesModal = () => {
+    setNotesModal({
+      isOpen: false,
+      projectId: "",
+      currentContent: "",
+    });
+  };
+
+  const saveNotes = async (content: string) => {
+    if (notesModal.projectId) {
+      try {
+        const response = await fetch(`/api/projects/${notesModal.projectId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ notes: content }),
+        });
+
+        if (response.ok) {
+          await fetchProjects(); // Refresh projects
+          closeNotesModal();
+        } else {
+          const errorData = await response.json();
+          alert(`فشل في تحديث الملاحظات: ${errorData.error}`);
+        }
+      } catch (error) {
+        console.error("Error updating notes:", error);
+        alert("حدث خطأ أثناء تحديث الملاحظات");
+      }
+    }
+  };
+
+  // Handle rating update
+  const updateRating = async (projectId: string, rating: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ verificationMode: rating }),
+      });
+
+      if (response.ok) {
+        await fetchProjects(); // Refresh projects
+      } else {
+        const errorData = await response.json();
+        alert(`فشل في تحديث التقييم: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating rating:", error);
+      alert("حدث خطأ أثناء تحديث التقييم");
+    }
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen w-full md:py-20 py-10">
       <div className="w-full text-center md:mb-34 mb-14">
-        <h1 className="text-3xl">لوحــــــة المــــــتابــــعة</h1>
+        <h1 className="text-3xl text-[#EAD06C] font-bold">
+          لوحــــــة المــــــتابــــعة
+        </h1>
       </div>
 
       {/* Mobile Card View */}
@@ -144,39 +267,51 @@ export default function ClientTrackingBoardPage() {
                     <div className="text-gray-400 text-xs mb-2">
                       حالة التصوير
                     </div>
-                    <select
-                      value={project.filmingStatus}
-                      onChange={(e) =>
-                        updateFilmingStatus(project.id, e.target.value)
+                    <CustomDropdown
+                      options={["لم يتم الانتهاء منه", "تم الانتـــهاء مــنه"]}
+                      placeholder="اختر حالة التصوير"
+                      selectedValue={project.filmingStatus}
+                      onSelect={(value) =>
+                        updateFilmingStatus(project.id, value)
                       }
-                      className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(
+                      className="w-full"
+                      buttonClassName={`${getFilmingStatusColor(
                         project.filmingStatus
-                      )}`}
-                    >
-                      <option value="لم يتم الانتهاء منه">
-                        لم يتم الانتهاء منه
-                      </option>
-                      <option value="تم الانتـــهاء مــنه">
-                        تم الانتـــهاء مــنه
-                      </option>
-                    </select>
+                      )} min-w-[180px]`}
+                    />
                   </div>
 
-                  <div className="bg-[#0B0B0B] rounded-lg p-3">
-                    <div className="text-gray-400 text-xs mb-2">
-                      رابط ملفات التصوير
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      ملفات التصوير
                     </div>
-                    <input
-                      type="url"
-                      placeholder="أضف رابط ملفات التصوير"
-                      className="w-full bg-[#1a1a1a] text-white px-2 py-1 rounded text-xs outline-none border border-[#3F3F3F] focus:border-[#EAD06C]"
-                      defaultValue={project.fileLinks || ""}
-                      onBlur={(e) => {
-                        if (e.target.value !== (project.fileLinks || "")) {
-                          updateFileLinks(project.id, e.target.value);
+                    {project.fileLinks ? (
+                      <button
+                        onClick={() =>
+                          openFilmingFilesModal(
+                            project.id,
+                            project.fileLinks || ""
+                          )
                         }
-                      }}
-                    />
+                        className="w-full text-left text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                      >
+                        {project.fileLinks.length > 50
+                          ? `${project.fileLinks.substring(0, 50)}...`
+                          : project.fileLinks}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          openFilmingFilesModal(
+                            project.id,
+                            project.fileLinks || ""
+                          )
+                        }
+                        className="w-full text-left text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                      >
+                        إضافة ملفات التصوير
+                      </button>
+                    )}
                     {!project.fileLinks && (
                       <div className="text-red-400 text-xs mt-1">
                         ⚠️ مطلوب لتغيير حالة التصوير إلى &quot;تم الانتهاء
@@ -185,121 +320,171 @@ export default function ClientTrackingBoardPage() {
                     )}
                   </div>
 
-                  <div className="bg-[#0B0B0B] rounded-lg p-3">
-                    <div className="text-gray-400 text-xs mb-2">
-                      حالة التحرير
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      التحرير
                     </div>
                     <div
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
+                      className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                         project.editMode
                       )}`}
                     >
                       {getStatusText(project.editMode)}
                     </div>
                     {project.editor && (
-                      <div className="text-gray-500 text-xs mt-1">
+                      <div className="text-[#CCCCCC] text-xs mt-2 bg-[#1A1A1A] px-2 py-1 rounded">
                         المحرر: {project.editor.name}
                       </div>
                     )}
                   </div>
 
-                  <div className="bg-[#0B0B0B] rounded-lg p-3">
-                    <div className="text-gray-400 text-xs mb-2">
-                      حالة التصميم
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      التصميم
                     </div>
                     <div
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
+                      className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                         project.designMode
                       )}`}
                     >
                       {getStatusText(project.designMode)}
                     </div>
                     {project.designer && (
-                      <div className="text-gray-500 text-xs mt-1">
+                      <div className="text-[#CCCCCC] text-xs mt-2 bg-[#1A1A1A] px-2 py-1 rounded">
                         المصمم: {project.designer.name}
                       </div>
                     )}
                   </div>
 
-                  <div className="bg-[#0B0B0B] rounded-lg p-3">
-                    <div className="text-gray-400 text-xs mb-2">
-                      حالة المراجعة
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      المراجعة
                     </div>
                     <div
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
+                      className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                         project.reviewMode
                       )}`}
                     >
                       {getStatusText(project.reviewMode)}
                     </div>
                     {project.reviewer && (
-                      <div className="text-gray-500 text-xs mt-1">
+                      <div className="text-[#CCCCCC] text-xs mt-2 bg-[#1A1A1A] px-2 py-1 rounded">
                         المراجع: {project.reviewer.name}
                       </div>
                     )}
                   </div>
 
-                  {project.verificationMode &&
-                    project.verificationMode !== "لا شيء" && (
-                      <div className="bg-[#0B0B0B] rounded-lg p-3">
-                        <div className="text-gray-400 text-xs mb-2">
-                          تقييم المشروع
-                        </div>
-                        <div className="text-[#EAD06C] text-sm font-medium">
-                          {project.verificationMode}
-                        </div>
-                      </div>
-                    )}
-
-                  {project.filmingStatus === "تم الانتـــهاء مــنه" &&
-                    (project.fileLinks ||
-                      project.reviewLinks ||
-                      project.designLinks) && (
-                      <div className="bg-[#0B0B0B] rounded-lg p-3">
-                        <div className="text-gray-400 text-xs mb-2">
-                          الروابط المتاحة
-                        </div>
-                        <div className="space-y-1">
-                          {project.fileLinks && (
-                            <a
-                              href={project.fileLinks}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block text-blue-400 hover:text-blue-300 text-xs underline"
-                            >
-                              ملفات المشروع
-                            </a>
-                          )}
-                          {project.reviewLinks && (
-                            <a
-                              href={project.reviewLinks}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block text-blue-400 hover:text-blue-300 text-xs underline"
-                            >
-                              روابط المراجعة
-                            </a>
-                          )}
-                          {project.designLinks && (
-                            <a
-                              href={project.designLinks}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block text-blue-400 hover:text-blue-300 text-xs underline"
-                            >
-                              روابط التصميم
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                  {project.notes && (
-                    <div className="bg-[#0B0B0B] rounded-lg p-3">
-                      <div className="text-gray-400 text-xs mb-2">ملاحظات</div>
-                      <div className="text-white text-sm">{project.notes}</div>
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      التقييم
                     </div>
-                  )}
+                    <CustomDropdown
+                      options={[
+                        "ممتاز",
+                        "جيد جداً",
+                        "جيد",
+                        "مقبول",
+                        "يحتاج تحسين",
+                        "لا شيء",
+                      ]}
+                      placeholder="اختر التقييم"
+                      selectedValue={project.verificationMode || ""}
+                      onSelect={(value: string) =>
+                        updateRating(project.id, value)
+                      }
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      التوثيق
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          const newStatus = project.documentation ? "" : "موثق";
+                          // Update documentation status
+                          fetch(`/api/projects/${project.id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ documentation: newStatus }),
+                          }).then(() => fetchProjects());
+                        }}
+                        className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
+                      >
+                        <div className="relative w-8 h-8">
+                          {/* Verified Badge */}
+                          <div
+                            className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
+                              project.documentation
+                                ? "opacity-100 scale-100 rotate-0"
+                                : "opacity-0 scale-75 rotate-180"
+                            }`}
+                          >
+                            <svg
+                              className="w-5 h-5 text-white transition-all duration-300"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+
+                          {/* Unverified Badge */}
+                          <div
+                            className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
+                              project.documentation
+                                ? "opacity-0 scale-75 rotate-180"
+                                : "opacity-100 scale-100 rotate-0"
+                            }`}
+                          >
+                            <div className="w-3 h-3 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
+                          </div>
+                        </div>
+                      </button>
+                      <span
+                        className={`text-xs font-medium ${
+                          project.documentation
+                            ? "text-blue-400"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {project.documentation ? "موثق" : "غير موثق"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      الملاحظات
+                    </div>
+                    {project.notes ? (
+                      <button
+                        onClick={() =>
+                          openNotesModal(project.id, project.notes || "")
+                        }
+                        className="w-full text-left text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                      >
+                        {project.notes.length > 50
+                          ? `${project.notes.substring(0, 50)}...`
+                          : project.notes}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          openNotesModal(project.id, project.notes || "")
+                        }
+                        className="w-full text-left text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                      >
+                        إضافة ملاحظات
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
@@ -316,50 +501,53 @@ export default function ClientTrackingBoardPage() {
           >
             <table className="border-collapse w-full min-w-[800px]">
               <thead>
-                <tr className="border-b border-[#3F3F3F]">
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                <tr className="border-b border-[#3F3F3F] bg-[#1A1A1A]">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     المشروع
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     النوع
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
-                    التاريخ
-                  </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
-                    حالة التصوير
-                  </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     ملفات التصوير
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
+                    الملاحظات
+                  </th>
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
+                    حالة التصوير
+                  </th>
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     التحرير
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     التصميم
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     المراجعة
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
+                    الروابط
+                  </th>
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     التقييم
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
-                    الروابط
+                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
+                    التوثيق
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={10} className="py-8 text-center text-gray-400">
+                    <td colSpan={11} className="py-8 text-center text-gray-400">
                       جاري تحميل المشاريع...
                     </td>
                   </tr>
                 ) : projects.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={11}
                       className="py-8 px-4 text-center text-gray-400"
                     >
                       لا توجد مشاريع بعد. قم بإنشاء مشروع جديد من لوحة التحكم.
@@ -375,109 +563,136 @@ export default function ClientTrackingBoardPage() {
                         <div className="text-[#EAD06C] font-medium">
                           {project.title}
                         </div>
-                        {project.notes && (
-                          <div className="text-gray-400 text-xs mt-1 max-w-[150px] truncate">
-                            {project.notes}
-                          </div>
-                        )}
+                        <div className="text-gray-400 text-xs mt-1">
+                          {project.date}
+                        </div>
                       </td>
-                      <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap">
+                      <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap text-xs">
                         {project.type}
                       </td>
-                      <td className="py-4 px-4 text-center text-gray-400 border-l border-[#3F3F3F] whitespace-nowrap">
-                        {project.date}
-                      </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <select
-                          value={project.filmingStatus}
-                          onChange={(e) =>
-                            updateFilmingStatus(project.id, e.target.value)
-                          }
-                          className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(
-                            project.filmingStatus
-                          )}`}
-                        >
-                          <option value="لم يتم الانتهاء منه">
-                            لم يتم الانتهاء منه
-                          </option>
-                          <option value="تم الانتـــهاء مــنه">
-                            تم الانتـــهاء مــنه
-                          </option>
-                        </select>
-                      </td>
-                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <div className="flex flex-col gap-1">
-                          <input
-                            type="url"
-                            placeholder="رابط ملفات التصوير"
-                            className="bg-[#0B0B0B] text-white px-2 py-1 rounded text-xs w-32 outline-none border border-[#3F3F3F] focus:border-[#EAD06C]"
-                            defaultValue={project.fileLinks || ""}
-                            onBlur={(e) => {
-                              if (
-                                e.target.value !== (project.fileLinks || "")
-                              ) {
-                                updateFileLinks(project.id, e.target.value);
+                        <div className="flex flex-col gap-2 items-center">
+                          {project.fileLinks ? (
+                            <button
+                              onClick={() =>
+                                openFilmingFilesModal(
+                                  project.id,
+                                  project.fileLinks || ""
+                                )
                               }
-                            }}
-                          />
+                              className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center"
+                            >
+                              {project.fileLinks.length > 30
+                                ? `${project.fileLinks.substring(0, 30)}...`
+                                : project.fileLinks}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                openFilmingFilesModal(
+                                  project.id,
+                                  project.fileLinks || ""
+                                )
+                              }
+                              className="text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center"
+                            >
+                              إضافة ملفات
+                            </button>
+                          )}
                           {!project.fileLinks && (
                             <div className="text-red-400 text-xs">مطلوب</div>
                           )}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
-                            project.editMode
-                          )}`}
-                        >
-                          {getStatusText(project.editMode)}
-                        </span>
-                        {project.editor && (
-                          <div className="text-gray-500 text-xs mt-1">
-                            {project.editor.name}
-                          </div>
-                        )}
+                        <div className="max-w-[150px]">
+                          {project.notes ? (
+                            <button
+                              onClick={() =>
+                                openNotesModal(project.id, project.notes || "")
+                              }
+                              className="w-full text-left text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer break-words"
+                            >
+                              {project.notes.length > 30
+                                ? `${project.notes.substring(0, 30)}...`
+                                : project.notes}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                openNotesModal(project.id, project.notes || "")
+                              }
+                              className="w-full text-left text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                            >
+                              إضافة ملاحظات
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
-                            project.designMode
-                          )}`}
-                        >
-                          {getStatusText(project.designMode)}
-                        </span>
-                        {project.designer && (
-                          <div className="text-gray-500 text-xs mt-1">
-                            {project.designer.name}
-                          </div>
-                        )}
+                        <CustomDropdown
+                          options={[
+                            "لم يتم الانتهاء منه",
+                            "تم الانتـــهاء مــنه",
+                          ]}
+                          placeholder="اختر حالة التصوير"
+                          selectedValue={project.filmingStatus}
+                          onSelect={(value) =>
+                            updateFilmingStatus(project.id, value)
+                          }
+                          className="w-full max-w-[200px] mx-auto"
+                          buttonClassName={`${getFilmingStatusColor(
+                            project.filmingStatus
+                          )} min-w-[180px]`}
+                        />
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
-                            project.reviewMode
-                          )}`}
-                        >
-                          {getStatusText(project.reviewMode)}
-                        </span>
-                        {project.reviewer && (
-                          <div className="text-gray-500 text-xs mt-1">
-                            {project.reviewer.name}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        {project.verificationMode &&
-                        project.verificationMode !== "لا شيء" ? (
-                          <span className="text-[#EAD06C] text-sm font-medium">
-                            {project.verificationMode}
+                        <div className="flex flex-col items-center gap-2">
+                          <span
+                            className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
+                              project.editMode
+                            )}`}
+                          >
+                            {getStatusText(project.editMode)}
                           </span>
-                        ) : (
-                          <span className="text-gray-500 text-sm">
-                            غير مقيم
+                          {project.editor && (
+                            <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded">
+                              {project.editor.name}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
+                        <div className="flex flex-col items-center gap-2">
+                          <span
+                            className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
+                              project.designMode
+                            )}`}
+                          >
+                            {getStatusText(project.designMode)}
                           </span>
-                        )}
+                          {project.designer && (
+                            <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded">
+                              {project.designer.name}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
+                        <div className="flex flex-col items-center gap-2">
+                          <span
+                            className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
+                              project.reviewMode
+                            )}`}
+                          >
+                            {getStatusText(project.reviewMode)}
+                          </span>
+                          {project.reviewer && (
+                            <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded">
+                              {project.reviewer.name}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.filmingStatus === "تم الانتـــهاء مــنه" ? (
@@ -526,6 +741,87 @@ export default function ClientTrackingBoardPage() {
                           </span>
                         )}
                       </td>
+                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
+                        <CustomDropdown
+                          options={[
+                            "ممتاز",
+                            "جيد جداً",
+                            "جيد",
+                            "مقبول",
+                            "يحتاج تحسين",
+                            "لا شيء",
+                          ]}
+                          placeholder="اختر التقييم"
+                          selectedValue={project.verificationMode || ""}
+                          onSelect={(value: string) =>
+                            updateRating(project.id, value)
+                          }
+                          className="min-w-[120px]"
+                        />
+                      </td>
+                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => {
+                              const newStatus = project.documentation
+                                ? ""
+                                : "موثق";
+                              // Update documentation status
+                              fetch(`/api/projects/${project.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  documentation: newStatus,
+                                }),
+                              }).then(() => fetchProjects());
+                            }}
+                            className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
+                          >
+                            <div className="relative w-6 h-6">
+                              {/* Verified Badge */}
+                              <div
+                                className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
+                                  project.documentation
+                                    ? "opacity-100 scale-100 rotate-0"
+                                    : "opacity-0 scale-75 rotate-180"
+                                }`}
+                              >
+                                <svg
+                                  className="w-4 h-4 text-white transition-all duration-300"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+
+                              {/* Unverified Badge */}
+                              <div
+                                className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
+                                  project.documentation
+                                    ? "opacity-0 scale-75 rotate-180"
+                                    : "opacity-100 scale-100 rotate-0"
+                                }`}
+                              >
+                                <div className="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
+                              </div>
+                            </div>
+                          </button>
+                          <span
+                            className={`text-xs font-medium ${
+                              project.documentation
+                                ? "text-blue-400"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {project.documentation ? "موثق" : "غير موثق"}
+                          </span>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -534,6 +830,32 @@ export default function ClientTrackingBoardPage() {
           </div>
         </div>
       </div>
+
+      {/* Filming Files Modal */}
+      <TextEditModal
+        isOpen={filmingFilesModal.isOpen}
+        onClose={closeFilmingFilesModal}
+        onSave={saveFilmingFiles}
+        title="ملفات التصوير"
+        initialContent={filmingFilesModal.currentContent}
+        placeholder="أدخل روابط ملفات التصوير (مثال: https://drive.google.com/...)"
+        isTextarea={true}
+        rows={4}
+        maxLength={2000}
+      />
+
+      {/* Notes Modal */}
+      <TextEditModal
+        isOpen={notesModal.isOpen}
+        onClose={closeNotesModal}
+        onSave={saveNotes}
+        title="الملاحظات"
+        initialContent={notesModal.currentContent}
+        placeholder="أدخل الملاحظات الخاصة بالمشروع..."
+        isTextarea={true}
+        rows={6}
+        maxLength={1500}
+      />
     </div>
   );
 }
