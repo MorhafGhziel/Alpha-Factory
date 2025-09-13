@@ -146,6 +146,21 @@ export async function PUT(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
+    // Validate filming status update - cannot mark as done without file links
+    if (
+      updateData.filmingStatus === "تم الانتـــهاء مــنه" &&
+      !existingProject.fileLinks &&
+      !updateData.fileLinks
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "يجب إضافة رابط الملفات قبل تغيير حالة التصوير إلى 'تم الانتهاء منه'",
+        },
+        { status: 400 }
+      );
+    }
+
     // Check permissions based on user role
     const canUpdate =
       user.role === "admin" ||

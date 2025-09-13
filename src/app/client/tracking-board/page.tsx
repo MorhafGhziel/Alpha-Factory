@@ -31,6 +31,15 @@ export default function ClientTrackingBoardPage() {
 
   // Update filming status
   const updateFilmingStatus = async (projectId: string, filmingStatus: string) => {
+    // Find the project to check if it has file links
+    const project = projects.find(p => p.id === projectId);
+    
+    // If trying to mark as done but no file links, show error
+    if (filmingStatus === "تم الانتـــهاء مــنه" && !project?.fileLinks) {
+      alert("يجب إضافة رابط الملفات قبل تغيير حالة التصوير إلى 'تم الانتهاء منه'");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
@@ -49,6 +58,29 @@ export default function ClientTrackingBoardPage() {
     } catch (error) {
       console.error("Error updating filming status:", error);
       alert("حدث خطأ أثناء تحديث حالة التصوير");
+    }
+  };
+
+  // Update file links
+  const updateFileLinks = async (projectId: string, fileLinks: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fileLinks }),
+      });
+
+      if (response.ok) {
+        await fetchProjects(); // Refresh projects
+      } else {
+        const errorData = await response.json();
+        alert(`فشل في تحديث روابط الملفات: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating file links:", error);
+      alert("حدث خطأ أثناء تحديث روابط الملفات");
     }
   };
 
@@ -114,6 +146,26 @@ export default function ClientTrackingBoardPage() {
                       <option value="لم يتم الانتهاء منه">لم يتم الانتهاء منه</option>
                       <option value="تم الانتـــهاء مــنه">تم الانتـــهاء مــنه</option>
                     </select>
+                  </div>
+
+                  <div className="bg-[#0B0B0B] rounded-lg p-3">
+                    <div className="text-gray-400 text-xs mb-2">رابط ملفات التصوير</div>
+                    <input
+                      type="url"
+                      placeholder="أضف رابط ملفات التصوير"
+                      className="w-full bg-[#1a1a1a] text-white px-2 py-1 rounded text-xs outline-none border border-[#3F3F3F] focus:border-[#EAD06C]"
+                      defaultValue={project.fileLinks || ""}
+                      onBlur={(e) => {
+                        if (e.target.value !== (project.fileLinks || "")) {
+                          updateFileLinks(project.id, e.target.value);
+                        }
+                      }}
+                    />
+                    {!project.fileLinks && (
+                      <div className="text-red-400 text-xs mt-1">
+                        ⚠️ مطلوب لتغيير حالة التصوير إلى "تم الانتهاء منه"
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-[#0B0B0B] rounded-lg p-3">
@@ -214,6 +266,9 @@ export default function ClientTrackingBoardPage() {
                     حالة التصوير
                   </th>
                   <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
+                    ملفات التصوير
+                  </th>
+                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
                     التحرير
                   </th>
                   <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
@@ -233,13 +288,13 @@ export default function ClientTrackingBoardPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-gray-400">
+                    <td colSpan={10} className="py-8 text-center text-gray-400">
                       جاري تحميل المشاريع...
                     </td>
                   </tr>
                 ) : projects.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 px-4 text-center text-gray-400">
+                    <td colSpan={10} className="py-8 px-4 text-center text-gray-400">
                       لا توجد مشاريع بعد. قم بإنشاء مشروع جديد من لوحة التحكم.
                     </td>
                   </tr>
@@ -272,6 +327,26 @@ export default function ClientTrackingBoardPage() {
                           <option value="لم يتم الانتهاء منه">لم يتم الانتهاء منه</option>
                           <option value="تم الانتـــهاء مــنه">تم الانتـــهاء مــنه</option>
                         </select>
+                      </td>
+                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <input
+                            type="url"
+                            placeholder="رابط ملفات التصوير"
+                            className="bg-[#0B0B0B] text-white px-2 py-1 rounded text-xs w-32 outline-none border border-[#3F3F3F] focus:border-[#EAD06C]"
+                            defaultValue={project.fileLinks || ""}
+                            onBlur={(e) => {
+                              if (e.target.value !== (project.fileLinks || "")) {
+                                updateFileLinks(project.id, e.target.value);
+                              }
+                            }}
+                          />
+                          {!project.fileLinks && (
+                            <div className="text-red-400 text-xs">
+                              مطلوب
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(project.editMode)}`}>
