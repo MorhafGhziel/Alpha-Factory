@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { generatePassword } from "../../../utils/credentials";
 
 interface User {
   id: string;
@@ -39,6 +40,13 @@ export default function ManageAccountPage() {
     userId: string;
     userName: string;
   } | null>(null);
+  const [changePasswordModal, setChangePasswordModal] = useState<{
+    show: boolean;
+    userId: string;
+    userName: string;
+    generatedPassword?: string;
+  } | null>(null);
+  const [passwordError, setPasswordError] = useState('');
 
   // Auto-hide messages after 5 seconds
   useEffect(() => {
@@ -159,6 +167,67 @@ export default function ManageAccountPage() {
 
   const cancelDelete = () => {
     setDeleteConfirm(null);
+  };
+
+  const handleChangePassword = (userId: string, userName: string) => {
+    const generatedPassword = generatePassword();
+    setChangePasswordModal({ 
+      show: true, 
+      userId, 
+      userName, 
+      generatedPassword 
+    });
+    setPasswordError('');
+  };
+
+  const confirmChangePassword = async () => {
+    if (!changePasswordModal || !changePasswordModal.generatedPassword) return;
+
+    try {
+      const response = await fetch(`/api/admin/users/${changePasswordModal.userId}/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          newPassword: changePasswordModal.generatedPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to change password');
+      }
+
+      setChangePasswordModal(null);
+      setPasswordError('');
+      setError(null);
+      setSuccessMessage('تم تغيير كلمة المرور بنجاح');
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const regeneratePassword = () => {
+    if (!changePasswordModal) return;
+    
+    const newGeneratedPassword = generatePassword();
+    setChangePasswordModal({
+      ...changePasswordModal,
+      generatedPassword: newGeneratedPassword
+    });
+  };
+
+  const copyPasswordToClipboard = () => {
+    if (changePasswordModal?.generatedPassword) {
+      navigator.clipboard.writeText(changePasswordModal.generatedPassword);
+      setSuccessMessage('تم نسخ كلمة المرور إلى الحافظة');
+    }
+  };
+
+  const cancelChangePassword = () => {
+    setChangePasswordModal(null);
+    setPasswordError('');
   };
 
   return (
@@ -362,12 +431,20 @@ export default function ManageAccountPage() {
                             </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDeleteUser(user.id, user.name)}
-                          className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
-                        >
-                          حذف الحساب
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleChangePassword(user.id, user.name)}
+                            className="text-gray-400 cursor-pointer hover:text-blue-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-blue-900/20"
+                          >
+                            تغيير كلمة المرور
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.name)}
+                            className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
+                          >
+                            حذف الحساب
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -629,6 +706,109 @@ export default function ManageAccountPage() {
                 </button>
                 <button
                   onClick={cancelDelete}
+                  className="bg-gray-700 cursor-pointer text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Change Password Modal */}
+      <AnimatePresence>
+        {changePasswordModal && (
+          <motion.div
+            className="fixed inset-0 backdrop-blur-2xl bg-black/20 bg-opacity-50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="bg-[#0f0f0f] rounded-3xl p-8 max-w-md w-full mx-4"
+              initial={{ y: -50, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -50, opacity: 0, scale: 0.9 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.3,
+              }}
+            >
+              <h3 className="text-white text-xl font-semibold mb-4 text-center">
+                تغيير كلمة المرور
+              </h3>
+              <p className="text-gray-300 mb-6 text-center">
+                كلمة مرور جديدة تم إنشاؤها للمستخدم{" "}
+                <span className="text-[#E9CF6B] font-semibold">
+                  &quot;{changePasswordModal.userName}&quot;
+                </span>
+              </p>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-gray-300 text-sm mb-2">
+                    كلمة المرور الجديدة المُولدة
+                  </label>
+                  <div className="relative">
+                    <div className="w-full bg-[#1a1a1a] text-green-400 px-4 py-3 rounded-lg font-mono text-lg font-bold border border-green-500/30">
+                      {changePasswordModal.generatedPassword}
+                    </div>
+                    <button
+                      onClick={copyPasswordToClipboard}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      title="نسخ كلمة المرور"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-center">
+                  <button
+                    onClick={regeneratePassword}
+                    className="text-[#E9CF6B] hover:text-yellow-300 transition-colors text-sm flex items-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>إنشاء كلمة مرور جديدة</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-4 mb-6">
+                <div className="flex items-center mb-2">
+                  <span className="text-blue-400 text-lg mr-2">ℹ️</span>
+                  <span className="text-blue-300 font-semibold">
+                    تنبيه مهم
+                  </span>
+                </div>
+                <p className="text-blue-200 text-sm">
+                  احتفظ بكلمة المرور هذه في مكان آمن. يمكنك نسخها باستخدام الزر أعلاه أو إنشاء كلمة مرور جديدة قبل التأكيد.
+                </p>
+              </div>
+
+              {passwordError && (
+                <div className="mb-4 text-red-400 text-sm text-center bg-red-900/20 border border-red-500 rounded-lg p-2">
+                  {passwordError}
+                </div>
+              )}
+
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={confirmChangePassword}
+                  className="bg-[#E9CF6B] cursor-pointer text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+                >
+                  تأكيد وحفظ كلمة المرور
+                </button>
+                <button
+                  onClick={cancelChangePassword}
                   className="bg-gray-700 cursor-pointer text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
                 >
                   إلغاء

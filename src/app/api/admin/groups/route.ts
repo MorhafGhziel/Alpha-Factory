@@ -244,10 +244,12 @@ export async function POST(req: NextRequest) {
             username: userData.username,
           };
 
-          // Add phone number for clients
+          // Add phone number for clients but DON'T change email after signup
           if (userData.role === "client" && userData.phone) {
             updateData.phone = userData.phone;
+            // DON'T update email - it was already set correctly during signUpEmail
           }
+          // For non-client users, DON'T update email either - it was set correctly during signUpEmail
 
           await tx.user.update({
             where: { id: createdUserIds[i] },
