@@ -52,10 +52,44 @@ const Login = ({}: LoginProps = {}) => {
       }
     }
 
+    // Helper function to check if input is email format
+    const isEmail = (input: string): boolean => {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+    };
+
     // If no hardcoded credentials match, try auth client
     try {
+      let emailForAuth = username;
+
+      // If the input is not an email format, find the user's email by username
+      if (!isEmail(username)) {
+        try {
+          const response = await fetch('/api/auth/find-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ identifier: username }),
+          });
+
+          if (!response.ok) {
+            if (response.status === 404) {
+              setError("اسم المستخدم غير موجود");
+              return;
+            }
+            throw new Error('Failed to find user');
+          }
+
+          const userData = await response.json();
+          emailForAuth = userData.email;
+        } catch {
+          setError("حدث خطأ في البحث عن المستخدم");
+          return;
+        }
+      }
+
       const { data, error } = await authClient.signIn.email({
-        email: username,
+        email: emailForAuth,
         password,
         callbackURL: "/api/auth/callback", // This will be handled by the auth callback
       });
@@ -286,7 +320,7 @@ const Login = ({}: LoginProps = {}) => {
               <div>
                 <input
                   type="text"
-                  placeholder="البريد الإلكتروني"
+                  placeholder="البريد الإلكتروني أو اسم المستخدم"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"

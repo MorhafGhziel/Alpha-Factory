@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SummaryCard from "@/components/ui/SummaryCard";
 import AddProjectModal from "@/components/ui/AddProjectModal";
 import RequestImprovementModal from "@/components/ui/RequestImprovementModal";
-import { useProjects, Project } from "@/contexts/ProjectContext";
+import { Project } from "../../../types";
 
 export default function ClientDashboardPage() {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
@@ -12,8 +12,30 @@ export default function ClientDashboardPage() {
     useState(false);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("جميع الحالات");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { projects, addProject } = useProjects();
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("/api/projects");
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data.projects || []);
+      } else {
+        console.error("Failed to fetch projects");
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load projects on component mount
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   // Function to check if a project is fully documented (completed all stages)
   const isProjectDocumented = (project: Project) => {
@@ -61,9 +83,38 @@ export default function ClientDashboardPage() {
     setIsRequestImprovementModalOpen(false);
   };
 
-  const handleAddProject = (projectData: Omit<Project, "id">) => {
-    addProject(projectData);
-    closeAddProjectModal();
+  const handleAddProject = async (projectData: {
+    title: string;
+    type: string;
+    filmingStatus: string;
+    fileLinks: string;
+    notes: string;
+    date: string;
+  }) => {
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(projectData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Project created successfully:", data);
+        // Refresh the projects list
+        await fetchProjects();
+        closeAddProjectModal();
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to create project:", errorData);
+        alert(`فشل في إنشاء المشروع: ${errorData.error || "خطأ غير معروف"}`);
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      alert("حدث خطأ أثناء إنشاء المشروع");
+    }
   };
 
   const toggleFilterDropdown = () => {
@@ -275,7 +326,13 @@ export default function ClientDashboardPage() {
           المـــــشــاريع
         </h2>
 
-        {projects.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12 sm:py-16">
+            <div className="text-gray-400 text-base sm:text-lg mb-4">
+              جاري تحميل المشاريع...
+            </div>
+          </div>
+        ) : projects.length === 0 ? (
           <div className="text-center py-12 sm:py-16">
             <div className="text-gray-400 text-base sm:text-lg mb-4">
               لا توجد مشاريع بعد

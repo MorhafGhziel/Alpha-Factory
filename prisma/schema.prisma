@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -17,26 +11,32 @@ datasource db {
 model User {
   id            String    @id
   name          String
-  email         String
+  email         String    @unique
   emailVerified Boolean   @default(false)
   image         String?
-  username      String?
+  username      String?   @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
   role          String?
   groupId       String?
-  group         Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  @@unique([email])
-  @@unique([username])
+  phone         String?   @unique
+  accounts      Account[]
+  sessions      Session[]
+  group         Group?    @relation(fields: [groupId], references: [id])
+  
+  // Project relations
+  clientProjects    Project[] @relation("ClientProjects")
+  editorProjects    Project[] @relation("EditorProjects")
+  designerProjects  Project[] @relation("DesignerProjects")
+  reviewerProjects  Project[] @relation("ReviewerProjects")
+
   @@map("user")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -44,7 +44,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -53,7 +52,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -63,6 +61,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -79,14 +78,57 @@ model Verification {
 }
 
 model Group {
-  id                String   @id @default(cuid())
-  name              String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  users             User[]
-  telegramChatId    String?  // Telegram group chat ID
-  telegramInviteLink String? // Telegram group invite link
-  telegramGroupName String?  // Telegram group name
+  id                 String    @id @default(cuid())
+  name               String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  telegramChatId     String?
+  telegramGroupName  String?
+  telegramInviteLink String?
+  users              User[]
+  projects           Project[]
 
   @@map("group")
+}
+
+model Project {
+  id                 String   @id @default(cuid())
+  title              String
+  type               String
+  filmingStatus      String
+  fileLinks          String?
+  notes              String?
+  date               String
+  startDate          DateTime?
+  endDate            DateTime?
+  
+  // Progress tracking fields
+  editMode           String   @default("لم يبدأ")
+  reviewMode         String   @default("في الانتظار")
+  designMode         String   @default("في الانتظار")
+  verificationMode   String   @default("لا شيء")
+  
+  // Links for different stages
+  reviewLinks        String?
+  designLinks        String?
+  documentation      String?
+  
+  // Relations
+  clientId           String
+  client             User     @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
+  groupId            String?
+  group              Group?   @relation(fields: [groupId], references: [id])
+  
+  // Assignment tracking
+  editorId           String?
+  editor             User?    @relation("EditorProjects", fields: [editorId], references: [id])
+  designerId         String?
+  designer           User?    @relation("DesignerProjects", fields: [designerId], references: [id])
+  reviewerId         String?
+  reviewer           User?    @relation("ReviewerProjects", fields: [reviewerId], references: [id])
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("project")
 }

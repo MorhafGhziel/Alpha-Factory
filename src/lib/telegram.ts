@@ -112,10 +112,6 @@ ${users
 • تحديثات حالة المشروع
 • تنبيهات مهمة
 
-📝 **الأوامر المتاحة:**
-/status - عرض حالة المشروع
-/help - عرض المساعدة
-/team - عرض أعضاء الفريق
 
 🚀 بالتوفيق في مشروعكم!`;
 
@@ -192,6 +188,96 @@ export async function sendProjectUpdate(
 }
 
 /**
+ * Send new project notification to the team
+ */
+export async function sendNewProjectNotification(
+  chatId: string,
+  projectData: {
+    title: string;
+    type: string;
+    filmingStatus: string;
+    date: string;
+    clientName: string;
+    notes?: string;
+    fileLinks?: string;
+  }
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    const message = `🎬 **مشروع جديد متاح للعمل!**
+
+📋 **العنوان:** ${projectData.title}
+🎥 **النوع:** ${projectData.type}
+📅 **التاريخ:** ${projectData.date}
+📸 **حالة التصوير:** ${projectData.filmingStatus}
+👤 **العميل:** ${projectData.clientName}
+
+${projectData.notes ? `📝 **ملاحظات:** ${projectData.notes}` : ""}
+${projectData.fileLinks ? `🔗 **الملفات:** ${projectData.fileLinks}` : ""}
+
+🚀 **الفريق جاهز للبدء في العمل!**
+⏰ **تم الإنشاء:** ${new Date().toLocaleString("ar-EG")}
+
+`;
+
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error sending new project notification:", error);
+    return false;
+  }
+}
+
+/**
+ * Send detailed project status update notification
+ */
+export async function sendProjectStatusUpdate(
+  chatId: string,
+  updateData: {
+    projectTitle: string;
+    updatedBy: string;
+    userRole: string;
+    fieldName: string;
+    oldValue: string;
+    newValue: string;
+    fieldNameArabic: string;
+  }
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    const roleEmoji = getRoleEmoji(updateData.userRole);
+    const fieldEmoji = getFieldEmoji(updateData.fieldName);
+
+    const message = `📊 **تحديث حالة المشروع**
+
+🎬 **المشروع:** ${updateData.projectTitle}
+${roleEmoji} **المحدث بواسطة:** ${updateData.updatedBy} (${getRoleInArabic(
+      updateData.userRole
+    )})
+
+${fieldEmoji} **المجال المحدث:** ${updateData.fieldNameArabic}
+❌ **القيمة السابقة:** ${updateData.oldValue}
+✅ **القيمة الجديدة:** ${updateData.newValue}
+
+⏰ **وقت التحديث:** ${new Date().toLocaleString("ar-EG")}`;
+
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error sending project status update:", error);
+    return false;
+  }
+}
+
+/**
  * Handle bot commands
  */
 export function setupBotCommands(): void {
@@ -258,6 +344,62 @@ function getRoleInArabic(role: string): string {
     admin: "مدير",
   };
   return roleMap[role] || role;
+}
+
+/**
+ * Get role emoji
+ */
+function getRoleEmoji(role: string): string {
+  const emojiMap: { [key: string]: string } = {
+    client: "👤",
+    editor: "✂️",
+    designer: "🎨",
+    reviewer: "👁️",
+    admin: "👑",
+  };
+  return emojiMap[role] || "👤";
+}
+
+/**
+ * Get field emoji based on field name
+ */
+function getFieldEmoji(fieldName: string): string {
+  const emojiMap: { [key: string]: string } = {
+    filmingStatus: "🎬",
+    editMode: "✂️",
+    designMode: "🎨",
+    reviewMode: "👁️",
+    verificationMode: "⭐",
+    reviewLinks: "🔗",
+    designLinks: "🔗",
+    fileLinks: "📁",
+    notes: "📝",
+    title: "📋",
+    type: "🎥",
+    date: "📅",
+  };
+  return emojiMap[fieldName] || "📊";
+}
+
+/**
+ * Get field name in Arabic
+ */
+function getFieldNameInArabic(fieldName: string): string {
+  const fieldMap: { [key: string]: string } = {
+    filmingStatus: "حالة التصوير",
+    editMode: "حالة التحرير",
+    designMode: "حالة التصميم",
+    reviewMode: "حالة المراجعة",
+    verificationMode: "تقييم المشروع",
+    reviewLinks: "روابط المراجعة",
+    designLinks: "روابط التصميم",
+    fileLinks: "ملفات المشروع",
+    notes: "الملاحظات",
+    title: "عنوان المشروع",
+    type: "نوع المشروع",
+    date: "تاريخ المشروع",
+  };
+  return fieldMap[fieldName] || fieldName;
 }
 
 /**

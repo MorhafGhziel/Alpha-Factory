@@ -8,6 +8,7 @@ import { authClient } from "@/src/lib/auth-client";
 interface UserFormData {
   name: string;
   email: string;
+  phone?: string; // Phone number for clients
   role: string;
 }
 
@@ -25,7 +26,7 @@ export default function AddAccountPage() {
   const [formData, setFormData] = useState<FormData>({
     groupName: "",
     telegramChatId: "",
-    client: { name: "", email: "", role: "client" },
+    client: { name: "", email: "", phone: "", role: "client" },
     editor: { name: "", email: "", role: "editor" },
     designer: { name: "", email: "", role: "designer" },
     reviewer: { name: "", email: "", role: "reviewer" },
@@ -98,10 +99,27 @@ export default function AddAccountPage() {
       formData.reviewer,
     ];
     for (const user of users) {
-      if (!user.name || !user.email) {
-        setSubmitError("الاسم والبريد الإلكتروني مطلوبان لكل مستخدم");
-        setIsSubmitting(false);
-        return;
+      if (user.role === "client") {
+        // For clients, require name and phone number
+        if (!user.name || !user.phone) {
+          setSubmitError("الاسم ورقم الهاتف مطلوبان للعميل");
+          setIsSubmitting(false);
+          return;
+        }
+        // Validate phone number format
+        const phoneRegex = /^[0-9+\-\s()]+$/;
+        if (!phoneRegex.test(user.phone)) {
+          setSubmitError("رقم الهاتف غير صحيح");
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        // For other roles, require name and email
+        if (!user.name || !user.email) {
+          setSubmitError("الاسم والبريد الإلكتروني مطلوبان لكل مستخدم");
+          setIsSubmitting(false);
+          return;
+        }
       }
     }
 
@@ -280,11 +298,11 @@ export default function AddAccountPage() {
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
-                type="email"
-                placeholder="Email"
-                value={formData.client.email}
+                type="tel"
+                placeholder="Phone Number / رقم الهاتف"
+                value={formData.client.phone || ""}
                 onChange={(e) =>
-                  handleInputChange("client", "email", e.target.value)
+                  handleInputChange("client", "phone", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />

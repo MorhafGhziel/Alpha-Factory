@@ -18,13 +18,13 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { email, name } = await req.json();
+    const { email, name, phone } = await req.json();
     const userId = id;
 
     // Validate input
-    if (!email && !name) {
+    if (!email && !name && !phone) {
       return NextResponse.json(
-        { error: "At least one field (email or name) is required" },
+        { error: "At least one field (email, name, or phone) is required" },
         { status: 400 }
       );
     }
@@ -48,10 +48,39 @@ export async function PUT(
       }
     }
 
+    // Check if phone is already taken by another user
+    if (phone) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          phone: phone,
+          NOT: {
+            id: userId,
+          },
+        },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: "Phone number is already taken" },
+          { status: 409 }
+        );
+      }
+
+      // Validate phone number format
+      const phoneRegex = /^[0-9+\-\s()]+$/;
+      if (!phoneRegex.test(phone)) {
+        return NextResponse.json(
+          { error: "Invalid phone number format" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update user
-    const updateData: { email?: string; name?: string } = {};
+    const updateData: { email?: string; name?: string; phone?: string } = {};
     if (email) updateData.email = email;
     if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -60,6 +89,7 @@ export async function PUT(
         id: true,
         name: true,
         email: true,
+        phone: true,
         role: true,
         createdAt: true,
         emailVerified: true,
