@@ -314,10 +314,7 @@ export default function ClientTrackingBoardPage() {
       {/* Desktop Table View */}
       <div className="hidden md:block w-[90%]">
         <div className="bg-[#1a1a1a] rounded-[24px] overflow-hidden border border-[#3F3F3F]">
-          <div
-            className="overflow-x-auto scrollbar-thin scrollbar-track-[#1a1a1a] scrollbar-thumb-[#3f3f3f] hover:scrollbar-thumb-[#555555] scrollbar-thumb-rounded-full"
-            style={{ position: "relative", zIndex: 1 }}
-          >
+          <div className="overflow-x-auto scrollbar-thin scrollbar-track-[#1a1a1a] scrollbar-thumb-[#3f3f3f] hover:scrollbar-thumb-[#555555] scrollbar-thumb-rounded-full relative z-10">
             <table className="border-collapse w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-[#3F3F3F]">
