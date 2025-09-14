@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import CustomDatePicker from "./CustomDatePicker";
 
 interface AddProjectModalProps {
   isOpen: boolean;
@@ -30,43 +31,9 @@ export default function AddProjectModal({
   const [fileLinks, setFileLinks] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-
-  const calculateProjectDuration = (videoType: string): number => {
-    switch (videoType) {
-      case "فيــــــــــــــديوهــــات طـــــــويلة":
-        return 365;
-      case "فيــــــــــــــديوهــــات قـــــصيرة":
-        return 90;
-      case "إعلانات / مقاطع فيديو ترويجية":
-        return 30;
-      default:
-        return 90;
-    }
-  };
-
-  const calculateProjectDates = (
-    videoType: string
-  ): { startDate: string; endDate: string } => {
-    if (!videoType) return { startDate: "", endDate: "" };
-
-    const today = new Date();
-    const start = new Date(today);
-    const duration = calculateProjectDuration(videoType);
-    const end = new Date(today);
-    end.setDate(today.getDate() + duration);
-
-    return {
-      startDate: start.toISOString().split("T")[0],
-      endDate: end.toISOString().split("T")[0],
-    };
-  };
 
   const handleProjectTypeChange = (type: string) => {
     setProjectType(type);
-    const dates = calculateProjectDates(type);
-    setStartDate(dates.startDate);
-    setEndDate(dates.endDate);
   };
 
   const handleSubmit = () => {
@@ -75,15 +42,13 @@ export default function AddProjectModal({
       return;
     }
 
-    const dateRange = `${startDate} - ${endDate}`;
-
     onAddProject({
       title,
       type: projectType,
       filmingStatus,
       fileLinks,
       notes,
-      date: dateRange,
+      date: startDate,
     });
 
     setTitle("");
@@ -92,7 +57,6 @@ export default function AddProjectModal({
     setFileLinks("");
     setNotes("");
     setStartDate("");
-    setEndDate("");
   };
 
   return (
@@ -140,34 +104,12 @@ export default function AddProjectModal({
 
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
               <div className="space-y-4 sm:space-y-6 lg:space-y-10">
-                <div className="space-y-4">
-                  <div className="text-sm text-gray-500 text-right">
-                    اختر نوع الفيديو لتغيير المدة تلقائياً
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 text-right">
-                        تاريخ النهاية
-                      </label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        readOnly
-                        className="w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-full focus:outline-none text-right cursor-not-allowed opacity-70 text-sm sm:text-base"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-2 text-right">
-                        تاريخ البداية
-                      </label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        readOnly
-                        className="w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-full focus:outline-none text-right cursor-not-allowed opacity-70 text-sm sm:text-base"
-                      />
-                    </div>
-                  </div>
+                <div>
+                  <CustomDatePicker
+                    value={startDate}
+                    onChange={setStartDate}
+                    placeholder="تاريخ بداية المشروع"
+                  />
                 </div>
 
                 <div>

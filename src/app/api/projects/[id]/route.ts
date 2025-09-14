@@ -14,8 +14,6 @@ interface UpdateProjectRequest {
   fileLinks?: string;
   notes?: string;
   date?: string;
-  startDate?: string;
-  endDate?: string;
   editMode?: string;
   reviewMode?: string;
   designMode?: string;
@@ -215,16 +213,16 @@ export async function PUT(
     // Prepare update data
     const updates: any = {};
 
-    // Parse dates if provided
-    if (updateData.startDate)
-      updates.startDate = new Date(updateData.startDate);
-    if (updateData.endDate) updates.endDate = new Date(updateData.endDate);
+    // Parse date if provided
+    if (updateData.date) {
+      updates.startDate = new Date(updateData.date);
+      updates.endDate = null; // Always set endDate to null
+    }
 
     // Add other fields
     Object.keys(updateData).forEach((key) => {
       if (
-        key !== "startDate" &&
-        key !== "endDate" &&
+        key !== "date" &&
         updateData[key as keyof UpdateProjectRequest] !== undefined
       ) {
         updates[key] = updateData[key as keyof UpdateProjectRequest];

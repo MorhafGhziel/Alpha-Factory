@@ -10,8 +10,6 @@ interface CreateProjectRequest {
   fileLinks?: string;
   notes?: string;
   date: string;
-  startDate?: string;
-  endDate?: string;
 }
 
 // POST - Create a new project
@@ -33,8 +31,6 @@ export async function POST(req: NextRequest) {
       fileLinks,
       notes,
       date,
-      startDate,
-      endDate,
     }: CreateProjectRequest = await req.json();
 
     // Validate required fields
@@ -79,9 +75,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse dates if provided
-    const parsedStartDate = startDate ? new Date(startDate) : null;
-    const parsedEndDate = endDate ? new Date(endDate) : null;
+    // Parse date if provided
+    const parsedStartDate = date ? new Date(date) : null;
 
     // Create the project
     const project = await prisma.project.create({
@@ -93,7 +88,7 @@ export async function POST(req: NextRequest) {
         notes,
         date,
         startDate: parsedStartDate,
-        endDate: parsedEndDate,
+        endDate: null,
         clientId: user.id,
         groupId: user.groupId,
       },
