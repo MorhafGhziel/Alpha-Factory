@@ -28,6 +28,16 @@ export default function ClientTrackingBoardPage() {
     currentContent: "",
   });
 
+  const [loadingStates, setLoadingStates] = useState<{
+    [key: string]: {
+      filmingStatus?: boolean;
+      rating?: boolean;
+      documentation?: boolean;
+      notes?: boolean;
+      fileLinks?: boolean;
+    };
+  }>({});
+
   // Fetch projects from API
   const fetchProjects = async () => {
     try {
@@ -66,6 +76,12 @@ export default function ClientTrackingBoardPage() {
       return;
     }
 
+    // Set loading state
+    setLoadingStates((prev) => ({
+      ...prev,
+      [projectId]: { ...prev[projectId], filmingStatus: true },
+    }));
+
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
@@ -84,6 +100,12 @@ export default function ClientTrackingBoardPage() {
     } catch (error) {
       console.error("Error updating filming status:", error);
       alert("حدث خطأ أثناء تحديث حالة التصوير");
+    } finally {
+      // Clear loading state
+      setLoadingStates((prev) => ({
+        ...prev,
+        [projectId]: { ...prev[projectId], filmingStatus: false },
+      }));
     }
   };
 
@@ -208,6 +230,12 @@ export default function ClientTrackingBoardPage() {
 
   // Handle rating update
   const updateRating = async (projectId: string, rating: string) => {
+    // Set loading state
+    setLoadingStates((prev) => ({
+      ...prev,
+      [projectId]: { ...prev[projectId], rating: true },
+    }));
+
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
@@ -226,8 +254,21 @@ export default function ClientTrackingBoardPage() {
     } catch (error) {
       console.error("Error updating rating:", error);
       alert("حدث خطأ أثناء تحديث التقييم");
+    } finally {
+      // Clear loading state
+      setLoadingStates((prev) => ({
+        ...prev,
+        [projectId]: { ...prev[projectId], rating: false },
+      }));
     }
   };
+
+  // Loading spinner component
+  const LoadingSpinner = ({ size = "w-4 h-4" }: { size?: string }) => (
+    <div
+      className={`${size} animate-spin rounded-full border-2 border-gray-300 border-t-[#EAD06C]`}
+    ></div>
+  );
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full md:py-20 py-10">
@@ -278,18 +319,29 @@ export default function ClientTrackingBoardPage() {
                     <div className="text-gray-400 text-xs mb-2">
                       حالة التصوير
                     </div>
-                    <CustomDropdown
-                      options={["لم يتم الانتهاء منه", "تم الانتـــهاء مــنه"]}
-                      placeholder="اختر حالة التصوير"
-                      selectedValue={project.filmingStatus}
-                      onSelect={(value) =>
-                        updateFilmingStatus(project.id, value)
-                      }
-                      className="w-full"
-                      buttonClassName={`${getFilmingStatusColor(
-                        project.filmingStatus
-                      )} min-w-[180px]`}
-                    />
+                    <div className="relative">
+                      {loadingStates[project.id]?.filmingStatus ? (
+                        <div className="flex items-center justify-center min-h-[40px]">
+                          <LoadingSpinner size="w-6 h-6" />
+                        </div>
+                      ) : (
+                        <CustomDropdown
+                          options={[
+                            "لم يتم الانتهاء منه",
+                            "تم الانتـــهاء مــنه",
+                          ]}
+                          placeholder="اختر حالة التصوير"
+                          selectedValue={project.filmingStatus}
+                          onSelect={(value) =>
+                            updateFilmingStatus(project.id, value)
+                          }
+                          className="w-full"
+                          buttonClassName={`${getFilmingStatusColor(
+                            project.filmingStatus
+                          )} min-w-[180px]`}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
@@ -389,22 +441,30 @@ export default function ClientTrackingBoardPage() {
                     <div className="text-[#EAD06C] text-xs mb-2 font-medium">
                       التقييم
                     </div>
-                    <CustomDropdown
-                      options={[
-                        "ممتاز",
-                        "جيد جداً",
-                        "جيد",
-                        "مقبول",
-                        "يحتاج تحسين",
-                        "لا شيء",
-                      ]}
-                      placeholder="اختر التقييم"
-                      selectedValue={project.verificationMode || ""}
-                      onSelect={(value: string) =>
-                        updateRating(project.id, value)
-                      }
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      {loadingStates[project.id]?.rating ? (
+                        <div className="flex items-center justify-center min-h-[40px]">
+                          <LoadingSpinner size="w-6 h-6" />
+                        </div>
+                      ) : (
+                        <CustomDropdown
+                          options={[
+                            "ممتاز",
+                            "جيد جداً",
+                            "جيد",
+                            "مقبول",
+                            "يحتاج تحسين",
+                            "لا شيء",
+                          ]}
+                          placeholder="اختر التقييم"
+                          selectedValue={project.verificationMode || ""}
+                          onSelect={(value: string) =>
+                            updateRating(project.id, value)
+                          }
+                          className="w-full"
+                        />
+                      )}
+                    </div>
                   </div>
 
                   <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
@@ -412,61 +472,107 @@ export default function ClientTrackingBoardPage() {
                       التوثيق
                     </div>
                     <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => {
-                          const newStatus = project.documentation ? "" : "موثق";
-                          // Update documentation status
-                          fetch(`/api/projects/${project.id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ documentation: newStatus }),
-                          }).then(() => fetchProjects());
-                        }}
-                        className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
-                      >
-                        <div className="relative w-8 h-8">
-                          {/* Verified Badge */}
-                          <div
-                            className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
-                              project.documentation
-                                ? "opacity-100 scale-100 rotate-0"
-                                : "opacity-0 scale-75 rotate-180"
-                            }`}
-                          >
-                            <svg
-                              className="w-5 h-5 text-white transition-all duration-300"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-
-                          {/* Unverified Badge */}
-                          <div
-                            className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
-                              project.documentation
-                                ? "opacity-0 scale-75 rotate-180"
-                                : "opacity-100 scale-100 rotate-0"
-                            }`}
-                          >
-                            <div className="w-3 h-3 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
-                          </div>
+                      {loadingStates[project.id]?.documentation ? (
+                        <div className="flex items-center justify-center w-8 h-8">
+                          <LoadingSpinner size="w-6 h-6" />
                         </div>
-                      </button>
-                      <span
-                        className={`text-xs font-medium ${
-                          project.documentation
-                            ? "text-blue-400"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {project.documentation ? "موثق" : "غير موثق"}
-                      </span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={async () => {
+                              const newStatus = project.documentation
+                                ? ""
+                                : "موثق";
+
+                              // Set loading state
+                              setLoadingStates((prev) => ({
+                                ...prev,
+                                [project.id]: {
+                                  ...prev[project.id],
+                                  documentation: true,
+                                },
+                              }));
+
+                              try {
+                                const response = await fetch(
+                                  `/api/projects/${project.id}`,
+                                  {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      documentation: newStatus,
+                                    }),
+                                  }
+                                );
+
+                                if (response.ok) {
+                                  await fetchProjects();
+                                }
+                              } catch (error) {
+                                console.error(
+                                  "Error updating documentation:",
+                                  error
+                                );
+                              } finally {
+                                // Clear loading state
+                                setLoadingStates((prev) => ({
+                                  ...prev,
+                                  [project.id]: {
+                                    ...prev[project.id],
+                                    documentation: false,
+                                  },
+                                }));
+                              }
+                            }}
+                            className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
+                          >
+                            <div className="relative w-8 h-8">
+                              {/* Verified Badge */}
+                              <div
+                                className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
+                                  project.documentation
+                                    ? "opacity-100 scale-100 rotate-0"
+                                    : "opacity-0 scale-75 rotate-180"
+                                }`}
+                              >
+                                <svg
+                                  className="w-5 h-5 text-white transition-all duration-300"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+
+                              {/* Unverified Badge */}
+                              <div
+                                className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
+                                  project.documentation
+                                    ? "opacity-0 scale-75 rotate-180"
+                                    : "opacity-100 scale-100 rotate-0"
+                                }`}
+                              >
+                                <div className="w-3 h-3 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
+                              </div>
+                            </div>
+                          </button>
+                          <span
+                            className={`text-xs font-medium ${
+                              project.documentation
+                                ? "text-blue-400"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {project.documentation ? "موثق" : "غير موثق"}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -650,21 +756,29 @@ export default function ClientTrackingBoardPage() {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <CustomDropdown
-                          options={[
-                            "لم يتم الانتهاء منه",
-                            "تم الانتـــهاء مــنه",
-                          ]}
-                          placeholder="اختر حالة التصوير"
-                          selectedValue={project.filmingStatus}
-                          onSelect={(value) =>
-                            updateFilmingStatus(project.id, value)
-                          }
-                          className="w-full max-w-[200px] mx-auto"
-                          buttonClassName={`${getFilmingStatusColor(
-                            project.filmingStatus
-                          )} min-w-[180px]`}
-                        />
+                        <div className="relative">
+                          {loadingStates[project.id]?.filmingStatus ? (
+                            <div className="flex items-center justify-center min-h-[40px]">
+                              <LoadingSpinner size="w-6 h-6" />
+                            </div>
+                          ) : (
+                            <CustomDropdown
+                              options={[
+                                "لم يتم الانتهاء منه",
+                                "تم الانتـــهاء مــنه",
+                              ]}
+                              placeholder="اختر حالة التصوير"
+                              selectedValue={project.filmingStatus}
+                              onSelect={(value) =>
+                                updateFilmingStatus(project.id, value)
+                              }
+                              className="w-full max-w-[200px] mx-auto"
+                              buttonClassName={`${getFilmingStatusColor(
+                                project.filmingStatus
+                              )} min-w-[180px]`}
+                            />
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <div className="flex flex-col items-center gap-2">
@@ -762,84 +876,134 @@ export default function ClientTrackingBoardPage() {
                         )}
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <CustomDropdown
-                          options={[
-                            "ممتاز",
-                            "جيد جداً",
-                            "جيد",
-                            "مقبول",
-                            "يحتاج تحسين",
-                            "لا شيء",
-                          ]}
-                          placeholder="اختر التقييم"
-                          selectedValue={project.verificationMode || ""}
-                          onSelect={(value: string) =>
-                            updateRating(project.id, value)
-                          }
-                          className="min-w-[120px]"
-                        />
+                        <div className="relative">
+                          {loadingStates[project.id]?.rating ? (
+                            <div className="flex items-center justify-center min-h-[40px]">
+                              <LoadingSpinner size="w-6 h-6" />
+                            </div>
+                          ) : (
+                            <CustomDropdown
+                              options={[
+                                "ممتاز",
+                                "جيد جداً",
+                                "جيد",
+                                "مقبول",
+                                "يحتاج تحسين",
+                                "لا شيء",
+                              ]}
+                              placeholder="اختر التقييم"
+                              selectedValue={project.verificationMode || ""}
+                              onSelect={(value: string) =>
+                                updateRating(project.id, value)
+                              }
+                              className="min-w-[120px]"
+                            />
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => {
-                              const newStatus = project.documentation
-                                ? ""
-                                : "موثق";
-                              // Update documentation status
-                              fetch(`/api/projects/${project.id}`, {
-                                method: "PUT",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  documentation: newStatus,
-                                }),
-                              }).then(() => fetchProjects());
-                            }}
-                            className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
-                          >
-                            <div className="relative w-6 h-6">
-                              {/* Verified Badge */}
-                              <div
-                                className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
-                                  project.documentation
-                                    ? "opacity-100 scale-100 rotate-0"
-                                    : "opacity-0 scale-75 rotate-180"
-                                }`}
-                              >
-                                <svg
-                                  className="w-4 h-4 text-white transition-all duration-300"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-
-                              {/* Unverified Badge */}
-                              <div
-                                className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
-                                  project.documentation
-                                    ? "opacity-0 scale-75 rotate-180"
-                                    : "opacity-100 scale-100 rotate-0"
-                                }`}
-                              >
-                                <div className="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
-                              </div>
+                          {loadingStates[project.id]?.documentation ? (
+                            <div className="flex items-center justify-center w-6 h-6">
+                              <LoadingSpinner size="w-6 h-6" />
                             </div>
-                          </button>
-                          <span
-                            className={`text-xs font-medium ${
-                              project.documentation
-                                ? "text-blue-400"
-                                : "text-gray-400"
-                            }`}
-                          >
-                            {project.documentation ? "موثق" : "غير موثق"}
-                          </span>
+                          ) : (
+                            <>
+                              <button
+                                onClick={async () => {
+                                  const newStatus = project.documentation
+                                    ? ""
+                                    : "موثق";
+
+                                  // Set loading state
+                                  setLoadingStates((prev) => ({
+                                    ...prev,
+                                    [project.id]: {
+                                      ...prev[project.id],
+                                      documentation: true,
+                                    },
+                                  }));
+
+                                  try {
+                                    const response = await fetch(
+                                      `/api/projects/${project.id}`,
+                                      {
+                                        method: "PUT",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          documentation: newStatus,
+                                        }),
+                                      }
+                                    );
+
+                                    if (response.ok) {
+                                      await fetchProjects();
+                                    }
+                                  } catch (error) {
+                                    console.error(
+                                      "Error updating documentation:",
+                                      error
+                                    );
+                                  } finally {
+                                    // Clear loading state
+                                    setLoadingStates((prev) => ({
+                                      ...prev,
+                                      [project.id]: {
+                                        ...prev[project.id],
+                                        documentation: false,
+                                      },
+                                    }));
+                                  }
+                                }}
+                                className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
+                              >
+                                <div className="relative w-6 h-6">
+                                  {/* Verified Badge */}
+                                  <div
+                                    className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
+                                      project.documentation
+                                        ? "opacity-100 scale-100 rotate-0"
+                                        : "opacity-0 scale-75 rotate-180"
+                                    }`}
+                                  >
+                                    <svg
+                                      className="w-4 h-4 text-white transition-all duration-300"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  </div>
+
+                                  {/* Unverified Badge */}
+                                  <div
+                                    className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
+                                      project.documentation
+                                        ? "opacity-0 scale-75 rotate-180"
+                                        : "opacity-100 scale-100 rotate-0"
+                                    }`}
+                                  >
+                                    <div className="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
+                                  </div>
+                                </div>
+                              </button>
+                              <span
+                                className={`text-xs font-medium ${
+                                  project.documentation
+                                    ? "text-blue-400"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                {project.documentation ? "موثق" : "غير موثق"}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
