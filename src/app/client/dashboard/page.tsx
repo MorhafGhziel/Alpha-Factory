@@ -441,6 +441,19 @@ export default function ClientDashboardPage() {
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                     <span className="text-gray-300 text-sm sm:text-base">
+                      حالة التصميم:
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getStatusColor(
+                        project.designMode || "لم يبدأ"
+                      )}`}
+                    >
+                      {project.designMode || "لم يبدأ"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span className="text-gray-300 text-sm sm:text-base">
                       المراجعة:
                     </span>
                     <span
