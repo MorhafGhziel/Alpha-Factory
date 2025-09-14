@@ -136,26 +136,53 @@ export default function ClientTrackingBoardPage() {
     switch (status) {
       case "تم الانتهاء منه":
       case "تمت المراجعة":
-        return "bg-green-600 text-white border border-green-500";
+        return "text-white border";
       case "قيد التنفيذ":
-        return "bg-[#EAD06C] text-black border border-[#F4D03F]";
+        return "text-white border";
       case "في الانتظار":
-        return "bg-orange-600 text-white border border-orange-500";
+        return "text-white border";
       case "لم يبدأ":
-        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
+        return "text-white border";
       default:
-        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
+        return "text-white border";
+    }
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "تم الانتهاء منه":
+      case "تمت المراجعة":
+        return { backgroundColor: "#5dc239", borderColor: "#5dc239" };
+      case "قيد التنفيذ":
+        return { backgroundColor: "#db8351", borderColor: "#db8351" };
+      case "في الانتظار":
+        return { backgroundColor: "#db8351", borderColor: "#db8351" };
+      case "لم يبدأ":
+        return { backgroundColor: "#262626", borderColor: "#262626" };
+      default:
+        return { backgroundColor: "#ef3c54", borderColor: "#ef3c54" };
     }
   };
 
   const getFilmingStatusColor = (status: string) => {
     switch (status) {
       case "تم الانتـــهاء مــنه":
-        return "bg-green-600 text-white border border-green-500";
+        return "text-white border";
       case "لم يتم الانتهاء منه":
-        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
+        return "text-white border";
       default:
-        return "bg-[#2A2A2A] text-[#CCCCCC] border border-[#3F3F3F]";
+        return "text-white border";
+    }
+  };
+
+  const getFilmingStatusStyle = (status: string) => {
+    switch (status) {
+      case "تم الانتـــهاء مــنه":
+        return { backgroundColor: "#5dc239", borderColor: "#5dc239" };
+      case "لم يتم الانتهاء منه":
+        return { backgroundColor: "#ef3c54", borderColor: "#ef3c54" };
+      default:
+        return { backgroundColor: "#ef3c54", borderColor: "#ef3c54" };
     }
   };
 
@@ -339,6 +366,7 @@ export default function ClientTrackingBoardPage() {
                           buttonClassName={`${getFilmingStatusColor(
                             project.filmingStatus
                           )} min-w-[180px]`}
+                          style={getFilmingStatusStyle(project.filmingStatus)}
                         />
                       )}
                     </div>
@@ -391,6 +419,7 @@ export default function ClientTrackingBoardPage() {
                       className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                         project.editMode
                       )}`}
+                      style={getStatusStyle(project.editMode)}
                     >
                       {getStatusText(project.editMode)}
                     </div>
@@ -409,6 +438,7 @@ export default function ClientTrackingBoardPage() {
                       className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                         project.designMode
                       )}`}
+                      style={getStatusStyle(project.designMode)}
                     >
                       {getStatusText(project.designMode)}
                     </div>
@@ -427,6 +457,7 @@ export default function ClientTrackingBoardPage() {
                       className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                         project.reviewMode
                       )}`}
+                      style={getStatusStyle(project.reviewMode)}
                     >
                       {getStatusText(project.reviewMode)}
                     </div>
@@ -776,6 +807,9 @@ export default function ClientTrackingBoardPage() {
                               buttonClassName={`${getFilmingStatusColor(
                                 project.filmingStatus
                               )} min-w-[180px]`}
+                              style={getFilmingStatusStyle(
+                                project.filmingStatus
+                              )}
                             />
                           )}
                         </div>
@@ -786,6 +820,7 @@ export default function ClientTrackingBoardPage() {
                             className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                               project.editMode
                             )}`}
+                            style={getStatusStyle(project.editMode)}
                           >
                             {getStatusText(project.editMode)}
                           </span>
@@ -802,6 +837,7 @@ export default function ClientTrackingBoardPage() {
                             className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                               project.designMode
                             )}`}
+                            style={getStatusStyle(project.designMode)}
                           >
                             {getStatusText(project.designMode)}
                           </span>
@@ -818,6 +854,7 @@ export default function ClientTrackingBoardPage() {
                             className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
                               project.reviewMode
                             )}`}
+                            style={getStatusStyle(project.reviewMode)}
                           >
                             {getStatusText(project.reviewMode)}
                           </span>

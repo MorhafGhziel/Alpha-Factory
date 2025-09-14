@@ -11,6 +11,7 @@ interface CustomDropdownProps {
   className?: string;
   buttonClassName?: string;
   optionClassName?: string;
+  style?: React.CSSProperties;
 }
 
 export default function CustomDropdown({
@@ -21,6 +22,7 @@ export default function CustomDropdown({
   className = "",
   buttonClassName = "",
   optionClassName = "",
+  style,
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -70,6 +72,7 @@ export default function CustomDropdown({
         ref={buttonRef}
         onClick={toggleDropdown}
         className={`w-full bg-[#0B0B0B] cursor-pointer hover:bg-[#333336] transition-all duration-300 text-white px-4 py-2 rounded-full focus:outline-none flex items-center justify-between min-w-[200px] ${buttonClassName}`}
+        style={style}
       >
         <svg
           className={`w-5 h-5 transition-transform ${
