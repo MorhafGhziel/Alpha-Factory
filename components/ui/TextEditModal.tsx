@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import VoiceRecorder from "./VoiceRecorder";
 
 interface TextEditModalProps {
   isOpen: boolean;
@@ -41,6 +42,16 @@ export default function TextEditModal({
   const handleClose = () => {
     setContent(initialContent); // Reset to original content
     onClose();
+  };
+
+  const handleVoiceRecorded = (hasRecording: boolean) => {
+    if (hasRecording) {
+      setContent(
+        (prev) => prev + (prev ? "\n" : "") + "🎤 [رسالة صوتية مسجلة]"
+      );
+    } else {
+      setContent((prev) => prev.replace(/\n?🎤 \[رسالة صوتية مسجلة\]/g, ""));
+    }
   };
 
   return (
@@ -112,6 +123,14 @@ export default function TextEditModal({
                     <div className="text-right text-xs text-gray-400 mt-1">
                       {content.length}/{maxLength}
                     </div>
+                  )}
+
+                  {/* Voice Recording Section - Only show for textarea */}
+                  {isTextarea && (
+                    <VoiceRecorder
+                      onVoiceRecorded={handleVoiceRecorded}
+                      className="mt-3"
+                    />
                   )}
                 </div>
 

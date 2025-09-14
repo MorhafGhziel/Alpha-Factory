@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomDatePicker from "./CustomDatePicker";
+import VoiceRecorder from "./VoiceRecorder";
 
 interface AddProjectModalProps {
   isOpen: boolean;
@@ -34,6 +35,14 @@ export default function AddProjectModal({
 
   const handleProjectTypeChange = (type: string) => {
     setProjectType(type);
+  };
+
+  const handleVoiceRecorded = (hasRecording: boolean) => {
+    if (hasRecording) {
+      setNotes((prev) => prev + (prev ? "\n" : "") + "🎤 [رسالة صوتية مسجلة]");
+    } else {
+      setNotes((prev) => prev.replace(/\n?🎤 \[رسالة صوتية مسجلة\]/g, ""));
+    }
   };
 
   const handleSubmit = () => {
@@ -255,6 +264,12 @@ export default function AddProjectModal({
                     onChange={(e) => setNotes(e.target.value)}
                     className="w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-2xl focus:outline-none text-right resize-none text-sm sm:text-base"
                     placeholder="الملاحـــــــظات"
+                  />
+
+                  {/* Voice Recording Section */}
+                  <VoiceRecorder
+                    onVoiceRecorded={handleVoiceRecorded}
+                    className="mt-3"
                   />
                 </div>
 
