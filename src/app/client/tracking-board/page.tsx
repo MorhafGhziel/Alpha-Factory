@@ -1076,6 +1076,7 @@ export default function ClientTrackingBoardPage() {
         isTextarea={true}
         rows={6}
         maxLength={1500}
+        showVoiceRecorder={true}
       />
     </div>
   );

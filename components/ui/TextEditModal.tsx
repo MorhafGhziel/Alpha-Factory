@@ -14,6 +14,7 @@ interface TextEditModalProps {
   isTextarea?: boolean;
   rows?: number;
   maxLength?: number;
+  showVoiceRecorder?: boolean;
 }
 
 export default function TextEditModal({
@@ -26,6 +27,7 @@ export default function TextEditModal({
   isTextarea = false,
   rows = 4,
   maxLength = 1000,
+  showVoiceRecorder = false,
 }: TextEditModalProps) {
   const [content, setContent] = useState(initialContent);
 
@@ -125,8 +127,8 @@ export default function TextEditModal({
                     </div>
                   )}
 
-                  {/* Voice Recording Section - Only show for textarea */}
-                  {isTextarea && (
+                  {/* Voice Recording Section - Only show when enabled */}
+                  {showVoiceRecorder && (
                     <VoiceRecorder
                       onVoiceRecorded={handleVoiceRecorded}
                       className="mt-3"
