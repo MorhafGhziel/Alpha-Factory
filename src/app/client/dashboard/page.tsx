@@ -371,26 +371,44 @@ export default function ClientDashboardPage() {
           </div>
         ) : (
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8"
             dir="rtl"
           >
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-[#0F0F0F] p-3 sm:p-4 rounded-lg w-full"
+                className="group relative bg-gradient-to-br from-[#0F0F0F] to-[#1a1a1a] p-6 rounded-2xl w-full border border-[#2a2a2a] hover:border-[#EAD06C]/30 hover:shadow-2xl hover:shadow-[#EAD06C]/10 transition-all duration-300 transform hover:-translate-y-1"
               >
-                <div className="mb-3 sm:mb-4">
-                  <div className="text-white font-semibold text-base sm:text-lg text-right break-words">
-                    {project.title}
+                {/* Header with title and type */}
+                <div className="mb-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-bold text-lg sm:text-xl text-right break-words leading-tight group-hover:text-[#EAD06C] transition-colors duration-300">
+                        {project.title}
+                      </h3>
+                    </div>
+                    <div className="ml-3 flex-shrink-0">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-[#EAD06C]/20 to-[#C48829]/20 text-[#EAD06C] border border-[#EAD06C]/30">
+                        {project.type}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2 sm:space-y-3 text-right">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <span className="text-gray-300 text-sm sm:text-base">
-                      التاريخ:
-                    </span>
-                    <span className="text-white text-sm sm:text-base">
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span>
                       {project.startDate
                         ? new Date(project.startDate).toLocaleDateString(
                             "ar-SA",
@@ -403,90 +421,108 @@ export default function ClientDashboardPage() {
                         : project.date}
                     </span>
                   </div>
+                </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <span className="text-gray-300 text-sm sm:text-base">
-                      النوع:
-                    </span>
-                    <span className="text-[#E9CF6B] text-sm sm:text-base break-words">
-                      {project.type}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <span className="text-gray-300 text-sm sm:text-base">
-                      حالة التصوير:
-                    </span>
+                {/* Status Grid */}
+                <div className="space-y-4 mb-6">
+                  {/* Filming Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#EAD06C]"></div>
+                      <span className="text-gray-300 text-sm font-medium">
+                        التصوير
+                      </span>
+                    </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getFilmingStatusColor(
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getFilmingStatusColor(
                         project.filmingStatus
-                      )}`}
+                      )} shadow-lg`}
                     >
                       {project.filmingStatus}
                     </span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <span className="text-gray-300 text-sm sm:text-base">
-                      حالة التحرير:
-                    </span>
+                  {/* Edit Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#EAD06C]"></div>
+                      <span className="text-gray-300 text-sm font-medium">
+                        التحرير
+                      </span>
+                    </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getStatusColor(
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(
                         project.editMode || "لم يبدأ"
-                      )}`}
+                      )} shadow-lg`}
                     >
                       {project.editMode || "لم يبدأ"}
                     </span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <span className="text-gray-300 text-sm sm:text-base">
-                      حالة التصميم:
-                    </span>
+                  {/* Design Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#EAD06C]"></div>
+                      <span className="text-gray-300 text-sm font-medium">
+                        التصميم
+                      </span>
+                    </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getStatusColor(
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(
                         project.designMode || "لم يبدأ"
-                      )}`}
+                      )} shadow-lg`}
                     >
                       {project.designMode || "لم يبدأ"}
                     </span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <span className="text-gray-300 text-sm sm:text-base">
-                      المراجعة:
-                    </span>
+                  {/* Review Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#EAD06C]"></div>
+                      <span className="text-gray-300 text-sm font-medium">
+                        المراجعة
+                      </span>
+                    </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getStatusColor(
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(
                         project.reviewMode || "في الانتظار"
-                      )}`}
+                      )} shadow-lg`}
                     >
                       {project.reviewMode || "في الانتظار"}
                     </span>
                   </div>
-
-                  {project.fileLinks && (
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <span className="text-gray-300 text-sm sm:text-base">
-                        الملفات:
-                      </span>
-                      <span className="text-white text-xs sm:text-sm break-all">
-                        {project.fileLinks}
-                      </span>
-                    </div>
-                  )}
-
-                  {project.notes && (
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <span className="text-gray-300 text-sm sm:text-base">
-                        ملاحظة:
-                      </span>
-                      <span className="text-white text-xs sm:text-sm break-words">
-                        {project.notes}
-                      </span>
-                    </div>
-                  )}
                 </div>
+
+                {/* Additional Info */}
+                {(project.fileLinks || project.notes) && (
+                  <div className="space-y-3 pt-4 border-t border-[#2a2a2a]">
+                    {project.fileLinks && (
+                      <div>
+                        <span className="text-gray-400 text-xs block mb-1">
+                          الملفات
+                        </span>
+                        <span className="text-white text-xs break-all leading-relaxed">
+                          {project.fileLinks}
+                        </span>
+                      </div>
+                    )}
+
+                    {project.notes && (
+                      <div>
+                        <span className="text-gray-400 text-xs block mb-1">
+                          ملاحظة
+                        </span>
+                        <span className="text-white text-xs break-words leading-relaxed">
+                          {project.notes}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Hover overlay effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#EAD06C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none"></div>
               </div>
             ))}
           </div>
