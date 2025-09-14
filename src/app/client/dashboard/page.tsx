@@ -65,21 +65,13 @@ export default function ClientDashboardPage() {
     fetchProjects();
   }, []);
 
-  // Function to check if a project is fully documented (completed all stages)
-  const isProjectDocumented = (project: Project) => {
-    return (
-      project.filmingStatus === "تم الانتهاء منه" &&
-      project.editMode === "تم الانتهاء منه" &&
-      project.reviewMode === "تمت المراجعة" &&
-      project.designMode === "تم الانتهاء منه" &&
-      project.verificationMode &&
-      project.verificationMode !== "لا شيء" &&
-      project.verificationMode !== "قيد التطوير"
-    );
+  // Function to check if a project is verified
+  const isProjectVerified = (project: Project) => {
+    return project.documentation && project.documentation.trim() !== "";
   };
 
-  // Count documented projects
-  const documentedProjectsCount = projects.filter(isProjectDocumented).length;
+  // Count verified projects
+  const completedVerifications = projects.filter(isProjectVerified).length;
 
   // Count projects in different stages
   const projectsInReview = projects.filter(
@@ -196,7 +188,7 @@ export default function ClientDashboardPage() {
             icon="/icons/CheckedUserMale.svg"
             iconAlt="Person"
             title="المشاريع الموثقة"
-            value={documentedProjectsCount}
+            value={completedVerifications}
           />
           <SummaryCard
             icon="/icons/Eye.svg"
