@@ -494,9 +494,11 @@ export default function ClientDashboardPage() {
                         <span className="text-gray-400 text-xs block mb-1">
                           الملفات
                         </span>
-                        <span className="text-white text-xs break-all leading-relaxed">
-                          {project.fileLinks}
-                        </span>
+                        <div className="text-white text-xs break-all leading-relaxed truncate">
+                          {project.fileLinks.length > 50
+                            ? `${project.fileLinks.substring(0, 50)}...`
+                            : project.fileLinks}
+                        </div>
                       </div>
                     )}
 
@@ -505,9 +507,11 @@ export default function ClientDashboardPage() {
                         <span className="text-gray-400 text-xs block mb-1">
                           ملاحظة
                         </span>
-                        <span className="text-white text-xs break-words leading-relaxed">
-                          {project.notes}
-                        </span>
+                        <div className="text-white text-xs break-words leading-relaxed truncate">
+                          {project.notes.length > 50
+                            ? `${project.notes.substring(0, 50)}...`
+                            : project.notes}
+                        </div>
                       </div>
                     )}
                   </div>

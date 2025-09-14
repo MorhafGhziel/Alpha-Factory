@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import { Project } from "../../../types";
 import CustomDropdown from "../../../../components/ui/CustomDropdown";
 import TextEditModal from "../../../../components/ui/TextEditModal";
+import { authClient } from "../../../lib/auth-client";
 
 export default function ClientTrackingBoardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [session, setSession] = useState<any>(null);
   const [filmingFilesModal, setFilmingFilesModal] = useState<{
     isOpen: boolean;
     projectId: string;
@@ -55,10 +58,25 @@ export default function ClientTrackingBoardPage() {
     }
   };
 
-  // Load projects on component mount
+  // Load projects and session on component mount
   useEffect(() => {
-    fetchProjects();
+    const loadData = async () => {
+      await fetchProjects();
+
+      // Fetch session to check user role
+      try {
+        const sessionData = await authClient.getSession();
+        setSession(sessionData);
+      } catch (error) {
+        console.error("Error fetching session:", error);
+      }
+    };
+
+    loadData();
   }, []);
+
+  // Check if current user is a client (can edit)
+  const isClient = session?.data?.user?.role === "client";
 
   // Update filming status
   const updateFilmingStatus = async (
@@ -730,31 +748,40 @@ export default function ClientTrackingBoardPage() {
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <div className="flex flex-col gap-2 items-center">
                           {project.fileLinks ? (
-                            <button
-                              onClick={() =>
-                                openFilmingFilesModal(
-                                  project.id,
-                                  project.fileLinks || ""
-                                )
-                              }
-                              className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center"
-                            >
-                              {project.fileLinks.length > 30
-                                ? `${project.fileLinks.substring(0, 30)}...`
-                                : project.fileLinks}
-                            </button>
+                            <div className="flex flex-col gap-1 items-center">
+                              <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] text-center truncate">
+                                {project.fileLinks.length > 30
+                                  ? `${project.fileLinks.substring(0, 30)}...`
+                                  : project.fileLinks}
+                              </div>
+                              {isClient && (
+                                <button
+                                  onClick={() =>
+                                    openFilmingFilesModal(
+                                      project.id,
+                                      project.fileLinks || ""
+                                    )
+                                  }
+                                  className="text-blue-400 text-xs hover:text-blue-300 transition-colors duration-200 font-medium cursor-pointer"
+                                >
+                                  تعديل
+                                </button>
+                              )}
+                            </div>
                           ) : (
-                            <button
-                              onClick={() =>
-                                openFilmingFilesModal(
-                                  project.id,
-                                  project.fileLinks || ""
-                                )
-                              }
-                              className="text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center"
-                            >
-                              إضافة ملفات
-                            </button>
+                            isClient && (
+                              <button
+                                onClick={() =>
+                                  openFilmingFilesModal(
+                                    project.id,
+                                    project.fileLinks || ""
+                                  )
+                                }
+                                className="text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center"
+                              >
+                                إضافة ملفات
+                              </button>
+                            )
                           )}
                           {!project.fileLinks && (
                             <div className="text-red-400 text-xs">مطلوب</div>
@@ -762,27 +789,42 @@ export default function ClientTrackingBoardPage() {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <div className="max-w-[150px]">
+                        <div className="flex flex-col gap-2 items-center">
                           {project.notes ? (
-                            <button
-                              onClick={() =>
-                                openNotesModal(project.id, project.notes || "")
-                              }
-                              className="w-full text-left text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer break-words"
-                            >
-                              {project.notes.length > 30
-                                ? `${project.notes.substring(0, 30)}...`
-                                : project.notes}
-                            </button>
+                            <div className="flex flex-col gap-1 items-center">
+                              <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] text-center truncate">
+                                {project.notes.length > 30
+                                  ? `${project.notes.substring(0, 30)}...`
+                                  : project.notes}
+                              </div>
+                              {isClient && (
+                                <button
+                                  onClick={() =>
+                                    openNotesModal(
+                                      project.id,
+                                      project.notes || ""
+                                    )
+                                  }
+                                  className="text-blue-400 text-xs hover:text-blue-300 transition-colors duration-200 font-medium cursor-pointer"
+                                >
+                                  تعديل
+                                </button>
+                              )}
+                            </div>
                           ) : (
-                            <button
-                              onClick={() =>
-                                openNotesModal(project.id, project.notes || "")
-                              }
-                              className="w-full text-left text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
-                            >
-                              إضافة ملاحظات
-                            </button>
+                            isClient && (
+                              <button
+                                onClick={() =>
+                                  openNotesModal(
+                                    project.id,
+                                    project.notes || ""
+                                  )
+                                }
+                                className="text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center"
+                              >
+                                إضافة ملاحظات
+                              </button>
+                            )
                           )}
                         </div>
                       </td>
