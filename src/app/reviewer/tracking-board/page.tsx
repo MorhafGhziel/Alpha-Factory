@@ -25,7 +25,10 @@ export default function ReviewerTrackingBoardPage() {
   };
 
   // Update project status
-  const updateProjectStatus = async (projectId: string, updates: Partial<Project>) => {
+  const updateProjectStatus = async (
+    projectId: string,
+    updates: Partial<Project>
+  ) => {
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
@@ -129,7 +132,16 @@ export default function ReviewerTrackingBoardPage() {
                       className="border-b border-[#3F3F3F] hover:bg-[#141414] transition-colors"
                     >
                       <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap">
-                        {project.date}
+                        {project.startDate
+                          ? new Date(project.startDate).toLocaleDateString(
+                              "ar-SA",
+                              {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                              }
+                            )
+                          : project.date}
                       </td>
                       <td className="py-4 px-4 text-center text-[#EAD06C] border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.title}
@@ -141,39 +153,63 @@ export default function ReviewerTrackingBoardPage() {
                         {project.notes || "لا توجد ملاحظات"}
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(project.editMode)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
+                            project.editMode
+                          )}`}
+                        >
                           {project.editMode || "لم يبدأ"}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(project.designMode)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(
+                            project.designMode
+                          )}`}
+                        >
                           {project.designMode || "في الانتظار"}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           {project.reviewLinks && (
-                            <a href={project.reviewLinks} target="_blank" rel="noopener noreferrer" 
-                               className="text-blue-400 hover:text-blue-300 text-xs underline">
+                            <a
+                              href={project.reviewLinks}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 text-xs underline"
+                            >
                               تحرير
                             </a>
                           )}
                           {project.designLinks && (
-                            <a href={project.designLinks} target="_blank" rel="noopener noreferrer" 
-                               className="text-blue-400 hover:text-blue-300 text-xs underline">
+                            <a
+                              href={project.designLinks}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 text-xs underline"
+                            >
                               تصميم
                             </a>
                           )}
                           {!project.reviewLinks && !project.designLinks && (
-                            <span className="text-gray-400 text-xs">لا توجد روابط</span>
+                            <span className="text-gray-400 text-xs">
+                              لا توجد روابط
+                            </span>
                           )}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <select
                           value={project.reviewMode}
-                          onChange={(e) => updateProjectStatus(project.id, { reviewMode: e.target.value })}
-                          className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(project.reviewMode)}`}
+                          onChange={(e) =>
+                            updateProjectStatus(project.id, {
+                              reviewMode: e.target.value,
+                            })
+                          }
+                          className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(
+                            project.reviewMode
+                          )}`}
                         >
                           <option value="في الانتظار">في الانتظار</option>
                           <option value="قيد المراجعة">قيد المراجعة</option>
@@ -183,7 +219,11 @@ export default function ReviewerTrackingBoardPage() {
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <select
                           value={project.verificationMode || "لا شيء"}
-                          onChange={(e) => updateProjectStatus(project.id, { verificationMode: e.target.value })}
+                          onChange={(e) =>
+                            updateProjectStatus(project.id, {
+                              verificationMode: e.target.value,
+                            })
+                          }
                           className="bg-[#0B0B0B] text-[#EAD06C] px-2 py-1 rounded text-xs outline-none"
                         >
                           <option value="لا شيء">لا شيء</option>

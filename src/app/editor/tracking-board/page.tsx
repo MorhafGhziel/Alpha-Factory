@@ -27,11 +27,13 @@ export default function EditorDashboardPage() {
   // Update project status
   const updateProjectStatus = async (projectId: string, editMode: string) => {
     // Find the project to check if it has review links
-    const project = projects.find(p => p.id === projectId);
-    
+    const project = projects.find((p) => p.id === projectId);
+
     // If trying to mark as done but no review links, show error
     if (editMode === "تم الانتهاء منه" && !project?.reviewLinks) {
-      alert("يجب إضافة روابط المراجعة قبل تغيير حالة التحرير إلى 'تم الانتهاء منه'");
+      alert(
+        "يجب إضافة روابط المراجعة قبل تغيير حالة التحرير إلى 'تم الانتهاء منه'"
+      );
       return;
     }
 
@@ -57,7 +59,10 @@ export default function EditorDashboardPage() {
   };
 
   // Update project review links
-  const updateProjectReviewLinks = async (projectId: string, reviewLinks: string) => {
+  const updateProjectReviewLinks = async (
+    projectId: string,
+    reviewLinks: string
+  ) => {
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
@@ -153,7 +158,16 @@ export default function EditorDashboardPage() {
                       className="border-b border-[#3F3F3F] hover:bg-[#141414] transition-colors"
                     >
                       <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap">
-                        {project.date}
+                        {project.startDate
+                          ? new Date(project.startDate).toLocaleDateString(
+                              "ar-SA",
+                              {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                              }
+                            )
+                          : project.date}
                       </td>
                       <td className="py-4 px-4 text-center text-[#EAD06C] border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.title}
@@ -163,9 +177,9 @@ export default function EditorDashboardPage() {
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.fileLinks ? (
-                          <a 
-                            href={project.fileLinks} 
-                            target="_blank" 
+                          <a
+                            href={project.fileLinks}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-400 hover:text-blue-300 underline"
                           >
@@ -179,21 +193,31 @@ export default function EditorDashboardPage() {
                         {project.notes || "لا توجد ملاحظات"}
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs text-white ${
-                          project.filmingStatus === "تم الانتـــهاء مــنه" ? "bg-green-500" : "bg-red-500"
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs text-white ${
+                            project.filmingStatus === "تم الانتـــهاء مــنه"
+                              ? "bg-green-500"
+                              : "bg-red-500"
+                          }`}
+                        >
                           {project.filmingStatus}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <select
                           value={project.editMode}
-                          onChange={(e) => updateProjectStatus(project.id, e.target.value)}
-                          className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(project.editMode)}`}
+                          onChange={(e) =>
+                            updateProjectStatus(project.id, e.target.value)
+                          }
+                          className={`px-2 py-1 rounded text-xs text-white border-none outline-none ${getStatusColor(
+                            project.editMode
+                          )}`}
                         >
                           <option value="لم يبدأ">لم يبدأ</option>
                           <option value="قيد التنفيذ">قيد التنفيذ</option>
-                          <option value="تم الانتهاء منه">تم الانتهاء منه</option>
+                          <option value="تم الانتهاء منه">
+                            تم الانتهاء منه
+                          </option>
                         </select>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
@@ -203,8 +227,13 @@ export default function EditorDashboardPage() {
                           className="bg-[#0B0B0B] text-white px-2 py-1 rounded text-xs w-32 outline-none"
                           defaultValue={project.reviewLinks || ""}
                           onBlur={(e) => {
-                            if (e.target.value !== (project.reviewLinks || "")) {
-                              updateProjectReviewLinks(project.id, e.target.value);
+                            if (
+                              e.target.value !== (project.reviewLinks || "")
+                            ) {
+                              updateProjectReviewLinks(
+                                project.id,
+                                e.target.value
+                              );
                             }
                           }}
                         />

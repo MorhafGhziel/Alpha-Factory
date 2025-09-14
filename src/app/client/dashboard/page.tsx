@@ -363,7 +363,16 @@ export default function ClientDashboardPage() {
                       التاريخ:
                     </span>
                     <span className="text-white text-sm sm:text-base">
-                      {project.date}
+                      {project.startDate
+                        ? new Date(project.startDate).toLocaleDateString(
+                            "ar-SA",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            }
+                          )
+                        : project.date}
                     </span>
                   </div>
 

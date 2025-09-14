@@ -258,7 +258,18 @@ export default function ClientTrackingBoardPage() {
                   <div className="text-[#EAD06C] font-bold text-lg mb-1">
                     {project.title}
                   </div>
-                  <div className="text-gray-400 text-sm">{project.date}</div>
+                  <div className="text-gray-400 text-sm">
+                    {project.startDate
+                      ? new Date(project.startDate).toLocaleDateString(
+                          "ar-SA",
+                          {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                          }
+                        )
+                      : project.date}
+                  </div>
                   <div className="text-white text-sm mt-1">{project.type}</div>
                 </div>
 
@@ -564,7 +575,16 @@ export default function ClientTrackingBoardPage() {
                           {project.title}
                         </div>
                         <div className="text-gray-400 text-xs mt-1">
-                          {project.date}
+                          {project.startDate
+                            ? new Date(project.startDate).toLocaleDateString(
+                                "ar-SA",
+                                {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                }
+                              )
+                            : project.date}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap text-xs">
