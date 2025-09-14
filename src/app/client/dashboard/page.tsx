@@ -8,6 +8,34 @@ import { Project } from "../../../types";
 
 export default function ClientDashboardPage() {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+
+  // Color helper functions
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "تم الانتهاء منه":
+      case "تمت المراجعة":
+        return "bg-[#5dc239] text-white";
+      case "قيد التنفيذ":
+        return "bg-[#db8351] text-white";
+      case "في الانتظار":
+        return "bg-[#db8351] text-white";
+      case "لم يبدأ":
+        return "bg-[#262626] text-white";
+      default:
+        return "bg-[#ef3c54] text-white";
+    }
+  };
+
+  const getFilmingStatusColor = (status: string) => {
+    switch (status) {
+      case "تم الانتـــهاء مــنه":
+        return "bg-[#5dc239] text-white";
+      case "لم يتم الانتهاء منه":
+        return "bg-[#ef3c54] text-white";
+      default:
+        return "bg-[#ef3c54] text-white";
+    }
+  };
   const [isRequestImprovementModalOpen, setIsRequestImprovementModalOpen] =
     useState(false);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
@@ -390,11 +418,9 @@ export default function ClientDashboardPage() {
                       حالة التصوير:
                     </span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${
-                        project.filmingStatus === "تم الانتـــهاء مــنه"
-                          ? "bg-green-500 text-white"
-                          : "bg-red-500 text-white"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getFilmingStatusColor(
+                        project.filmingStatus
+                      )}`}
                     >
                       {project.filmingStatus}
                     </span>
@@ -405,13 +431,9 @@ export default function ClientDashboardPage() {
                       حالة التحرير:
                     </span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${
-                        project.editMode === "تم الانتهاء منه"
-                          ? "bg-green-500 text-white"
-                          : project.editMode === "قيد التنفيذ"
-                          ? "bg-yellow-500 text-white"
-                          : "bg-gray-500 text-white"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getStatusColor(
+                        project.editMode || "لم يبدأ"
+                      )}`}
                     >
                       {project.editMode || "لم يبدأ"}
                     </span>
@@ -422,11 +444,9 @@ export default function ClientDashboardPage() {
                       المراجعة:
                     </span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${
-                        project.reviewMode === "تمت المراجعة"
-                          ? "bg-green-500 text-white"
-                          : "bg-orange-500 text-white"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs sm:text-sm w-fit ${getStatusColor(
+                        project.reviewMode || "في الانتظار"
+                      )}`}
                     >
                       {project.reviewMode || "في الانتظار"}
                     </span>
