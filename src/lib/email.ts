@@ -210,15 +210,83 @@ function createCredentialsEmailTemplate(user: UserCredentials): string {
             </div>
 
             <div class="footer">
-                <p>إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم</p>
+                <p>إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم على:</p>
+                <p style="color: #E9CF6B; font-weight: bold;">support@alphafactory.net</p>
                 <p style="margin-top: 20px; font-size: 12px;">
-                    هذا البريد الإلكتروني تم إرساله تلقائياً، يرجى عدم الرد عليه
+                    هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
                 </p>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                    <p style="font-size: 11px; color: #666;">
+                        لإلغاء الاشتراك في هذه الرسائل، يرجى 
+                        <a href="mailto:support@alphafactory.net?subject=Unsubscribe" 
+                           style="color: #E9CF6B; text-decoration: underline;">النقر هنا</a>
+                        أو التواصل معنا مباشرة.
+                    </p>
+                    <p style="font-size: 10px; color: #555; margin-top: 10px;">
+                        Alpha Factory - منصة إدارة المشاريع الإبداعية
+                    </p>
+                </div>
             </div>
         </div>
     </body>
     </html>
   `;
+}
+
+/**
+ * Create plain text version of credentials email
+ */
+function createCredentialsEmailPlainText(user: UserCredentials): string {
+  const roleArabic = {
+    client: "عميل",
+    editor: "محرر",
+    designer: "مصمم",
+    reviewer: "مُراجع",
+  };
+
+  return `
+Alpha Factory - بيانات الدخول الخاصة بك
+
+مرحباً ${user.name}!
+
+تم إنشاء حسابك بنجاح في نظام Alpha Factory.
+
+معلومات المجموعة:
+المجموعة: ${user.groupName}
+الدور: ${roleArabic[user.role as keyof typeof roleArabic] || user.role}
+
+بيانات الدخول الخاصة بك:
+البريد الإلكتروني: ${user.email}
+اسم المستخدم: ${user.username}
+كلمة المرور: ${user.password}
+
+${
+  user.telegramInviteLink
+    ? `
+انضم إلى مجموعة التليجرام:
+${user.telegramInviteLink}
+
+فوائد الانضمام:
+- تحديثات فورية عن المشروع
+- إشعارات إنجاز المهام
+- التواصل المباشر مع الفريق
+- تنبيهات مهمة من الإدارة
+`
+    : ""
+}
+
+تنبيه أمني مهم:
+احتفظ بهذه المعلومات في مكان آمن ولا تشاركها مع أحد.
+يُنصح بتغيير كلمة المرور عند أول تسجيل دخول.
+
+إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم على: support@alphafactory.net
+
+---
+Alpha Factory Team
+هذا البريد الإلكتروني تم إرساله تلقائياً.
+
+لإلغاء الاشتراك في هذه الرسائل، يرجى التواصل مع support@alphafactory.net
+  `.trim();
 }
 
 /**
@@ -229,10 +297,23 @@ export async function sendCredentialsEmail(
 ): Promise<boolean> {
   try {
     const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev", // Default Resend address for testing
+      from: "Alpha Factory <support@alphafactory.net>",
       to: [user.email],
-      subject: `🔐 بيانات الدخول الخاصة بك - ${user.name}`,
+      subject: `بيانات الدخول الخاصة بك - ${user.name}`,
       html: createCredentialsEmailTemplate(user),
+      text: createCredentialsEmailPlainText(user),
+      headers: {
+        "X-Entity-Ref-ID": `user-credentials-${Date.now()}`,
+        "List-Unsubscribe":
+          "<mailto:support@alphafactory.net?subject=Unsubscribe>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+      tags: [
+        {
+          name: "category",
+          value: "user-credentials",
+        },
+      ],
     });
 
     if (error) {
