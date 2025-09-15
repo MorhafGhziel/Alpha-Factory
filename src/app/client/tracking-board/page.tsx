@@ -675,34 +675,54 @@ export default function ClientTrackingBoardPage() {
                     </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    النوع
+                    <TableTooltip text="في هذا الحقل يتم تحديد نوع المشروع او المحتوى">
+                      النوع ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    ملفات التصوير
+                    <TableTooltip text="المستندات او الملفات التي يحتاجها الفريق والمتعلقة بالمشروع">
+                      ملفات التصوير ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    الملاحظات
+                    <TableTooltip text="ملاحظات مهمة او تعليقات للفريق">
+                      الملاحظات ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    حالة التصوير
+                    <TableTooltip text="يرجى توضيح اذا كان التصوير لم يبدا - جاري - منتهي. حتى تكون حالة التصوير واضحة لدى الفريق">
+                      حالة التصوير ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    التحرير
+                    <TableTooltip text="متابعة حالة التحرير/المونتاج للمحتوى">
+                      التحرير ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    التصميم
+                    <TableTooltip text="متابعة حالة التصميم">
+                      التصميم ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    المراجعة
+                    <TableTooltip text="حالة مراجعة العمل النهائي">
+                      المراجعة ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    الروابط
+                    <TableTooltip text="الروابط النهائية للأعمال المنجزة">
+                      الروابط ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    التقييم
+                    <TableTooltip text="تقييم جودة المشروع/المحتوى بعد الانتهاء">
+                      التقييم ?
+                    </TableTooltip>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    التوثيق
+                    <TableTooltip text="يتم توثيق المشروع بالعلامة الزرقاء بعد الانتهاء منه دلالة على انتهاء العمل عليه">
+                      التوثيق ?
+                    </TableTooltip>
                   </th>
                 </tr>
               </thead>
