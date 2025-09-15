@@ -296,6 +296,8 @@ export async function sendCredentialsEmail(
   user: UserCredentials
 ): Promise<boolean> {
   try {
+    console.log(`📧 Sending email to ${user.name} at ${user.email}`);
+
     const { data, error } = await resend.emails.send({
       from: "Alpha Factory <support@alphafactory.net>",
       to: [user.email],
@@ -317,14 +319,24 @@ export async function sendCredentialsEmail(
     });
 
     if (error) {
-      console.error("Error sending email:", error);
+      console.error(`❌ Resend API error for ${user.email}:`, error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+
+      // Log specific error information
+      if (error.message) {
+        console.error(`Error message: ${error.message}`);
+      }
+      if (error.name) {
+        console.error(`Error name: ${error.name}`);
+      }
+
       return false;
     }
 
-    console.log("Email sent successfully:", data?.id);
+    console.log(`✅ Email sent successfully to ${user.email}, ID: ${data?.id}`);
     return true;
   } catch (error) {
-    console.error("Failed to send email:", error);
+    console.error(`❌ Exception while sending email to ${user.email}:`, error);
     return false;
   }
 }
@@ -337,33 +349,60 @@ export async function sendCredentialsEmails(users: UserCredentials[]): Promise<{
   failed: number;
   results: Array<{ email: string; success: boolean; error?: string }>;
 }> {
+  console.log(
+    `Starting to send emails to ${users.length} users:`,
+    users.map((u) => ({ name: u.name, email: u.email, role: u.role }))
+  );
+
   const results = [];
   let successful = 0;
   let failed = 0;
 
   for (const user of users) {
+    console.log(`Attempting to send email to ${user.name} (${user.email})`);
+
     try {
       const success = await sendCredentialsEmail(user);
       if (success) {
         successful++;
         results.push({ email: user.email, success: true });
+        console.log(
+          `✅ Email sent successfully to ${user.name} (${user.email})`
+        );
       } else {
         failed++;
         results.push({
           email: user.email,
           success: false,
-          error: "Failed to send email",
+          error: "Failed to send email - check Resend API response",
         });
+        console.error(
+          `❌ Failed to send email to ${user.name} (${user.email}) - sendCredentialsEmail returned false`
+        );
       }
     } catch (error) {
       failed++;
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       results.push({
         email: user.email,
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       });
+      console.error(
+        `❌ Exception while sending email to ${user.name} (${user.email}):`,
+        errorMessage
+      );
     }
+
+    // Add a small delay between emails to avoid rate limiting
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
+
+  console.log(
+    `Email sending completed: ${successful} successful, ${failed} failed`
+  );
+  console.log("Detailed results:", results);
 
   return { successful, failed, results };
 }

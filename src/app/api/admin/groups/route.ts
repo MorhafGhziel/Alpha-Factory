@@ -298,51 +298,73 @@ export async function POST(req: NextRequest) {
     );
 
     // Send emails to non-client users
+    console.log(`📧 About to send emails to ${emailUsers.length} employees`);
     const emailResults = await sendCredentialsEmails(emailUsers);
 
     console.log(
-      `Email sending results: ${emailResults.successful} successful, ${emailResults.failed} failed`
+      `📊 Email sending results: ${emailResults.successful} successful, ${emailResults.failed} failed`
     );
 
-    // Send WhatsApp messages to clients
+    // Log detailed email results
+    emailResults.results.forEach((result) => {
+      if (result.success) {
+        console.log(`✅ Email delivered to: ${result.email}`);
+      } else {
+        console.error(
+          `❌ Email failed for: ${result.email}, Error: ${result.error}`
+        );
+      }
+    });
+
+    // Send WhatsApp messages to clients (wrapped in try-catch to not affect email sending)
     let whatsappResults = { successful: 0, failed: 0 };
-    if (isWhatsAppConfigured() && clientUsersForWhatsApp.length > 0) {
-      console.log("Sending WhatsApp messages to clients...");
+    try {
+      if (isWhatsAppConfigured() && clientUsersForWhatsApp.length > 0) {
+        console.log("📱 Sending WhatsApp messages to clients...");
 
-      for (const client of clientUsersForWhatsApp) {
-        if (client.phone) {
-          try {
-            const result = await sendClientCredentials({
-              name: client.name,
-              phone: client.phone,
-              username: client.username,
-              password: client.password,
-              groupName: client.groupName,
-            });
+        for (const client of clientUsersForWhatsApp) {
+          if (client.phone) {
+            try {
+              const result = await sendClientCredentials({
+                name: client.name,
+                phone: client.phone,
+                username: client.username,
+                password: client.password,
+                groupName: client.groupName,
+              });
 
-            if (result.success) {
-              whatsappResults.successful++;
-              console.log(
-                `WhatsApp message sent successfully to ${client.name}`
-              );
-            } else {
+              if (result.success) {
+                whatsappResults.successful++;
+                console.log(
+                  `✅ WhatsApp message sent successfully to ${client.name}`
+                );
+              } else {
+                whatsappResults.failed++;
+                console.error(
+                  `❌ Failed to send WhatsApp to ${client.name}:`,
+                  result.error
+                );
+              }
+            } catch (error) {
               whatsappResults.failed++;
               console.error(
-                `Failed to send WhatsApp to ${client.name}:`,
-                result.error
+                `❌ Error sending WhatsApp to ${client.name}:`,
+                error
               );
             }
-          } catch (error) {
+          } else {
             whatsappResults.failed++;
-            console.error(`Error sending WhatsApp to ${client.name}:`, error);
+            console.error(`❌ No phone number for client ${client.name}`);
           }
-        } else {
-          whatsappResults.failed++;
-          console.error(`No phone number for client ${client.name}`);
         }
+      } else if (clientUsersForWhatsApp.length > 0) {
+        console.log(
+          "📱 WhatsApp not configured, skipping client notifications"
+        );
+        whatsappResults.failed = clientUsersForWhatsApp.length;
       }
-    } else if (clientUsersForWhatsApp.length > 0) {
-      console.log("WhatsApp not configured, skipping client notifications");
+    } catch (whatsappError) {
+      console.error("❌ WhatsApp section failed completely:", whatsappError);
       whatsappResults.failed = clientUsersForWhatsApp.length;
     }
 
