@@ -57,11 +57,11 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // For clients, require phone number instead of email
+      // For clients, require both email and phone number
       if (user.role === "client") {
-        if (!user.phone) {
+        if (!user.email || !user.phone) {
           return NextResponse.json(
-            { error: "Phone number is required for clients" },
+            { error: "Email and phone number are required for clients" },
             { status: 400 }
           );
         }
@@ -76,13 +76,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check if any email already exists (for non-client users)
-    const nonClientUsers = users.filter((user) => user.role !== "client");
-    if (nonClientUsers.length > 0) {
+    // Check if any email already exists (for all users now)
+    const allEmails = users.map((user) => user.email).filter(Boolean);
+    if (allEmails.length > 0) {
       const existingEmails = await prisma.user.findMany({
         where: {
           email: {
-            in: nonClientUsers.map((user) => user.email),
+            in: allEmails,
           },
         },
         select: { email: true },
@@ -144,12 +144,8 @@ export async function POST(req: NextRequest) {
           userData.role
         );
 
-        // For clients, use phone as email (temporary workaround)
-        // We'll store the actual phone in the phone field later
-        const emailForAuth =
-          userData.role === "client"
-            ? `${userData.phone?.replace(/\D/g, "")}@temp.alphafactory.com`
-            : userData.email;
+        // Use the actual email for all users including clients
+        const emailForAuth = userData.email;
 
         const signUpResult = await auth.api.signUpEmail({
           body: {
@@ -289,16 +285,16 @@ export async function POST(req: NextRequest) {
       telegramInviteLink: telegramResult?.inviteLink || undefined,
     }));
 
-    // Send credentials to users (emails for employees, WhatsApp for clients)
-    const emailUsers = usersWithTelegram.filter(
-      (user) => user.role !== "client"
-    );
+    // Send credentials to users (emails for all users now)
+    const emailUsers = usersWithTelegram; // Send emails to all users including clients
     const clientUsersForWhatsApp = usersWithTelegram.filter(
       (user) => user.role === "client"
     );
 
-    // Send emails to non-client users
-    console.log(`📧 About to send emails to ${emailUsers.length} employees`);
+    // Send emails to all users (including clients)
+    console.log(
+      `📧 About to send emails to ${emailUsers.length} users (including clients)`
+    );
     const emailResults = await sendCredentialsEmails(emailUsers);
 
     console.log(

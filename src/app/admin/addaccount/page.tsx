@@ -99,9 +99,9 @@ export default function AddAccountPage() {
     ];
     for (const user of users) {
       if (user.role === "client") {
-        // For clients, require name and phone number
-        if (!user.name || !user.phone) {
-          setSubmitError("الاسم ورقم الهاتف مطلوبان للعميل");
+        // For clients, require name, email, and phone number
+        if (!user.name || !user.email || !user.phone) {
+          setSubmitError("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبان للعميل");
           setIsSubmitting(false);
           return;
         }
@@ -112,10 +112,24 @@ export default function AddAccountPage() {
           setIsSubmitting(false);
           return;
         }
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(user.email)) {
+          setSubmitError("البريد الإلكتروني غير صحيح");
+          setIsSubmitting(false);
+          return;
+        }
       } else {
         // For other roles, require name and email
         if (!user.name || !user.email) {
           setSubmitError("الاسم والبريد الإلكتروني مطلوبان لكل مستخدم");
+          setIsSubmitting(false);
+          return;
+        }
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(user.email)) {
+          setSubmitError("البريد الإلكتروني غير صحيح");
           setIsSubmitting(false);
           return;
         }
@@ -278,9 +292,10 @@ export default function AddAccountPage() {
               <h2 className="text-[#E9CF6B] text-lg font-semibold text-center bg-[#0B0B0B] rounded-full py-1">
                 عميل
               </h2>
+        
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Username"
                 value={formData.client.name}
                 onChange={(e) =>
                   handleInputChange("client", "name", e.target.value)
@@ -288,11 +303,11 @@ export default function AddAccountPage() {
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />
               <input
-                type="text"
-                placeholder="Username"
-                value={formData.client.name}
+                type="email"
+                placeholder="Email"
+                value={formData.client.email}
                 onChange={(e) =>
-                  handleInputChange("client", "name", e.target.value)
+                  handleInputChange("client", "email", e.target.value)
                 }
                 className="w-full bg-[#0B0B0B] text-white placeholder-[#A9A9A9]/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E9CF6B]"
               />

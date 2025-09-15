@@ -114,13 +114,13 @@ export async function POST(req: NextRequest) {
 
       testResults.step3_authAttempt = {
         success: !!signInResult.user,
-        error: signInResult.error?.message || null,
+        error: null, // signInResult doesn't have error property in this auth library
         user: signInResult.user
           ? {
               id: signInResult.user.id,
               email: signInResult.user.email,
               name: signInResult.user.name,
-              role: signInResult.user.role,
+              // role: signInResult.user.role, // role not available in this context
             }
           : null,
       };

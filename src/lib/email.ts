@@ -49,9 +49,9 @@ interface UserCredentials {
 }
 
 /**
- * Email template for sending user credentials
+ * Email template for sending user credentials to clients (without Telegram group)
  */
-function createCredentialsEmailTemplate(user: UserCredentials): string {
+function createClientCredentialsEmailTemplate(user: UserCredentials): string {
   const roleArabic = {
     client: "عميل",
     editor: "محرر",
@@ -221,15 +221,223 @@ function createCredentialsEmailTemplate(user: UserCredentials): string {
                 
                 <div class="logo-container">
                     <div class="logo">
-                    
                         <span class="logo-text">Alpha Factory</span>
-                    
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-title">مرحباً بك في Alpha Factory</div>
+            <div class="subtitle">تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول إلى المنصة ومتابعة مشاريعك.</div>
+
+            <!-- Platform Login -->
+            <div class="action-section">
+                <div class="action-number">تسجيل الدخول الى منصة ألفا فاكتوري</div>
+                <a href="https://alphafactory.net/login" class="btn btn-gold">تسجيل دخول</a>
+            </div>
+
+            <!-- Credentials Information -->
+            <div class="credentials-info">
+                <h3 style="color: #E9CF6B; text-align: center; margin-bottom: 20px;">بيانات الدخول الخاصة بك</h3>
+                
+                <div class="credential-item">
+                    <div class="credential-label">الاسم:</div>
+                    <div class="credential-value">${user.name}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">البريد الإلكتروني:</div>
+                    <div class="credential-value">${user.email}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">اسم المستخدم:</div>
+                    <div class="credential-value">${user.username}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">كلمة المرور:</div>
+                    <div class="credential-value">${user.password}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">المجموعة:</div>
+                    <div class="credential-value">${user.groupName}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">الدور:</div>
+                    <div class="credential-value">${
+                      roleArabic[user.role as keyof typeof roleArabic] ||
+                      user.role
+                    }</div>
+                </div>
+            </div>
+
+            <div style="background-color: #2a1f1f; border: 1px solid #d73027; color: #ffcdd2; padding: 20px; border-radius: 10px; margin: 30px 0; text-align: center;">
+                <strong>⚠️ تنبيه أمني مهم</strong><br><br>
+                احتفظ بهذه المعلومات في مكان آمن ولا تشاركها مع أحد.<br>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; color: #666; font-size: 14px; border-top: 1px solid #333; padding-top: 20px;">
+                <p>إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم على:</p>
+                <p style="color: #E9CF6B; font-weight: bold;">support@alphafactory.net</p>
+                <p style="margin-top: 20px; font-size: 12px;">
+                    هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Email template for sending user credentials to employees (with Telegram group)
+ */
+function createEmployeeCredentialsEmailTemplate(user: UserCredentials): string {
+  // This is the original template with Telegram group for employees
+  const roleArabic = {
+    client: "عميل",
+    editor: "محرر",
+    designer: "مصمم",
+    reviewer: "مُراجع",
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>معلومات حسابك - Alpha Factory</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0B0B0B;
+                color: #ffffff;
+                margin: 0;
+                padding: 20px;
+                direction: rtl;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: #0B0B0B;
+                border-radius: 0;
+                padding: 40px;
+            }
+            .header {
+                position: relative;
+                margin-bottom: 60px;
+            }
+            .help-link {
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #4A9EFF;
+                text-decoration: underline;
+                font-size: 14px;
+            }
+            .logo-container {
+                text-align: center;
+                margin-bottom: 40px;
+            }
+            .logo {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .logo-text {
+                color: #ffffff;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .main-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: bold;
+                text-align: center;
+                margin: 40px 0 30px 0;
+            }
+            .action-section {
+                background-color: transparent;
+                margin: 30px 0;
+                text-align: center;
+            }
+            .action-number {
+                color: #E9CF6B;
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 15px;
+            }
+            .btn {
+                display: inline-block;
+                padding: 15px 40px;
+                border-radius: 25px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 16px;
+                margin: 10px 0;
+                transition: all 0.3s ease;
+                 color: #ffffff;
+            }
+            .btn-blue {
+                background: #039BE5;
+                color: #ffffff;
+            }
+            .btn-gold {
+                background: linear-gradient(135deg, #E9CF6B, #C48829);
+                color: #000000;
+            }
+            .credentials-info {
+                background-color: #1a1a1a;
+                border-radius: 15px;
+                padding: 25px;
+                margin: 30px 0;
+                border: 1px solid #333;
+            }
+            .credential-item {
+                margin: 15px 0;
+                padding: 15px;
+                background-color: #0f0f0f;
+                border-radius: 10px;
+                border-right: 4px solid #E9CF6B;
+            }
+            .credential-label {
+                color: #E9CF6B;
+                font-weight: bold;
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+            .credential-value {
+                color: #fff;
+                font-size: 16px;
+                font-family: 'Courier New', monospace;
+                background-color: #000;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #444;
+                word-break: break-all;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="mailto:support@alphafactory.net" class="help-link">
+                    <span style="color: white;">تحتاج الى مساعدة؟</span> 
+                    <span style="color: #4A9EFF;">تواصل معنا</span>
+                </a>
+                
+                <div class="logo-container">
+                    <div class="logo">
+                        <span class="logo-text">Alpha Factory</span>
                     </div>
                 </div>
             </div>
 
             <div class="main-title">معلومات حسابك</div>
-           
 
             <!-- Step 1: Telegram Group -->
             <div class="action-section">
@@ -306,9 +514,51 @@ function createCredentialsEmailTemplate(user: UserCredentials): string {
 }
 
 /**
- * Create plain text version of credentials email
+ * Create plain text version of credentials email for clients (without Telegram)
  */
-function createCredentialsEmailPlainText(user: UserCredentials): string {
+function createClientCredentialsEmailPlainText(user: UserCredentials): string {
+  const roleArabic = {
+    client: "عميل",
+    editor: "محرر",
+    designer: "مصمم",
+    reviewer: "مُراجع",
+  };
+
+  return `
+Alpha Factory - مرحباً بك في Alpha Factory
+
+تحتاج الى مساعدة؟ تواصل معنا: support@alphafactory.net
+
+مرحباً بك في Alpha Factory
+تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول إلى المنصة ومتابعة مشاريعك.
+
+تسجيل الدخول الى منصة ألفا فاكتوري:
+https://alphafactory.net/login
+
+بيانات الدخول الخاصة بك:
+الاسم: ${user.name}
+البريد الإلكتروني: ${user.email}
+اسم المستخدم: ${user.username}
+كلمة المرور: ${user.password}
+المجموعة: ${user.groupName}
+الدور: ${roleArabic[user.role as keyof typeof roleArabic] || user.role}
+
+⚠️ تنبيه أمني مهم
+احتفظ بهذه المعلومات في مكان آمن ولا تشاركها مع أحد.
+
+إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم على: support@alphafactory.net
+
+---
+هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
+  `.trim();
+}
+
+/**
+ * Create plain text version of credentials email for employees (with Telegram)
+ */
+function createEmployeeCredentialsEmailPlainText(
+  user: UserCredentials
+): string {
   const roleArabic = {
     client: "عميل",
     editor: "محرر",
@@ -369,12 +619,23 @@ async function sendCredentialsEmailOnce(
 
     console.log(`📧 Sending email to ${user.name} at ${user.email}`);
 
+    // Use different templates for clients vs employees
+    const isClient = user.role === "client";
+    const htmlTemplate = isClient
+      ? createClientCredentialsEmailTemplate(user)
+      : createEmployeeCredentialsEmailTemplate(user);
+    const textTemplate = isClient
+      ? createClientCredentialsEmailPlainText(user)
+      : createEmployeeCredentialsEmailPlainText(user);
+
     const { data, error } = await resend.emails.send({
       from: "Alpha Factory <support@alphafactory.net>",
       to: [user.email],
-      subject: `معلومات حسابك - Alpha Factory`,
-      html: createCredentialsEmailTemplate(user),
-      text: createCredentialsEmailPlainText(user),
+      subject: isClient
+        ? `مرحباً بك في Alpha Factory`
+        : `معلومات حسابك - Alpha Factory`,
+      html: htmlTemplate,
+      text: textTemplate,
       headers: {
         "X-Entity-Ref-ID": `user-credentials-${Date.now()}`,
         "List-Unsubscribe":
