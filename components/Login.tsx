@@ -8,13 +8,6 @@ import { authClient } from "../src/lib/auth-client";
 import { User } from "../src/lib/auth";
 import { getRoleDashboardPath } from "../src/lib/auth-middleware";
 
-const credentials = {
-  Admin0e2: { password: "Admin123", route: "/admin/addaccount" },
-  Client0e2: { password: "Client123", route: "/client" },
-  Editor0e2: { password: "Editor123", route: "/editor" },
-  Reviewer0e2: { password: "Reviewer123", route: "/reviewer" },
-  Designer0e2: { password: "Designer123", route: "/designer" },
-};
 
 interface LoginProps {
   user?: User;
@@ -40,24 +33,12 @@ const Login = ({}: LoginProps = {}) => {
     e.preventDefault();
     setError("");
 
-    // First try the hardcoded credentials
-    if (credentials[username as keyof typeof credentials]) {
-      const userCreds = credentials[username as keyof typeof credentials];
-      if (userCreds.password === password) {
-        router.push(userCreds.route);
-        return;
-      } else {
-        setError("كلمة المرور خاطئة");
-        return;
-      }
-    }
-
     // Helper function to check if input is email format
     const isEmail = (input: string): boolean => {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
     };
 
-    // If no hardcoded credentials match, try auth client
+    // Try auth client
     try {
       let emailForAuth = username;
 
