@@ -2,6 +2,42 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+/**
+ * Validate email address format
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * Retry mechanism for email sending
+ */
+async function retryEmailSend(
+  user: UserCredentials,
+  maxRetries: number = 2
+): Promise<boolean> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(
+      `📧 Attempt ${attempt}/${maxRetries} to send email to ${user.email}`
+    );
+
+    const success = await sendCredentialsEmailOnce(user);
+    if (success) {
+      return true;
+    }
+
+    if (attempt < maxRetries) {
+      // Wait before retrying (exponential backoff)
+      const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s...
+      console.log(`⏳ Waiting ${delay}ms before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  return false;
+}
+
 interface UserCredentials {
   name: string;
   email: string;
@@ -319,12 +355,18 @@ https://alphafactory.net/login
 }
 
 /**
- * Send credentials email to user
+ * Send credentials email to user (single attempt)
  */
-export async function sendCredentialsEmail(
+async function sendCredentialsEmailOnce(
   user: UserCredentials
 ): Promise<boolean> {
   try {
+    // Validate email format first
+    if (!isValidEmail(user.email)) {
+      console.error(`❌ Invalid email format: ${user.email}`);
+      return false;
+    }
+
     console.log(`📧 Sending email to ${user.name} at ${user.email}`);
 
     const { data, error } = await resend.emails.send({
@@ -359,6 +401,20 @@ export async function sendCredentialsEmail(
         console.error(`Error name: ${error.name}`);
       }
 
+      // Check for specific error types
+      if (typeof error === "object" && error !== null) {
+        const errorObj = error as any;
+        if (errorObj.code) {
+          console.error(`Error code: ${errorObj.code}`);
+        }
+        if (errorObj.type) {
+          console.error(`Error type: ${errorObj.type}`);
+        }
+        if (errorObj.details) {
+          console.error(`Error details: ${JSON.stringify(errorObj.details)}`);
+        }
+      }
+
       return false;
     }
 
@@ -368,6 +424,21 @@ export async function sendCredentialsEmail(
     console.error(`❌ Exception while sending email to ${user.email}:`, error);
     return false;
   }
+}
+
+/**
+ * Send credentials email to user with retry mechanism
+ */
+export async function sendCredentialsEmail(
+  user: UserCredentials
+): Promise<boolean> {
+  // Skip retry for invalid emails
+  if (!isValidEmail(user.email)) {
+    console.error(`❌ Invalid email format, skipping retry: ${user.email}`);
+    return false;
+  }
+
+  return await retryEmailSend(user);
 }
 
 /**
@@ -403,7 +474,11 @@ export async function sendCredentialsEmails(users: UserCredentials[]): Promise<{
         results.push({
           email: user.email,
           success: false,
-          error: "Failed to send email - check Resend API response",
+          error: `Failed to send email - ${
+            !isValidEmail(user.email)
+              ? "Invalid email format"
+              : "Check Resend API response in logs"
+          }`,
         });
         console.error(
           `❌ Failed to send email to ${user.name} (${user.email}) - sendCredentialsEmail returned false`
