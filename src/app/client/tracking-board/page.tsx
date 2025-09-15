@@ -11,6 +11,8 @@ export default function ClientTrackingBoardPage() {
   const [isLoading, setIsLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [session, setSession] = useState<any>(null);
+  const [hoveredHeader, setHoveredHeader] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [filmingFilesModal, setFilmingFilesModal] = useState<{
     isOpen: boolean;
     projectId: string;
@@ -314,6 +316,44 @@ export default function ClientTrackingBoardPage() {
       className={`${size} animate-spin rounded-full border-2 border-gray-300 border-t-[#EAD06C]`}
     ></div>
   );
+
+  // Tooltip handlers
+  const handleHeaderHover = (headerType: string, event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const tooltipWidth = 320; // max-w-xs is 320px
+    const screenWidth = window.innerWidth;
+    const margin = 20; // 20px margin from screen edges
+
+    let x = rect.left + rect.width / 2;
+
+    // Ensure tooltip doesn't go beyond screen edges
+    if (x - tooltipWidth / 2 < margin) {
+      x = margin + tooltipWidth / 2;
+    } else if (x + tooltipWidth / 2 > screenWidth - margin) {
+      x = screenWidth - margin - tooltipWidth / 2;
+    }
+
+    setTooltipPosition({
+      x: x,
+      y: rect.top - 10,
+    });
+    setHoveredHeader(headerType);
+  };
+
+  const handleHeaderLeave = () => {
+    setHoveredHeader(null);
+  };
+
+  const getTooltipText = (headerType: string) => {
+    switch (headerType) {
+      case "project":
+        return "الاسم الرسمي للمشروع وتاريخ بدء المشروع، حيث يمكنك تحديد المشروع عند المراجعة او المتابعة";
+      case "type":
+        return "نوع المشروع (تصوير، تحرير، تصميم، إلخ)";
+      default:
+        return "";
+    }
+  };
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full md:py-20 py-10">
@@ -668,8 +708,12 @@ export default function ClientTrackingBoardPage() {
             <table className="border-collapse w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-[#3F3F3F] bg-[#1A1A1A]">
-                  <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    المشروع
+                  <th
+                    className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap cursor-help"
+                    onMouseEnter={(e) => handleHeaderHover("project", e)}
+                    onMouseLeave={handleHeaderLeave}
+                  >
+                    المشروع ?
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
                     النوع
@@ -1120,6 +1164,23 @@ export default function ClientTrackingBoardPage() {
         maxLength={1500}
         showVoiceRecorder={true}
       />
+
+      {/* Standalone Tooltip */}
+      {hoveredHeader && (
+        <div
+          className="fixed z-[9999] px-3 py-2 bg-[#222224] text-white text-sm rounded-lg shadow-lg border border-[#333336] pointer-events-none max-w-xs"
+          style={{
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y}px`,
+            transform: "translateX(-50%) translateY(-100%)",
+          }}
+        >
+          <div className="whitespace-normal text-right">
+            {getTooltipText(hoveredHeader)}
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 rotate-[135deg] w-2 h-2 bg-[#222224] border-r border-t border-[#333336]"></div>
+        </div>
+      )}
     </div>
   );
 }
