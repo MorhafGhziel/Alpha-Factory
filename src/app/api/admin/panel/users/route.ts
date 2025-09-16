@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../lib/prisma";
 import { auth } from "../../../../../lib/auth";
 import { sendCredentialsEmail } from "../../../../../lib/email";
+import { generateCredentials } from "../../../../../utils/credentials";
 
 // GET all users (owner only)
 export async function GET(req: NextRequest) {
@@ -80,6 +81,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Generate username for the user
+    const { username } = generateCredentials(name, role);
+
     // Create user using better-auth
     const signUpResult = await auth.api.signUpEmail({
       body: {
@@ -87,6 +91,7 @@ export async function POST(req: NextRequest) {
         password,
         name,
         role,
+        username,
       },
     });
 
@@ -100,7 +105,7 @@ export async function POST(req: NextRequest) {
       await sendCredentialsEmail({
         name,
         email,
-        username: email, // Use email as username for single user creation
+        username: username, // Use the generated username
         password,
         role,
         groupName: "No Group", // Single user creation without group

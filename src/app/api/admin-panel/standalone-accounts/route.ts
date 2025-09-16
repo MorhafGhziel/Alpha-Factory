@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
             password: password,
             name: userData.name,
             role: userData.role,
+            username: username,
           },
         });
 
