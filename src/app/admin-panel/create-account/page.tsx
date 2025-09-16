@@ -34,6 +34,7 @@ export default function CreateAccountPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [createNewGroup, setCreateNewGroup] = useState(true);
+  const [createStandalone, setCreateStandalone] = useState(false);
 
   const roles = [
     { value: "admin", label: "مدير" },
@@ -43,9 +44,23 @@ export default function CreateAccountPage() {
     { value: "reviewer", label: "مراجع" },
   ];
 
+  // Filter roles based on standalone mode
+  const availableRoles = createStandalone 
+    ? roles.filter(role => role.value !== "client") // Exclude clients for standalone accounts
+    : roles;
+
   useEffect(() => {
     fetchGroups();
   }, []);
+
+  // Clear client roles when switching to standalone mode
+  useEffect(() => {
+    if (createStandalone) {
+      setUsers(users.map(user => 
+        user.role === "client" ? { ...user, role: "" } : user
+      ));
+    }
+  }, [createStandalone]);
 
   const fetchGroups = async () => {
     try {
@@ -82,16 +97,18 @@ export default function CreateAccountPage() {
     setSubmitError("");
 
     // Validation
-    if (createNewGroup && !formData.groupName.trim()) {
-      setSubmitError("اسم المجموعة مطلوب عند إنشاء مجموعة جديدة");
-      setIsSubmitting(false);
-      return;
-    }
+    if (!createStandalone) {
+      if (createNewGroup && !formData.groupName.trim()) {
+        setSubmitError("اسم المجموعة مطلوب عند إنشاء مجموعة جديدة");
+        setIsSubmitting(false);
+        return;
+      }
 
-    if (!createNewGroup && !selectedGroup) {
-      setSubmitError("يرجى اختيار مجموعة موجودة");
-      setIsSubmitting(false);
-      return;
+      if (!createNewGroup && !selectedGroup) {
+        setSubmitError("يرجى اختيار مجموعة موجودة");
+        setIsSubmitting(false);
+        return;
+      }
     }
 
     for (const user of users) {
@@ -126,18 +143,30 @@ export default function CreateAccountPage() {
     }
 
     try {
-      let endpoint = "/api/admin-panel/accounts";
-      let requestBody: any = {
-        users: users,
-        telegramChatId: formData.telegramChatId || undefined,
-      };
+      let endpoint: string;
+      let requestBody: any;
 
-      if (createNewGroup) {
-        // Create new group
-        requestBody.groupName = formData.groupName;
+      if (createStandalone) {
+        // Create standalone accounts without groups
+        endpoint = "/api/admin-panel/standalone-accounts";
+        requestBody = {
+          users: users,
+        };
       } else {
-        // Add to existing group
-        requestBody.groupId = selectedGroup;
+        // Create accounts with groups
+        endpoint = "/api/admin-panel/accounts";
+        requestBody = {
+          users: users,
+          telegramChatId: formData.telegramChatId || undefined,
+        };
+
+        if (createNewGroup) {
+          // Create new group
+          requestBody.groupName = formData.groupName;
+        } else {
+          // Add to existing group
+          requestBody.groupId = selectedGroup;
+        }
       }
 
       const response = await fetch(endpoint, {
@@ -215,14 +244,30 @@ export default function CreateAccountPage() {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Group Selection */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">إعداد المجموعة</h2>
+            <h2 className="text-xl font-semibold text-white">إعداد الحساب</h2>
             
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-4">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="radio"
-                  checked={createNewGroup}
-                  onChange={() => setCreateNewGroup(true)}
+                  checked={createStandalone}
+                  onChange={() => {
+                    setCreateStandalone(true);
+                    setCreateNewGroup(false);
+                  }}
+                  className="w-4 h-4 text-[#E9CF6B] bg-gray-800 border-gray-600 focus:ring-[#E9CF6B]"
+                />
+                <span className="text-gray-300">إنشاء حساب مستقل (بدون مجموعة)</span>
+              </label>
+              
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={!createStandalone && createNewGroup}
+                  onChange={() => {
+                    setCreateStandalone(false);
+                    setCreateNewGroup(true);
+                  }}
                   className="w-4 h-4 text-[#E9CF6B] bg-gray-800 border-gray-600 focus:ring-[#E9CF6B]"
                 />
                 <span className="text-gray-300">إنشاء مجموعة جديدة</span>
@@ -231,61 +276,79 @@ export default function CreateAccountPage() {
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="radio"
-                  checked={!createNewGroup}
-                  onChange={() => setCreateNewGroup(false)}
+                  checked={!createStandalone && !createNewGroup}
+                  onChange={() => {
+                    setCreateStandalone(false);
+                    setCreateNewGroup(false);
+                  }}
                   className="w-4 h-4 text-[#E9CF6B] bg-gray-800 border-gray-600 focus:ring-[#E9CF6B]"
                 />
                 <span className="text-gray-300">إضافة لمجموعة موجودة</span>
               </label>
             </div>
 
-            {createNewGroup ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!createStandalone && (
+              createNewGroup ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      اسم المجموعة *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.groupName}
+                      onChange={(e) => setFormData({ ...formData, groupName: e.target.value })}
+                      className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
+                      placeholder="مثال: فريق التطوير"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-2">
+                      معرف مجموعة تيليجرام (اختياري)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.telegramChatId}
+                      onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
+                      className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
+                      placeholder="مثال: -1001234567890"
+                    />
+                  </div>
+                </div>
+              ) : (
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
-                    اسم المجموعة *
+                    اختر المجموعة *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.groupName}
-                    onChange={(e) => setFormData({ ...formData, groupName: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
-                    placeholder="مثال: فريق التطوير"
+                  <select
+                    value={selectedGroup}
+                    onChange={(e) => setSelectedGroup(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
                     required
-                  />
+                  >
+                    <option value="">اختر مجموعة</option>
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name} ({group.users.length} مستخدم)
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                
-                <div>
-                  <label className="block text-gray-300 text-sm font-medium mb-2">
-                    معرف مجموعة تيليجرام (اختياري)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.telegramChatId}
-                    onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
-                    placeholder="مثال: -1001234567890"
-                  />
+              )
+            )}
+
+            {createStandalone && (
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-blue-300 text-sm">
+                    سيتم إنشاء الحسابات بدون ربطها بأي مجموعة. مناسب للمدراء والمشرفين.
+                  </span>
                 </div>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-gray-300 text-sm font-medium mb-2">
-                  اختر المجموعة *
-                </label>
-                <select
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
-                  required
-                >
-                  <option value="">اختر مجموعة</option>
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name} ({group.users.length} مستخدم)
-                    </option>
-                  ))}
-                </select>
               </div>
             )}
           </div>
@@ -357,7 +420,7 @@ export default function CreateAccountPage() {
                       required
                     >
                       <option value="">اختر الدور</option>
-                      {roles.map((role) => (
+                      {availableRoles.map((role) => (
                         <option key={role.value} value={role.value}>
                           {role.label}
                         </option>
