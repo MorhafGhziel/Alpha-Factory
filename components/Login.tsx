@@ -137,23 +137,54 @@ const Login = ({}: LoginProps = {}) => {
         return;
       }
 
-      // Credentials are valid, send OTP
-      const otpResponse = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: emailForAuth }),
-      });
+      const verifyData = await verifyResponse.json();
+      console.log("📥 Full verify response:", verifyData);
+      
+      const { requiresOTP, userRole } = verifyData;
+      console.log("🔐 User role:", userRole, "- OTP required:", requiresOTP);
+      console.log("🔍 RequiresOTP type:", typeof requiresOTP, "value:", requiresOTP);
 
-      if (!otpResponse.ok) {
-        setError("حدث خطأ في إرسال رمز التحقق");
-        return;
+      if (requiresOTP) {
+        // Admin/Owner - requires OTP verification
+        console.log("🛡️ Admin/Owner login - sending OTP");
+        
+        const otpResponse = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: emailForAuth }),
+        });
+
+        if (!otpResponse.ok) {
+          setError("حدث خطأ في إرسال رمز التحقق");
+          return;
+        }
+
+        // Store email for OTP verification and show OTP form
+        setUserEmail(emailForAuth);
+        setShowOTP(true);
+      } else {
+        // Regular user - proceed directly to login
+        console.log("✅ Regular user login - proceeding directly");
+        
+        const { data, error } = await authClient.signIn.email({
+          email: emailForAuth,
+          password,
+          callbackURL: "/api/auth/callback",
+        });
+
+        if (error) {
+          setError(error.message || "حدث خطأ ما");
+        } else if (data?.user && "role" in data.user) {
+          const dashboardPath = getRoleDashboardPath(
+            (data.user as { role: string }).role
+          );
+          router.push(dashboardPath);
+        } else {
+          router.refresh();
+        }
       }
-
-      // Store email for OTP verification and show OTP form
-      setUserEmail(emailForAuth);
-      setShowOTP(true);
     } catch {
       setError("حدث خطأ في تسجيل الدخول");
     }

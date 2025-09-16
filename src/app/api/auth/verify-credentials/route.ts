@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
+import prisma from "../../../../lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,8 +29,31 @@ export async function POST(req: NextRequest) {
       console.log("✅ Better-auth sign-in result:", !!signInResult.user);
 
       if (signInResult.user) {
+        // Better-auth user object doesn't include role, so fetch it from database
+        const userId = signInResult.user.id;
+        console.log("👤 User ID:", userId);
+
+        const userFromDb = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { role: true, email: true, name: true },
+        });
+
+        const userRole = userFromDb?.role;
+        console.log("👤 User role from DB:", userRole);
+        console.log("🔍 User role type:", typeof userRole);
+
+        // Determine if OTP is required based on role
+        const requiresOTP = userRole === "admin" || userRole === "owner";
+        console.log("🔐 OTP required:", requiresOTP);
+        console.log(
+          "🔍 Role comparison - admin:",
+          userRole === "admin",
+          "owner:",
+          userRole === "owner"
+        );
+
         // Credentials are valid, but we need to sign out immediately
-        // since we don't want to create a persistent session yet (OTP pending)
+        // since we don't want to create a persistent session yet (OTP might be pending)
         try {
           console.log("🚪 Signing out to prevent session creation...");
           await auth.api.signOut({
@@ -41,7 +65,11 @@ export async function POST(req: NextRequest) {
         }
 
         console.log("🎉 Credentials verified successfully via better-auth");
-        return NextResponse.json({ success: true });
+        return NextResponse.json({
+          success: true,
+          requiresOTP,
+          userRole,
+        });
       } else {
         console.log("❌ Better-auth sign-in failed - no user returned");
         return NextResponse.json(
