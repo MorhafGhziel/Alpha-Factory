@@ -82,3 +82,8 @@ export interface Project {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Global type declarations
+declare global {
+  var otpStorage: Map<string, { code: string; expires: number }> | undefined;
+}

@@ -16,9 +16,13 @@ interface LoginProps {
 const Login = ({}: LoginProps = {}) => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [error, setError] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
   const router = useRouter();
 
   const handleLoginClick = () => {
@@ -27,6 +31,53 @@ const Login = ({}: LoginProps = {}) => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleOTPVerification = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setIsVerifyingOTP(true);
+
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: userEmail, 
+          otp: otpCode 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || "رمز التحقق غير صحيح");
+        return;
+      }
+
+      // OTP verified successfully, proceed with login
+      const { data, error } = await authClient.signIn.email({
+        email: userEmail,
+        password,
+        callbackURL: "/api/auth/callback",
+      });
+
+      if (error) {
+        setError(error.message || "حدث خطأ ما");
+      } else if (data?.user && "role" in data.user) {
+        const dashboardPath = getRoleDashboardPath(
+          (data.user as { role: string }).role
+        );
+        router.push(dashboardPath);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("حدث خطأ في التحقق من الرمز");
+    } finally {
+      setIsVerifyingOTP(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,7 +89,6 @@ const Login = ({}: LoginProps = {}) => {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
     };
 
-    // Try auth client
     try {
       let emailForAuth = username;
 
@@ -69,25 +119,41 @@ const Login = ({}: LoginProps = {}) => {
         }
       }
 
-      const { data, error } = await authClient.signIn.email({
-        email: emailForAuth,
-        password,
-        callbackURL: "/api/auth/callback", // This will be handled by the auth callback
+      // First verify credentials without logging in
+      const verifyResponse = await fetch('/api/auth/verify-credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: emailForAuth, 
+          password 
+        }),
       });
 
-      if (error) {
-        setError(error.message || "حدث خطأ ما");
-      } else if (data?.user && "role" in data.user) {
-        // If we have user data with role, redirect immediately
-        const dashboardPath = getRoleDashboardPath(
-          (data.user as { role: string }).role
-        );
-        router.push(dashboardPath);
-      } else {
-        // If no role info yet, let the auth callback handle it
-        // The server-side callback will redirect based on role
-        router.refresh();
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        setError(errorData.error || "بيانات الدخول غير صحيحة");
+        return;
       }
+
+      // Credentials are valid, send OTP
+      const otpResponse = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: emailForAuth }),
+      });
+
+      if (!otpResponse.ok) {
+        setError("حدث خطأ في إرسال رمز التحقق");
+        return;
+      }
+
+      // Store email for OTP verification and show OTP form
+      setUserEmail(emailForAuth);
+      setShowOTP(true);
     } catch {
       setError("حدث خطأ في تسجيل الدخول");
     }
@@ -292,7 +358,7 @@ const Login = ({}: LoginProps = {}) => {
           </motion.div>
           <motion.div
             initial={{ x: 1000, opacity: 0 }}
-            animate={showForm ? { x: 0, opacity: 1 } : { x: 1000, opacity: 0 }}
+            animate={showForm && !showOTP ? { x: 0, opacity: 1 } : { x: 1000, opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
@@ -301,7 +367,7 @@ const Login = ({}: LoginProps = {}) => {
               <div>
                 <input
                   type="text"
-                  placeholder="البريد الإلكتروني أو اسم المستخدم"
+                  placeholder="البريد الإلكتروني"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"
@@ -352,6 +418,61 @@ const Login = ({}: LoginProps = {}) => {
               >
                 الاستمرار
               </button>
+            </form>
+          </motion.div>
+
+          {/* OTP Verification Form */}
+          <motion.div
+            initial={{ x: 1000, opacity: 0 }}
+            animate={showOTP ? { x: 0, opacity: 1 } : { x: 1000, opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-white text-xl mb-2">رمز التحقق</h3>
+              <p className="text-white/70 text-sm">
+                تم إرسال رمز التحقق إلى بريدك الإلكتروني
+              </p>
+            </div>
+            
+            <form onSubmit={handleOTPVerification} className="space-y-6 w-full max-w-sm">
+              <div>
+                <input
+                  type="text"
+                  placeholder="أدخل رمز التحقق"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all w-full"
+                  required
+                  maxLength={6}
+                />
+              </div>
+              
+              {error && (
+                <div className="text-red-400 text-sm text-center">{error}</div>
+              )}
+              
+              <div className="flex space-x-4 justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOTP(false);
+                    setOtpCode("");
+                    setError("");
+                  }}
+                  className="bg-gradient-to-r from-[#6B6B6B] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer"
+                >
+                  رجوع
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isVerifyingOTP}
+                  className="bg-gradient-to-r from-[#434343] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isVerifyingOTP ? "جاري التحقق..." : "تحقق"}
+                </button>
+              </div>
             </form>
           </motion.div>
         </div>
