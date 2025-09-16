@@ -771,3 +771,366 @@ export async function sendCredentialsEmails(users: UserCredentials[]): Promise<{
 
   return { successful, failed, results };
 }
+
+// Password Change Email Functionality
+
+interface PasswordChangeNotification {
+  name: string;
+  email: string;
+  role: string;
+  newPassword: string;
+  changedBy: string; // Who changed the password (admin name)
+}
+
+/**
+ * Email template for password change notification
+ */
+function createPasswordChangeEmailTemplate(
+  data: PasswordChangeNotification
+): string {
+  const roleArabic = {
+    client: "عميل",
+    admin: "مدير",
+    editor: "محرر",
+    designer: "مصمم",
+    reviewer: "مُراجع",
+    owner: "مالك",
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>تغيير كلمة المرور - Alpha Factory</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0B0B0B;
+                color: #ffffff;
+                margin: 0;
+                padding: 20px;
+                direction: rtl;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: #0B0B0B;
+                border-radius: 0;
+                padding: 40px;
+            }
+            .header {
+                position: relative;
+                margin-bottom: 60px;
+            }
+            .help-link {
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #4A9EFF;
+                text-decoration: underline;
+                font-size: 14px;
+            }
+            .logo-container {
+                text-align: center;
+                margin-bottom: 40px;
+            }
+            .logo {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .logo-text {
+                color: #ffffff;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .main-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: bold;
+                text-align: center;
+                margin: 40px 0 30px 0;
+            }
+            .subtitle {
+                color: #888;
+                font-size: 16px;
+                text-align: center;
+                margin-bottom: 50px;
+                line-height: 1.6;
+            }
+            .credentials-info {
+                background-color: #1a1a1a;
+                border-radius: 15px;
+                padding: 25px;
+                margin: 30px 0;
+                border: 1px solid #333;
+            }
+            .credential-item {
+                margin: 15px 0;
+                padding: 15px;
+                background-color: #0f0f0f;
+                border-radius: 10px;
+                border-right: 4px solid #E9CF6B;
+            }
+            .credential-label {
+                color: #E9CF6B;
+                font-weight: bold;
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+            .credential-value {
+                color: #fff;
+                font-size: 16px;
+                font-family: 'Courier New', monospace;
+                background-color: #000;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #444;
+                word-break: break-all;
+            }
+            .security-notice {
+                background-color: #2a1f1f;
+                border: 1px solid #d73027;
+                color: #ffcdd2;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 30px 0;
+                text-align: center;
+            }
+            .changed-by {
+                background-color: #1a2a1a;
+                border: 1px solid #4caf50;
+                color: #c8e6c9;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 20px 0;
+                text-align: center;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="mailto:support@alphafactory.net" class="help-link">
+                    <span style="color: white;">تحتاج الى مساعدة؟</span> 
+                    <span style="color: #4A9EFF;">تواصل معنا</span>
+                </a>
+                
+                <div class="logo-container">
+                    <div class="logo">
+                        <span class="logo-text">Alpha Factory</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-title">تم تغيير كلمة المرور</div>
+            <div class="subtitle">تم تغيير كلمة المرور الخاصة بحسابك بنجاح. يرجى استخدام كلمة المرور الجديدة لتسجيل الدخول.</div>
+
+            <div class="changed-by">
+                <strong>تم التغيير بواسطة:</strong> ${data.changedBy}<br>
+                <strong>تاريخ التغيير:</strong> ${new Date().toLocaleString(
+                  "ar-SA",
+                  {
+                    timeZone: "Asia/Riyadh",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )}
+            </div>
+
+            <!-- Credentials Information -->
+            <div class="credentials-info">
+                <h3 style="color: #E9CF6B; text-align: center; margin-bottom: 20px;">كلمة المرور الجديدة</h3>
+                
+                <div class="credential-item">
+                    <div class="credential-label">الاسم:</div>
+                    <div class="credential-value">${data.name}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">البريد الإلكتروني:</div>
+                    <div class="credential-value">${data.email}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">الدور:</div>
+                    <div class="credential-value">${
+                      roleArabic[data.role as keyof typeof roleArabic] ||
+                      data.role
+                    }</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">كلمة المرور الجديدة:</div>
+                    <div class="credential-value" style="font-size: 18px; font-weight: bold; color: #4caf50;">${
+                      data.newPassword
+                    }</div>
+                </div>
+            </div>
+
+            <div class="security-notice">
+                <strong>⚠️ تنبيه أمني مهم</strong><br><br>
+                إذا لم تطلب تغيير كلمة المرور، يرجى التواصل مع فريق الدعم فوراً.<br>
+                احتفظ بكلمة المرور الجديدة في مكان آمن ولا تشاركها مع أحد.
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; color: #666; font-size: 14px; border-top: 1px solid #333; padding-top: 20px;">
+                <p>إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم على:</p>
+                <p style="color: #E9CF6B; font-weight: bold;">support@alphafactory.net</p>
+                <p style="margin-top: 20px; font-size: 12px;">
+                    هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Create plain text version of password change email
+ */
+function createPasswordChangeEmailPlainText(
+  data: PasswordChangeNotification
+): string {
+  const roleArabic = {
+    client: "عميل",
+    admin: "مدير",
+    editor: "محرر",
+    designer: "مصمم",
+    reviewer: "مُراجع",
+    owner: "مالك",
+  };
+
+  return `
+Alpha Factory - تم تغيير كلمة المرور
+
+تحتاج الى مساعدة؟ تواصل معنا: support@alphafactory.net
+
+تم تغيير كلمة المرور الخاصة بحسابك بنجاح. يرجى استخدام كلمة المرور الجديدة لتسجيل الدخول.
+
+تم التغيير بواسطة: ${data.changedBy}
+تاريخ التغيير: ${new Date().toLocaleString("ar-SA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })}
+
+كلمة المرور الجديدة:
+الاسم: ${data.name}
+البريد الإلكتروني: ${data.email}
+الدور: ${roleArabic[data.role as keyof typeof roleArabic] || data.role}
+كلمة المرور الجديدة: ${data.newPassword}
+
+⚠️ تنبيه أمني مهم
+إذا لم تطلب تغيير كلمة المرور، يرجى التواصل مع فريق الدعم فوراً.
+احتفظ بكلمة المرور الجديدة في مكان آمن ولا تشاركها مع أحد.
+
+إذا كان لديك أي استفسار، يرجى التواصل مع فريق الدعم على: support@alphafactory.net
+
+---
+هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
+  `.trim();
+}
+
+/**
+ * Send password change notification email
+ */
+async function sendPasswordChangeEmailOnce(
+  data: PasswordChangeNotification
+): Promise<boolean> {
+  try {
+    // Validate email format first
+    if (!isValidEmail(data.email)) {
+      console.error(`❌ Invalid email format: ${data.email}`);
+      return false;
+    }
+
+    console.log(
+      `📧 Sending password change notification to ${data.name} at ${data.email}`
+    );
+
+    const htmlTemplate = createPasswordChangeEmailTemplate(data);
+    const textTemplate = createPasswordChangeEmailPlainText(data);
+
+    const { data: emailData, error } = await resend.emails.send({
+      from: "Alpha Factory <support@alphafactory.net>",
+      to: [data.email],
+      subject: `تم تغيير كلمة المرور - Alpha Factory`,
+      html: htmlTemplate,
+      text: textTemplate,
+      headers: {
+        "X-Entity-Ref-ID": `password-change-${Date.now()}`,
+        "List-Unsubscribe":
+          "<mailto:support@alphafactory.net?subject=Unsubscribe>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+      tags: [
+        {
+          name: "category",
+          value: "password-change",
+        },
+      ],
+    });
+
+    if (error) {
+      console.error(`❌ Resend API error for ${data.email}:`, error);
+      return false;
+    }
+
+    console.log(
+      `✅ Password change email sent successfully to ${data.email}, ID: ${emailData?.id}`
+    );
+    return true;
+  } catch (error) {
+    console.error(
+      `❌ Exception while sending password change email to ${data.email}:`,
+      error
+    );
+    return false;
+  }
+}
+
+/**
+ * Send password change notification email with retry mechanism
+ */
+export async function sendPasswordChangeEmail(
+  data: PasswordChangeNotification
+): Promise<boolean> {
+  // Skip retry for invalid emails
+  if (!isValidEmail(data.email)) {
+    console.error(`❌ Invalid email format, skipping retry: ${data.email}`);
+    return false;
+  }
+
+  // Use similar retry mechanism as credentials email
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    console.log(
+      `📧 Attempt ${attempt}/2 to send password change email to ${data.email}`
+    );
+
+    const success = await sendPasswordChangeEmailOnce(data);
+    if (success) {
+      return true;
+    }
+
+    if (attempt < 2) {
+      // Wait before retrying (exponential backoff)
+      const delay = Math.pow(2, attempt) * 1000; // 2s, 4s
+      console.log(`⏳ Waiting ${delay}ms before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  return false;
+}

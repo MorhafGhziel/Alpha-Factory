@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../lib/prisma";
 import { auth } from "../../../../../lib/auth";
+import { sendCredentialsEmail } from "../../../../../lib/email";
 
 // GET all users (owner only)
 export async function GET(req: NextRequest) {
@@ -93,13 +94,30 @@ export async function POST(req: NextRequest) {
       throw new Error("Failed to create user");
     }
 
+    // Send email notification with credentials
+    try {
+      console.log("Sending credential email to new user...");
+      await sendCredentialsEmail({
+        name,
+        email,
+        username: email, // Use email as username for single user creation
+        password,
+        role,
+        groupName: "No Group", // Single user creation without group
+      });
+      console.log("Credential email sent successfully");
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      // Don't fail the account creation if email fails
+    }
+
     return NextResponse.json({
       message: "User created successfully",
       user: {
         id: signUpResult.user.id,
         name: signUpResult.user.name,
         email: signUpResult.user.email,
-        role: signUpResult.user.role,
+        role: role,
         createdAt: signUpResult.user.createdAt,
         emailVerified: signUpResult.user.emailVerified,
       },

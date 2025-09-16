@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../lib/auth";
 import prisma from "../../../../../../lib/prisma";
 import { hash } from "bcryptjs";
+import { sendPasswordChangeEmail } from "../../../../../../lib/email";
 
 // PUT - Change user password
 export async function PUT(
@@ -51,7 +52,7 @@ export async function PUT(
     // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true },
+      select: { id: true, email: true, name: true, role: true },
     });
 
     if (!user) {
@@ -71,6 +72,22 @@ export async function PUT(
         password: hashedPassword,
       },
     });
+
+    // Send email notification about password change
+    try {
+      console.log("Sending password change notification email...");
+      await sendPasswordChangeEmail({
+        name: user.name || "User",
+        email: user.email,
+        role: user.role || "user",
+        newPassword: newPassword,
+        changedBy: session.user.name || "Admin",
+      });
+      console.log("Password change email sent successfully");
+    } catch (emailError) {
+      console.error("Error sending password change email:", emailError);
+      // Don't fail the password change if email fails
+    }
 
     return NextResponse.json({
       message: "Password changed successfully",

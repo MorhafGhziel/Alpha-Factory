@@ -56,6 +56,14 @@ export default function AccountsManagementPage() {
     generatedPassword?: string;
   } | null>(null);
   
+  // Delete group confirmation
+  const [deleteGroupConfirm, setDeleteGroupConfirm] = useState<{
+    show: boolean;
+    groupId: string;
+    groupName: string;
+    userCount: number;
+  } | null>(null);
+  
   const [passwordError, setPasswordError] = useState('');
 
   const roles = ['admin', 'client', 'designer', 'reviewer', 'editor'];
@@ -261,6 +269,51 @@ export default function AccountsManagementPage() {
   const cancelChangePassword = () => {
     setChangePasswordModal(null);
     setPasswordError('');
+  };
+
+  const handleDeleteGroup = (groupId: string, groupName: string, userCount: number) => {
+    setDeleteGroupConfirm({ 
+      show: true, 
+      groupId, 
+      groupName, 
+      userCount 
+    });
+  };
+
+  const confirmDeleteGroup = async () => {
+    if (!deleteGroupConfirm) return;
+
+    try {
+      const response = await fetch('/api/admin-panel/groups', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          groupId: deleteGroupConfirm.groupId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete group');
+      }
+
+      // Remove group from local state
+      setGroups(prevGroups => 
+        prevGroups.filter(group => group.id !== deleteGroupConfirm.groupId)
+      );
+      
+      setDeleteGroupConfirm(null);
+      setError(null);
+      setSuccessMessage(`تم حذف المجموعة "${deleteGroupConfirm.groupName}" وجميع حساباتها بنجاح`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const cancelDeleteGroup = () => {
+    setDeleteGroupConfirm(null);
   };
 
   const getFieldNameInArabic = (field: string) => {
@@ -666,13 +719,24 @@ export default function AccountsManagementPage() {
                 }}
               >
                 {/* Group Header */}
-                <div className="bg-[#E9CF6B] px-6 py-4">
+                <div className="bg-[#E9CF6B] px-6 py-4 relative">
                   <h2 className="text-black text-xl font-bold text-center">
                     مجموعة: {group.name}
                   </h2>
                   <p className="text-black/70 text-sm text-center mt-1">
                     تاريخ الإنشاء: {new Date(group.createdAt).toLocaleDateString('ar-EG')}
                   </p>
+                  
+                  {/* Delete Group Button */}
+                  <button
+                    onClick={() => handleDeleteGroup(group.id, group.name, group.users.length)}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors duration-200 shadow-lg"
+                    title="حذف المجموعة وجميع الحسابات"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Users in Group */}
@@ -818,6 +882,71 @@ export default function AccountsManagementPage() {
                 <button
                   onClick={cancelChangePassword}
                   className="bg-gray-700 cursor-pointer text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Group Confirmation Modal */}
+      <AnimatePresence>
+        {deleteGroupConfirm && (
+          <motion.div
+            className="fixed inset-0 backdrop-blur-2xl bg-black/20 bg-opacity-50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="bg-[#0f0f0f] rounded-3xl p-8 max-w-md w-full mx-4 border border-red-500/30"
+              initial={{ y: -50, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -50, opacity: 0, scale: 0.9 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                duration: 0.3,
+              }}
+            >
+              <div className="text-center mb-6">
+                <div className="mx-auto flex items-center justify-center w-16 h-16 rounded-full bg-red-900/20 mb-4">
+                  <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">تأكيد حذف المجموعة</h3>
+                <p className="text-gray-300 mb-4">
+                  هل أنت متأكد من حذف المجموعة{" "}
+                  <span className="text-[#E9CF6B] font-semibold">
+                    &quot;{deleteGroupConfirm.groupName}&quot;
+                  </span>
+                  ؟
+                </p>
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
+                  <p className="text-red-300 text-sm">
+                    <strong>تحذير:</strong> سيتم حذف المجموعة وجميع الحسابات الموجودة بداخلها ({deleteGroupConfirm.userCount} حساب) نهائياً ولا يمكن التراجع عن هذا الإجراء.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={confirmDeleteGroup}
+                  className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>حذف المجموعة</span>
+                </button>
+                <button
+                  onClick={cancelDeleteGroup}
+                  className="bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
                 >
                   إلغاء
                 </button>

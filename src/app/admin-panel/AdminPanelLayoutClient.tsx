@@ -29,15 +29,6 @@ export default function AdminPanelLayoutClient({
       ),
     },
     {
-      name: "إدارة الحسابات",
-      href: "/admin-panel/accounts",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-        </svg>
-      ),
-    },
-    {
       name: "إنشاء حساب جديد",
       href: "/admin-panel/create-account",
       icon: (
@@ -46,6 +37,16 @@ export default function AdminPanelLayoutClient({
         </svg>
       ),
     },
+    {
+      name: "إدارة الحسابات",
+      href: "/admin-panel/accounts",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+        </svg>
+      ),
+    },
+   
     {
       name: "إدارة الأدوار",
       href: "/admin-panel/roles",
@@ -105,7 +106,7 @@ export default function AdminPanelLayoutClient({
               {/* Back to Admin Panel Link */}
               <Link
                 href={backToAdminLink.href}
-                className="text-gray-300 hover:text-[#E9CF6B] hover:bg-gray-800 group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200"
+                className="text-gray-300 hover:text-[#E9CF6B] hover:bg-gray-800 group gap-2 flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200"
               >
                 {backToAdminLink.icon}
                 <span className="mr-3">{backToAdminLink.name}</span>

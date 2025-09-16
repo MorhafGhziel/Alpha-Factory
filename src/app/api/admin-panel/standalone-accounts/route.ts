@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import prisma from "../../../../lib/prisma";
 import { generateCredentials } from "../../../../utils/credentials";
+import { sendCredentialsEmails } from "../../../../lib/email";
 
 interface CreateUserRequest {
   name: string;
@@ -114,6 +115,23 @@ export async function POST(req: NextRequest) {
           password: password,
           role: userData.role,
         });
+      }
+
+      // Send email notifications
+      try {
+        console.log("Sending credential emails to users...");
+        const emailResults = await sendCredentialsEmails(
+          usersWithCredentials.map((user) => ({
+            ...user,
+            groupName: "Standalone Account", // Since these are standalone accounts
+          }))
+        );
+        console.log(
+          `Email results: ${emailResults.successful} successful, ${emailResults.failed} failed`
+        );
+      } catch (emailError) {
+        console.error("Error sending emails:", emailError);
+        // Don't fail the account creation if email fails
       }
 
       return NextResponse.json({

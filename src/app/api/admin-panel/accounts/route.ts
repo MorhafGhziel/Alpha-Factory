@@ -6,6 +6,7 @@ import {
   isTelegramConfigured,
   createTelegramGroup,
 } from "../../../../lib/telegram";
+import { sendCredentialsEmails } from "../../../../lib/email";
 
 interface CreateUserRequest {
   name: string;
@@ -200,7 +201,7 @@ export async function POST(req: NextRequest) {
               where: { id: targetGroup.id },
               data: {
                 telegramInviteLink: telegramResult.inviteLink,
-                telegramGroupName: telegramResult.groupName,
+                telegramGroupName: targetGroup.name,
                 telegramChatId: telegramResult.chatId?.toString(),
               },
             });
@@ -209,6 +210,23 @@ export async function POST(req: NextRequest) {
           console.error("Telegram group creation failed:", telegramError);
           // Continue without failing the entire operation
         }
+      }
+
+      // Send email notifications to users
+      try {
+        console.log("Sending credential emails to users...");
+        const emailResults = await sendCredentialsEmails(
+          usersWithCredentials.map((user) => ({
+            ...user,
+            telegramInviteLink: telegramResult?.inviteLink,
+          }))
+        );
+        console.log(
+          `Email results: ${emailResults.successful} successful, ${emailResults.failed} failed`
+        );
+      } catch (emailError) {
+        console.error("Error sending emails:", emailError);
+        // Don't fail the account creation if email fails
       }
 
       return NextResponse.json({
