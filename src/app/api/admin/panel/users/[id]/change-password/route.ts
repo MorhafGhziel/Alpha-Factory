@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../../../lib/auth";
-import prisma from "../../../../../../lib/prisma";
+import { auth } from "../../../../../../../lib/auth";
+import prisma from "../../../../../../../lib/prisma";
 import { hash } from "bcryptjs";
 
-// PUT - Change user password
+// PUT - Change user password (owner only)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   try {
-    // Check if user is authenticated and is admin
+    // Check if user is authenticated and is owner
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (
-      !session?.user ||
-      (session.user.role !== "admin" && session.user.role !== "owner")
-    ) {
+    if (!session?.user || session.user.role !== "owner") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -40,18 +37,10 @@ export async function PUT(
       );
     }
 
-    // Prevent admin from changing their own password through this endpoint
-    if (session.user.id === userId) {
-      return NextResponse.json(
-        { error: "Cannot change your own password through this method" },
-        { status: 400 }
-      );
-    }
-
     // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true },
+      select: { id: true, email: true, role: true },
     });
 
     if (!user) {

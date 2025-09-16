@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TeamGroup } from "../../types";
 import { createNewTeam, removeTeamById, TeamContext } from "@/src/utils";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
+import { auth } from "../../lib/auth";
 
 export default function AdminLayoutClient({
   children,
@@ -14,6 +15,7 @@ export default function AdminLayoutClient({
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [teams, setTeams] = useState<TeamGroup[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   const addTeam = (team: Omit<TeamGroup, "id" | "createdAt">) => {
     const newTeam = createNewTeam(team);
@@ -31,6 +33,23 @@ export default function AdminLayoutClient({
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    // Get user role to determine if admin panel link should be shown
+    const fetchUserRole = async () => {
+      try {
+        const response = await fetch('/api/auth/session');
+        if (response.ok) {
+          const data = await response.json();
+          setUserRole(data.user?.role || null);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+    
+    fetchUserRole();
+  }, []);
 
   return (
     <TeamContext.Provider value={{ teams, addTeam, deleteTeam }}>
@@ -51,6 +70,21 @@ export default function AdminLayoutClient({
               alt: "Profile",
               text: "الملف الشخصي",
             },
+            ...(userRole === "owner" ? [
+              {
+                path: "",
+                icon: "",
+                alt: "",
+                text: "",
+                isBorder: true,
+              },
+              {
+                path: "/admin-panel",
+                icon: "/icons/Adjust.svg",
+                alt: "Admin Panel",
+                text: "لوحة التحكم الرئيسية",
+              }
+            ] : []),
             {
               path: "",
               icon: "",
@@ -82,6 +116,21 @@ export default function AdminLayoutClient({
               alt: "Profile",
               tooltip: "الملف الشخصي",
             },
+            ...(userRole === "owner" ? [
+              {
+                path: "",
+                icon: "",
+                alt: "",
+                tooltip: "",
+                isBorder: true,
+              },
+              {
+                path: "/admin-panel",
+                icon: "/icons/Adjust.svg",
+                alt: "Admin Panel",
+                tooltip: "لوحة التحكم الرئيسية",
+              }
+            ] : []),
             {
               path: "",
               icon: "",

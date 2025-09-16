@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
       headers: req.headers,
     });
 
-    if (!session?.user || session.user.role !== "admin") {
+    if (
+      !session?.user ||
+      (session.user.role !== "admin" && session.user.role !== "owner")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -124,7 +127,10 @@ export async function GET(req: NextRequest) {
       headers: req.headers,
     });
 
-    if (!session?.user || session.user.role !== "admin") {
+    if (
+      !session?.user ||
+      (session.user.role !== "admin" && session.user.role !== "owner")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

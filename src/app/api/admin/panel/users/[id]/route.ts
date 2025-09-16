@@ -1,33 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../../lib/prisma";
-import { auth } from "../../../../../lib/auth";
+import prisma from "../../../../../../lib/prisma";
+import { auth } from "../../../../../../lib/auth";
 
-// UPDATE user
+// UPDATE user (owner only)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   try {
-    // Check if user is authenticated and is admin
+    // Check if user is authenticated and is owner
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (
-      !session?.user ||
-      (session.user.role !== "admin" && session.user.role !== "owner")
-    ) {
+    if (!session?.user || session.user.role !== "owner") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { email, name, phone } = await req.json();
+    const { email, name, role } = await req.json();
     const userId = id;
 
     // Validate input
-    if (!email && !name && !phone) {
+    if (!email && !name && !role) {
       return NextResponse.json(
-        { error: "At least one field (email, name, or phone) is required" },
+        { error: "At least one field (email, name, or role) is required" },
         { status: 400 }
       );
     }
@@ -51,39 +48,11 @@ export async function PUT(
       }
     }
 
-    // Check if phone is already taken by another user
-    if (phone) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          phone: phone,
-          NOT: {
-            id: userId,
-          },
-        },
-      });
-
-      if (existingUser) {
-        return NextResponse.json(
-          { error: "Phone number is already taken" },
-          { status: 409 }
-        );
-      }
-
-      // Validate phone number format
-      const phoneRegex = /^[0-9+\-\s()]+$/;
-      if (!phoneRegex.test(phone)) {
-        return NextResponse.json(
-          { error: "Invalid phone number format" },
-          { status: 400 }
-        );
-      }
-    }
-
     // Update user
-    const updateData: { email?: string; name?: string; phone?: string } = {};
+    const updateData: { email?: string; name?: string; role?: string } = {};
     if (email) updateData.email = email;
     if (name) updateData.name = name;
-    if (phone) updateData.phone = phone;
+    if (role) updateData.role = role;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -92,7 +61,6 @@ export async function PUT(
         id: true,
         name: true,
         email: true,
-        phone: true,
         role: true,
         createdAt: true,
         emailVerified: true,
@@ -109,31 +77,46 @@ export async function PUT(
   }
 }
 
-// DELETE user
+// DELETE user (owner only)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   try {
-    // Check if user is authenticated and is admin
+    // Check if user is authenticated and is owner
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (
-      !session?.user ||
-      (session.user.role !== "admin" && session.user.role !== "owner")
-    ) {
+    if (!session?.user || session.user.role !== "owner") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = id;
 
-    // Prevent admin from deleting themselves
+    // Prevent owner from deleting themselves
     if (session.user.id === userId) {
       return NextResponse.json(
         { error: "Cannot delete your own account" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Prevent deleting other owners (only one owner should exist, but safety check)
+    if (user.role === "owner") {
+      return NextResponse.json(
+        { error: "Cannot delete owner accounts" },
         { status: 400 }
       );
     }

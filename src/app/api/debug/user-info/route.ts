@@ -5,12 +5,15 @@ import { auth } from "../../../../lib/auth";
 // GET - Debug user information (admin only)
 export async function GET(req: NextRequest) {
   try {
-    // Check if user is authenticated and is admin
+    // Check if user is authenticated and is admin or owner
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (!session?.user || session.user.role !== "admin") {
+    if (
+      !session?.user ||
+      (session.user.role !== "admin" && session.user.role !== "owner")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

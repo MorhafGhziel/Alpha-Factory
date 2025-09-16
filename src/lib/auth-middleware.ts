@@ -1,7 +1,13 @@
 import { getServerSession } from "./get-session";
 import { redirect } from "next/navigation";
 
-export type UserRole = "admin" | "client" | "designer" | "reviewer" | "editor";
+export type UserRole =
+  | "owner"
+  | "admin"
+  | "client"
+  | "designer"
+  | "reviewer"
+  | "editor";
 
 interface AuthMiddlewareOptions {
   requiredRole?: UserRole;
@@ -44,6 +50,7 @@ export async function authMiddleware(options: AuthMiddlewareOptions = {}) {
 /**
  * Utility functions for specific role checks
  */
+export const requireOwner = () => authMiddleware({ requiredRole: "owner" });
 export const requireAdmin = () => authMiddleware({ requiredRole: "admin" });
 export const requireClient = () => authMiddleware({ requiredRole: "client" });
 export const requireDesigner = () =>
@@ -59,10 +66,23 @@ export const requireAnyRole = (roles: UserRole[]) =>
   authMiddleware({ allowedRoles: roles });
 
 /**
+ * Check if user is admin or owner (for current admin routes)
+ */
+export const requireAdminOrOwner = () =>
+  authMiddleware({ allowedRoles: ["admin", "owner"] });
+
+/**
+ * Check if user is only owner (for admin panel routes)
+ */
+export const requireOwnerOnly = () => authMiddleware({ requiredRole: "owner" });
+
+/**
  * Get user role-specific dashboard path
  */
 export function getRoleDashboardPath(role: string): string {
   switch (role) {
+    case "owner":
+      return "/admin";
     case "admin":
       return "/admin";
     case "client":

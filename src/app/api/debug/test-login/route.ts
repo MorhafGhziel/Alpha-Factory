@@ -5,12 +5,15 @@ import prisma from "../../../../lib/prisma";
 // POST - Test login process step by step (admin only)
 export async function POST(req: NextRequest) {
   try {
-    // Check if user is authenticated and is admin
+    // Check if user is authenticated and is admin or owner
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (!session?.user || session.user.role !== "admin") {
+    if (
+      !session?.user ||
+      (session.user.role !== "admin" && session.user.role !== "owner")
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
