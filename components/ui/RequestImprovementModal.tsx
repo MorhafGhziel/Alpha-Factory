@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProjects } from "@/contexts/ProjectContext";
 import CustomDropdown from "./CustomDropdown";
+import VoiceRecorder from "./VoiceRecorder";
 
 interface RequestImprovementModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface RequestImprovementModalProps {
     title: string;
     description: string;
     department: string;
+    hasVoiceRecording?: boolean;
+    isVerified?: boolean;
   }) => void;
 }
 
@@ -25,6 +28,26 @@ export default function RequestImprovementModal({
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [department, setDepartment] = useState<string>("");
+  const [hasVoiceRecording, setHasVoiceRecording] = useState<boolean>(false);
+  const [isVerified, setIsVerified] = useState<boolean>(false);
+
+  // Auto-verification logic: verify when all fields are completed
+  useEffect(() => {
+    const allFieldsCompleted = selectedProjectId && description && department;
+    if (allFieldsCompleted) {
+      setIsVerified(true);
+    } else {
+      setIsVerified(false);
+    }
+  }, [selectedProjectId, description, department]);
+
+  const handleVoiceRecorded = (hasRecording: boolean) => {
+    setHasVoiceRecording(hasRecording);
+  };
+
+  const handleManualVerificationToggle = () => {
+    setIsVerified(!isVerified);
+  };
 
   const handleSubmit = () => {
     if (!selectedProjectId || !description || !department) {
@@ -43,11 +66,15 @@ export default function RequestImprovementModal({
       title: selectedProject.title,
       description,
       department,
+      hasVoiceRecording,
+      isVerified,
     });
 
     setSelectedProjectId("");
     setDescription("");
     setDepartment("");
+    setHasVoiceRecording(false);
+    setIsVerified(false);
   };
 
   return (
@@ -150,13 +177,60 @@ export default function RequestImprovementModal({
               </div>
 
               <div>
+                <div className="text-white text-right mb-3 text-sm">
+                  وصف التحسين:
+                </div>
                 <textarea
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-2xl focus:outline-none text-right resize-none"
+                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-2xl focus:outline-none text-right resize-none border border-[#3F3F3F] focus:border-[#EAD06C]"
                   placeholder="اضف تحسيناتك"
                 />
+
+                {/* Voice Recording Section */}
+                <VoiceRecorder
+                  onVoiceRecorded={handleVoiceRecorded}
+                  className="mt-3"
+                />
+              </div>
+
+              {/* Verification Status */}
+              <div className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-[#333336]">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleManualVerificationToggle}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
+                      isVerified
+                        ? "bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/25"
+                        : "bg-gray-500 hover:bg-gray-600 text-white shadow-lg shadow-gray-500/25"
+                    }`}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {isVerified ? "تم التحقق" : "غير محقق"}
+                  </button>
+
+                  {isVerified && (
+                    <div className="text-green-400 text-sm flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span>جميع الحقول مكتملة</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-xs text-gray-400">
+                  {isVerified ? "تلقائي" : "يدوي"}
+                </div>
               </div>
 
               <div className="pt-4">

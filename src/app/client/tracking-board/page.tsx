@@ -39,6 +39,7 @@ export default function ClientTrackingBoardPage() {
       documentation?: boolean;
       notes?: boolean;
       fileLinks?: boolean;
+      verificationMode?: boolean;
     };
   }>({});
 
@@ -112,6 +113,8 @@ export default function ClientTrackingBoardPage() {
 
       if (response.ok) {
         await fetchProjects(); // Refresh projects
+        // Check for auto-verification after updating filming status
+        await checkAndAutoVerify(projectId);
       } else {
         const errorData = await response.json();
         alert(`فشل في تحديث حالة التصوير: ${errorData.error}`);
@@ -141,6 +144,8 @@ export default function ClientTrackingBoardPage() {
 
       if (response.ok) {
         await fetchProjects(); // Refresh projects
+        // Check for auto-verification after updating file links
+        await checkAndAutoVerify(projectId);
       } else {
         const errorData = await response.json();
         alert(`فشل في تحديث روابط الملفات: ${errorData.error}`);
@@ -262,6 +267,8 @@ export default function ClientTrackingBoardPage() {
 
         if (response.ok) {
           await fetchProjects(); // Refresh projects
+          // Check for auto-verification after updating notes
+          await checkAndAutoVerify(notesModal.projectId);
           closeNotesModal();
         } else {
           const errorData = await response.json();
@@ -306,6 +313,40 @@ export default function ClientTrackingBoardPage() {
         ...prev,
         [projectId]: { ...prev[projectId], rating: false },
       }));
+    }
+  };
+
+  // Auto-verification logic: Check if project is complete and auto-verify
+  const checkAndAutoVerify = async (projectId: string) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return;
+
+    // Check if all required fields are completed
+    const isComplete =
+      project.filmingStatus === "تم الانتـــهاء مــنه" &&
+      project.fileLinks &&
+      project.fileLinks.trim() !== "" &&
+      project.editMode === "تم الانتهاء منه" &&
+      project.reviewMode === "تمت المراجعة" &&
+      project.designMode === "تم الانتهاء منه";
+
+    // If project is complete and not already verified, auto-verify
+    if (isComplete && project.verificationMode !== "متميز") {
+      try {
+        const response = await fetch(`/api/projects/${projectId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ verificationMode: "متميز" }),
+        });
+
+        if (response.ok) {
+          await fetchProjects(); // Refresh projects
+        }
+      } catch (error) {
+        console.error("Error auto-verifying project:", error);
+      }
     }
   };
 
@@ -530,51 +571,11 @@ export default function ClientTrackingBoardPage() {
                         <>
                           <button
                             onClick={async () => {
-                              const newStatus = project.documentation
-                                ? ""
-                                : "موثق";
-
-                              // Set loading state
-                              setLoadingStates((prev) => ({
-                                ...prev,
-                                [project.id]: {
-                                  ...prev[project.id],
-                                  documentation: true,
-                                },
-                              }));
-
-                              try {
-                                const response = await fetch(
-                                  `/api/projects/${project.id}`,
-                                  {
-                                    method: "PUT",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      documentation: newStatus,
-                                    }),
-                                  }
-                                );
-
-                                if (response.ok) {
-                                  await fetchProjects();
-                                }
-                              } catch (error) {
-                                console.error(
-                                  "Error updating documentation:",
-                                  error
-                                );
-                              } finally {
-                                // Clear loading state
-                                setLoadingStates((prev) => ({
-                                  ...prev,
-                                  [project.id]: {
-                                    ...prev[project.id],
-                                    documentation: false,
-                                  },
-                                }));
-                              }
+                              // Toggle verification status manually
+                              const currentStatus = project.verificationMode;
+                              const newStatus =
+                                currentStatus === "متميز" ? "لا شيء" : "متميز";
+                              await updateRating(project.id, newStatus);
                             }}
                             className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
                           >
@@ -582,7 +583,8 @@ export default function ClientTrackingBoardPage() {
                               {/* Verified Badge */}
                               <div
                                 className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
-                                  project.documentation
+                                  project.verificationMode &&
+                                  project.verificationMode !== "لا شيء"
                                     ? "opacity-100 scale-100 rotate-0"
                                     : "opacity-0 scale-75 rotate-180"
                                 }`}
@@ -603,7 +605,8 @@ export default function ClientTrackingBoardPage() {
                               {/* Unverified Badge */}
                               <div
                                 className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
-                                  project.documentation
+                                  project.verificationMode &&
+                                  project.verificationMode !== "لا شيء"
                                     ? "opacity-0 scale-75 rotate-180"
                                     : "opacity-100 scale-100 rotate-0"
                                 }`}
@@ -614,12 +617,16 @@ export default function ClientTrackingBoardPage() {
                           </button>
                           <span
                             className={`text-xs font-medium ${
-                              project.documentation
+                              project.verificationMode &&
+                              project.verificationMode !== "لا شيء"
                                 ? "text-blue-400"
                                 : "text-gray-400"
                             }`}
                           >
-                            {project.documentation ? "موثق" : "غير موثق"}
+                            {project.verificationMode &&
+                            project.verificationMode !== "لا شيء"
+                              ? project.verificationMode
+                              : "غير محقق"}
                           </span>
                         </>
                       )}
@@ -1013,51 +1020,14 @@ export default function ClientTrackingBoardPage() {
                             <>
                               <button
                                 onClick={async () => {
-                                  const newStatus = project.documentation
-                                    ? ""
-                                    : "موثق";
-
-                                  // Set loading state
-                                  setLoadingStates((prev) => ({
-                                    ...prev,
-                                    [project.id]: {
-                                      ...prev[project.id],
-                                      documentation: true,
-                                    },
-                                  }));
-
-                                  try {
-                                    const response = await fetch(
-                                      `/api/projects/${project.id}`,
-                                      {
-                                        method: "PUT",
-                                        headers: {
-                                          "Content-Type": "application/json",
-                                        },
-                                        body: JSON.stringify({
-                                          documentation: newStatus,
-                                        }),
-                                      }
-                                    );
-
-                                    if (response.ok) {
-                                      await fetchProjects();
-                                    }
-                                  } catch (error) {
-                                    console.error(
-                                      "Error updating documentation:",
-                                      error
-                                    );
-                                  } finally {
-                                    // Clear loading state
-                                    setLoadingStates((prev) => ({
-                                      ...prev,
-                                      [project.id]: {
-                                        ...prev[project.id],
-                                        documentation: false,
-                                      },
-                                    }));
-                                  }
+                                  // Toggle verification status manually
+                                  const currentStatus =
+                                    project.verificationMode;
+                                  const newStatus =
+                                    currentStatus === "متميز"
+                                      ? "لا شيء"
+                                      : "متميز";
+                                  await updateRating(project.id, newStatus);
                                 }}
                                 className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
                               >
@@ -1065,7 +1035,8 @@ export default function ClientTrackingBoardPage() {
                                   {/* Verified Badge */}
                                   <div
                                     className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
-                                      project.documentation
+                                      project.verificationMode &&
+                                      project.verificationMode !== "لا شيء"
                                         ? "opacity-100 scale-100 rotate-0"
                                         : "opacity-0 scale-75 rotate-180"
                                     }`}
@@ -1086,7 +1057,8 @@ export default function ClientTrackingBoardPage() {
                                   {/* Unverified Badge */}
                                   <div
                                     className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
-                                      project.documentation
+                                      project.verificationMode &&
+                                      project.verificationMode !== "لا شيء"
                                         ? "opacity-0 scale-75 rotate-180"
                                         : "opacity-100 scale-100 rotate-0"
                                     }`}
@@ -1097,12 +1069,16 @@ export default function ClientTrackingBoardPage() {
                               </button>
                               <span
                                 className={`text-xs font-medium ${
-                                  project.documentation
+                                  project.verificationMode &&
+                                  project.verificationMode !== "لا شيء"
                                     ? "text-blue-400"
                                     : "text-gray-400"
                                 }`}
                               >
-                                {project.documentation ? "موثق" : "غير موثق"}
+                                {project.verificationMode &&
+                                project.verificationMode !== "لا شيء"
+                                  ? project.verificationMode
+                                  : "غير محقق"}
                               </span>
                             </>
                           )}
