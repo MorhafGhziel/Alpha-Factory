@@ -6,6 +6,61 @@ import {
   sendProjectUpdate,
   sendProjectStatusUpdate,
 } from "../../../../lib/telegram";
+import { sendClientProjectNotification } from "../../../../lib/email";
+
+/**
+ * Helper function to determine if a status change should notify the client
+ */
+function getClientNotificationStatus(
+  fieldName: string,
+  newValue: string,
+  userRole: string
+):
+  | "editing_started"
+  | "editing_completed"
+  | "design_started"
+  | "design_completed"
+  | "review_started"
+  | "review_completed"
+  | "project_completed"
+  | null {
+  // Editor status changes
+  if (fieldName === "editMode") {
+    if (newValue === "جاري العمل عليه" && userRole === "editor") {
+      return "editing_started";
+    }
+    if (newValue === "تم الانتهاء منه" && userRole === "editor") {
+      return "editing_completed";
+    }
+  }
+
+  // Designer status changes
+  if (fieldName === "designMode") {
+    if (newValue === "جاري العمل عليه" && userRole === "designer") {
+      return "design_started";
+    }
+    if (newValue === "تم الانتهاء منه" && userRole === "designer") {
+      return "design_completed";
+    }
+  }
+
+  // Reviewer status changes
+  if (fieldName === "reviewMode") {
+    if (newValue === "جاري العمل عليه" && userRole === "reviewer") {
+      return "review_started";
+    }
+    if (newValue === "تم الانتهاء منه" && userRole === "reviewer") {
+      return "review_completed";
+    }
+  }
+
+  // Project completion (verification mode)
+  if (fieldName === "verificationMode" && newValue === "تم الانتهاء منه") {
+    return "project_completed";
+  }
+
+  return null;
+}
 
 interface UpdateProjectRequest {
   title?: string;
@@ -264,6 +319,47 @@ export async function PUT(
             newValue: String(newValue || "غير محدد"),
             fieldNameArabic: getFieldNameInArabic(fieldName),
           });
+        }
+      }
+    }
+
+    // Send client email notifications for major status changes
+    if (updatedProject.client && Object.keys(updates).length > 0) {
+      for (const [fieldName, newValue] of Object.entries(updates)) {
+        if (fieldName === "startDate" || fieldName === "endDate") continue; // Skip date objects
+
+        const oldValue = (existingProject as any)[fieldName];
+
+        // Only notify if the value actually changed and it's a significant status change
+        if (oldValue !== newValue) {
+          const clientNotificationStatus = getClientNotificationStatus(
+            fieldName,
+            String(newValue),
+            user.role || "unknown"
+          );
+
+          if (clientNotificationStatus) {
+            try {
+              await sendClientProjectNotification({
+                clientName: updatedProject.client.name,
+                clientEmail: updatedProject.client.email,
+                projectTitle: updatedProject.title,
+                projectType: updatedProject.type,
+                status: clientNotificationStatus,
+                updatedBy: user.name,
+                updatedByRole: getRoleInArabic(user.role || "unknown"),
+              });
+              console.log(
+                `✅ Client notification sent for ${fieldName} change to ${newValue}`
+              );
+            } catch (emailError) {
+              console.error(
+                "❌ Error sending client notification:",
+                emailError
+              );
+              // Don't fail the update if email fails
+            }
+          }
         }
       }
     }

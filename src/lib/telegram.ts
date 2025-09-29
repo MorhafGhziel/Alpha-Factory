@@ -340,7 +340,7 @@ export function setupBotCommands(): void {
 /**
  * Get role name in Arabic
  */
-function getRoleInArabic(role: string): string {
+export function getRoleInArabic(role: string): string {
   const roleMap: { [key: string]: string } = {
     client: "عميل",
     editor: "محرر",

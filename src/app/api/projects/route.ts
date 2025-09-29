@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../lib/auth";
 import prisma from "../../../lib/prisma";
 import { sendNewProjectNotification } from "../../../lib/telegram";
+import { sendClientProjectNotification } from "../../../lib/email";
 
 interface CreateProjectRequest {
   title: string;
@@ -141,6 +142,22 @@ export async function POST(req: NextRequest) {
         notes,
         fileLinks,
       });
+    }
+
+    // Send email notification to client
+    try {
+      await sendClientProjectNotification({
+        clientName: user.name,
+        clientEmail: user.email,
+        projectTitle: title,
+        projectType: type,
+        status: "created",
+        message: notes ? `ملاحظات المشروع: ${notes}` : undefined,
+      });
+      console.log(`✅ Client notification sent for project: ${title}`);
+    } catch (emailError) {
+      console.error("❌ Error sending client notification:", emailError);
+      // Don't fail project creation if email fails
     }
 
     return NextResponse.json({
