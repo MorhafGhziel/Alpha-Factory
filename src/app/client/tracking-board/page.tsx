@@ -537,6 +537,13 @@ export default function ClientTrackingBoardPage() {
                         <div className="flex items-center justify-center min-h-[40px]">
                           <LoadingSpinner size="w-6 h-6" />
                         </div>
+                      ) : isClient ? (
+                        // Read-only display for clients
+                        <div className="w-full px-3 py-2 text-xs font-medium text-center bg-[#1A1A1A] rounded">
+                          <span className="text-gray-300">
+                            {project.verificationMode || "لا شيء"}
+                          </span>
+                        </div>
                       ) : (
                         <CustomDropdown
                           options={[
@@ -625,7 +632,7 @@ export default function ClientTrackingBoardPage() {
                           >
                             {project.verificationMode &&
                             project.verificationMode !== "لا شيء"
-                              ? project.verificationMode
+                              ? "موثق"
                               : "غير محقق"}
                           </span>
                         </>
@@ -940,16 +947,6 @@ export default function ClientTrackingBoardPage() {
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.filmingStatus === "تم الانتـــهاء مــنه" ? (
                           <div className="flex flex-col gap-1">
-                            {project.fileLinks && (
-                              <a
-                                href={project.fileLinks}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-300 text-xs underline"
-                              >
-                                ملفات
-                              </a>
-                            )}
                             {project.reviewLinks && (
                               <a
                                 href={project.reviewLinks}
@@ -957,7 +954,7 @@ export default function ClientTrackingBoardPage() {
                                 rel="noopener noreferrer"
                                 className="text-blue-400 hover:text-blue-300 text-xs underline"
                               >
-                                مراجعة
+                                تحرير
                               </a>
                             )}
                             {project.designLinks && (
@@ -970,8 +967,7 @@ export default function ClientTrackingBoardPage() {
                                 تصميم
                               </a>
                             )}
-                            {!project.fileLinks &&
-                              !project.reviewLinks &&
+                            {!project.reviewLinks &&
                               !project.designLinks && (
                                 <span className="text-gray-500 text-xs">
                                   لا توجد
@@ -989,6 +985,13 @@ export default function ClientTrackingBoardPage() {
                           {loadingStates[project.id]?.rating ? (
                             <div className="flex items-center justify-center min-h-[40px]">
                               <LoadingSpinner size="w-6 h-6" />
+                            </div>
+                          ) : isClient ? (
+                            // Read-only display for clients
+                            <div className="min-w-[120px] px-3 py-2 text-xs font-medium text-center">
+                              <span className="text-gray-300">
+                                {project.verificationMode || "لا شيء"}
+                              </span>
                             </div>
                           ) : (
                             <CustomDropdown
@@ -1077,8 +1080,8 @@ export default function ClientTrackingBoardPage() {
                               >
                                 {project.verificationMode &&
                                 project.verificationMode !== "لا شيء"
-                                  ? project.verificationMode
-                                  : "غير محقق"}
+                                  ? "تم التوثيق"
+                                  : "غير موثق"}
                               </span>
                             </>
                           )}

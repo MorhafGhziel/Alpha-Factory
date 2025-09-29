@@ -26,7 +26,7 @@ function getClientNotificationStatus(
   | null {
   // Editor status changes
   if (fieldName === "editMode") {
-    if (newValue === "جاري العمل عليه" && userRole === "editor") {
+    if (newValue === "قيد التنفيذ" && userRole === "editor") {
       return "editing_started";
     }
     if (newValue === "تم الانتهاء منه" && userRole === "editor") {
@@ -36,7 +36,7 @@ function getClientNotificationStatus(
 
   // Designer status changes
   if (fieldName === "designMode") {
-    if (newValue === "جاري العمل عليه" && userRole === "designer") {
+    if (newValue === "قيد التنفيذ" && userRole === "designer") {
       return "design_started";
     }
     if (newValue === "تم الانتهاء منه" && userRole === "designer") {
@@ -46,10 +46,10 @@ function getClientNotificationStatus(
 
   // Reviewer status changes
   if (fieldName === "reviewMode") {
-    if (newValue === "جاري العمل عليه" && userRole === "reviewer") {
+    if (newValue === "قيد المراجعة" && userRole === "reviewer") {
       return "review_started";
     }
-    if (newValue === "تم الانتهاء منه" && userRole === "reviewer") {
+    if (newValue === "تمت المراجعة" && userRole === "reviewer") {
       return "review_completed";
     }
   }
