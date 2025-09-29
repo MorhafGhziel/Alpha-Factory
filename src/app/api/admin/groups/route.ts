@@ -7,15 +7,10 @@ import {
   createTelegramGroup,
   isTelegramConfigured,
 } from "../../../../lib/telegram";
-import {
-  sendClientCredentials,
-  isWhatsAppConfigured,
-} from "../../../../lib/whatsapp";
 
 interface UserData {
   name: string;
   email: string;
-  phone?: string; // Phone number for clients
   role: string;
 }
 
@@ -60,22 +55,12 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // For clients, require both email and phone number
-      if (user.role === "client") {
-        if (!user.email || !user.phone) {
-          return NextResponse.json(
-            { error: "Email and phone number are required for clients" },
-            { status: 400 }
-          );
-        }
-      } else {
-        // For other roles, require email
-        if (!user.email) {
-          return NextResponse.json(
-            { error: "Email is required for non-client users" },
-            { status: 400 }
-          );
-        }
+      // For all roles, require email
+      if (!user.email) {
+        return NextResponse.json(
+          { error: "Email is required for all users" },
+          { status: 400 }
+        );
       }
     }
 
@@ -103,36 +88,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check if any phone number already exists (for client users)
-    const clientUsers = users.filter((user) => user.role === "client");
-    if (clientUsers.length > 0) {
-      const existingPhones = await prisma.user.findMany({
-        where: {
-          phone: {
-            in: clientUsers.map((user) => user.phone!),
-          },
-        },
-        select: { phone: true },
-      });
-
-      if (existingPhones.length > 0) {
-        return NextResponse.json(
-          {
-            error: `رقم الهاتف مستخدم مسبقاً: ${existingPhones
-              .map((u) => u.phone)
-              .join(", ")}`,
-          },
-          { status: 409 }
-        );
-      }
-    }
-
     // Generate credentials and create users
     const createdUserIds: string[] = [];
     const usersWithCredentials: Array<{
       name: string;
       email: string;
-      phone?: string;
       username: string;
       password: string;
       role: string;
@@ -170,7 +130,6 @@ export async function POST(req: NextRequest) {
         usersWithCredentials.push({
           name: userData.name,
           email: userData.email,
-          phone: userData.phone,
           username: username,
           password: password,
           role: userData.role,
@@ -244,12 +203,7 @@ export async function POST(req: NextRequest) {
             username: userData.username,
           };
 
-          // Add phone number for clients but DON'T change email after signup
-          if (userData.role === "client" && userData.phone) {
-            updateData.phone = userData.phone;
-            // DON'T update email - it was already set correctly during signUpEmail
-          }
-          // For non-client users, DON'T update email either - it was set correctly during signUpEmail
+          // DON'T update email - it was already set correctly during signUpEmail
 
           await tx.user.update({
             where: { id: createdUserIds[i] },
@@ -269,7 +223,6 @@ export async function POST(req: NextRequest) {
             name: true,
             email: true,
             username: true,
-            phone: true,
             role: true,
             createdAt: true,
             emailVerified: true,
@@ -289,13 +242,9 @@ export async function POST(req: NextRequest) {
       telegramInviteLink: telegramResult?.inviteLink || undefined,
     }));
 
-    // Send credentials to users (emails for all users now)
-    const emailUsers = usersWithTelegram; // Send emails to all users including clients
-    const clientUsersForWhatsApp = usersWithTelegram.filter(
-      (user) => user.role === "client"
-    );
+    // Send credentials to all users via email (including clients)
+    const emailUsers = usersWithTelegram;
 
-    // Send emails to all users (including clients)
     console.log(
       `📧 About to send emails to ${emailUsers.length} users (including clients)`
     );
@@ -316,65 +265,12 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Send WhatsApp messages to clients (wrapped in try-catch to not affect email sending)
-    let whatsappResults = { successful: 0, failed: 0 };
-    try {
-      if (isWhatsAppConfigured() && clientUsersForWhatsApp.length > 0) {
-        console.log("📱 Sending WhatsApp messages to clients...");
-
-        for (const client of clientUsersForWhatsApp) {
-          if (client.phone) {
-            try {
-              const result = await sendClientCredentials({
-                name: client.name,
-                phone: client.phone,
-                username: client.username,
-                password: client.password,
-                groupName: client.groupName,
-              });
-
-              if (result.success) {
-                whatsappResults.successful++;
-                console.log(
-                  `✅ WhatsApp message sent successfully to ${client.name}`
-                );
-              } else {
-                whatsappResults.failed++;
-                console.error(
-                  `❌ Failed to send WhatsApp to ${client.name}:`,
-                  result.error
-                );
-              }
-            } catch (error) {
-              whatsappResults.failed++;
-              console.error(
-                `❌ Error sending WhatsApp to ${client.name}:`,
-                error
-              );
-            }
-          } else {
-            whatsappResults.failed++;
-            console.error(`❌ No phone number for client ${client.name}`);
-          }
-        }
-      } else if (clientUsersForWhatsApp.length > 0) {
-        console.log(
-          "📱 WhatsApp not configured, skipping client notifications"
-        );
-        whatsappResults.failed = clientUsersForWhatsApp.length;
-      }
-    } catch (whatsappError) {
-      console.error("❌ WhatsApp section failed completely:", whatsappError);
-      whatsappResults.failed = clientUsersForWhatsApp.length;
-    }
-
     return NextResponse.json({
       message: "Group and users created successfully",
       group: result.group,
       users: result.users,
       credentials: usersWithCredentials.map((u) => ({
         email: u.email,
-        phone: u.phone,
         username: u.username,
         password: u.password,
         role: u.role,
@@ -382,11 +278,6 @@ export async function POST(req: NextRequest) {
       emailResults: {
         successful: emailResults.successful,
         failed: emailResults.failed,
-      },
-      whatsappResults: {
-        configured: isWhatsAppConfigured(),
-        successful: whatsappResults.successful,
-        failed: whatsappResults.failed,
       },
       telegram: {
         configured: isTelegramConfigured(),
@@ -433,7 +324,6 @@ export async function GET(req: NextRequest) {
             name: true,
             email: true,
             username: true,
-            phone: true,
             role: true,
             createdAt: true,
             emailVerified: true,

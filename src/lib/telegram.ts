@@ -1,4 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
+import { createReadStream, existsSync } from "fs";
+import { join } from "path";
 
 // Telegram Bot configuration
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -98,22 +100,25 @@ async function setupGroupBot(
 
   try {
     // Send welcome message to the group
-    const welcomeMessage = `🎉 مرحباً بكم في مجموعة Alpha Factory!
+    // Filter out client names from the team list
+    const teamMembers = users
+      .filter((user) => user.role !== "client") // Don't show client names
+      .map((user) => `• ${user.name} - ${getRoleInArabic(user.role)}`)
+      .join("\n");
 
-📋 **اسم المشروع:** ${groupName}
+    const welcomeMessage = `${addMessageSeparator()}🎉 مرحباً بكم في مجموعة Alpha Factory!
+
+📋 **اسم المشروع:** ${removeLinks(groupName)}
 
 👥 **أعضاء الفريق:**
-${users
-  .map((user) => `• ${user.name} - ${getRoleInArabic(user.role)}`)
-  .join("\n")}
+${teamMembers || "• سيتم إضافة أعضاء الفريق قريباً"}
 
 🤖 **أنا بوت Alpha Factory وسأقوم بإرسال التحديثات التالية:**
 • إشعارات إنجاز المهام
 • تحديثات حالة المشروع
 • تنبيهات مهمة
 
-
-🚀 بالتوفيق في مشروعكم!`;
+🚀 بالتوفيق في مشروعكم!${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, welcomeMessage, {
       parse_mode: "Markdown",
@@ -137,15 +142,15 @@ export async function notifyAdmin(
 
   try {
     const roleArabic = getRoleInArabic(role);
-    const message = `✅ **تم إنجاز مهمة جديدة!**
+    const message = `${addMessageSeparator()}✅ **تم إنجاز مهمة جديدة!**
 
 👤 **المنجز:** ${completedBy}
 🎯 **الدور:** ${roleArabic}
-📋 **نوع المهمة:** ${taskType}
-🏷️ **المشروع:** ${projectName}
+📋 **نوع المهمة:** ${removeLinks(taskType)}
+🏷️ **المشروع:** ${removeLinks(projectName)}
 ⏰ **الوقت:** ${new Date().toLocaleString("ar-EG")}
 
-@admin يرجى مراجعة العمل المنجز.`;
+@admin يرجى مراجعة العمل المنجز.${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
@@ -170,11 +175,13 @@ export async function sendProjectUpdate(
   if (!bot) return false;
 
   try {
-    const updateMessage = `📢 **تحديث المشروع: ${projectName}**
+    const updateMessage = `${addMessageSeparator()}📢 **تحديث المشروع: ${removeLinks(
+      projectName
+    )}**
 
-🔔 **نوع التحديث:** ${updateType}
-📝 **التفاصيل:** ${message}
-⏰ **الوقت:** ${new Date().toLocaleString("ar-EG")}`;
+🔔 **نوع التحديث:** ${removeLinks(updateType)}
+📝 **التفاصيل:** ${removeLinks(message)}
+⏰ **الوقت:** ${new Date().toLocaleString("ar-EG")}${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, updateMessage, {
       parse_mode: "Markdown",
@@ -183,6 +190,122 @@ export async function sendProjectUpdate(
     return true;
   } catch (error) {
     console.error("Error sending project update:", error);
+    return false;
+  }
+}
+
+/**
+ * Send voice note to Telegram chat
+ */
+export async function sendVoiceNote(
+  chatId: string,
+  voiceUrl: string,
+  projectTitle: string
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    console.log("Attempting to send voice note:", voiceUrl);
+
+    // Extract filename from URL to check if it's a local file
+    const urlParts = voiceUrl.split("/");
+    const filename = urlParts[urlParts.length - 1];
+
+    // Try to send from local file first (more reliable)
+    const localFilePath = join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "voice",
+      filename
+    );
+
+    if (existsSync(localFilePath)) {
+      console.log("Sending voice note from local file:", localFilePath);
+
+      try {
+        // Try as voice message first
+        await bot.sendVoice(chatId, createReadStream(localFilePath), {
+          caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+            projectTitle
+          )}`,
+          parse_mode: "Markdown",
+        });
+        console.log("Voice note sent successfully as voice message");
+        return true;
+      } catch (voiceError) {
+        const errorMsg =
+          voiceError instanceof Error ? voiceError.message : String(voiceError);
+        console.log("Voice format failed, trying as audio:", errorMsg);
+
+        // Fallback: Try as audio file
+        try {
+          await bot.sendAudio(chatId, createReadStream(localFilePath), {
+            caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+              projectTitle
+            )}`,
+            parse_mode: "Markdown",
+            title: "Voice Note",
+          });
+          console.log("Voice note sent successfully as audio file");
+          return true;
+        } catch (audioError) {
+          const audioErrorMsg =
+            audioError instanceof Error
+              ? audioError.message
+              : String(audioError);
+          console.log(
+            "Audio format failed, trying as document:",
+            audioErrorMsg
+          );
+
+          // Final fallback: Send as document
+          await bot.sendDocument(chatId, createReadStream(localFilePath), {
+            caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+              projectTitle
+            )}`,
+            parse_mode: "Markdown",
+          });
+          console.log("Voice note sent successfully as document");
+          return true;
+        }
+      }
+    } else {
+      // File doesn't exist locally, try using the URL
+      console.log("Local file not found, trying URL:", voiceUrl);
+
+      try {
+        await bot.sendAudio(chatId, voiceUrl, {
+          caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+            projectTitle
+          )}`,
+          parse_mode: "Markdown",
+          title: "Voice Note",
+        });
+        console.log("Voice note sent successfully via URL");
+        return true;
+      } catch (urlError) {
+        const urlErrorMsg =
+          urlError instanceof Error ? urlError.message : String(urlError);
+        console.error("Failed to send via URL:", urlErrorMsg);
+        throw urlError;
+      }
+    }
+  } catch (error) {
+    console.error("Error sending voice note:", error);
+
+    // Send error message
+    try {
+      await bot.sendMessage(
+        chatId,
+        `🎤 **تم إرفاق رسالة صوتية بالمشروع ولكن حدث خطأ في الإرسال**\n\n⚠️ **تفاصيل الخطأ:** ${
+          error instanceof Error ? error.message : String(error)
+        }\n📂 **الملف:** ${voiceUrl}`
+      );
+    } catch (msgError) {
+      console.error("Failed to send error message:", msgError);
+    }
+
     return false;
   }
 }
@@ -200,30 +323,34 @@ export async function sendNewProjectNotification(
     clientName: string;
     notes?: string;
     fileLinks?: string;
+    voiceNoteUrl?: string;
   }
 ): Promise<boolean> {
   if (!bot) return false;
 
   try {
-    const message = `🎬 **مشروع جديد متاح للعمل!**
+    const message = `${addMessageSeparator()}🎬 **مشروع جديد متاح للعمل!**
 
-📋 **العنوان:** ${projectData.title}
-🎥 **النوع:** ${projectData.type}
+📋 **العنوان:** ${removeLinks(projectData.title)}
+🎥 **النوع:** ${removeLinks(projectData.type)}
 📅 **التاريخ:** ${projectData.date}
 📸 **حالة التصوير:** ${projectData.filmingStatus}
-👤 **العميل:** ${projectData.clientName}
 
-${projectData.notes ? `📝 **ملاحظات:** ${projectData.notes}` : ""}
-${projectData.fileLinks ? `🔗 **الملفات:** ${projectData.fileLinks}` : ""}
+${projectData.notes ? `📝 **ملاحظات:** ${removeLinks(projectData.notes)}` : ""}
 
 🚀 **الفريق جاهز للبدء في العمل!**
-⏰ **تم الإنشاء:** ${new Date().toLocaleString("ar-EG")}
-
-`;
+⏰ **تم الإنشاء:** ${new Date().toLocaleString(
+      "ar-EG"
+    )}${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
     });
+
+    // Send voice note if provided
+    if (projectData.voiceNoteUrl) {
+      await sendVoiceNote(chatId, projectData.voiceNoteUrl, projectData.title);
+    }
 
     return true;
   } catch (error) {
@@ -253,18 +380,20 @@ export async function sendProjectStatusUpdate(
     const roleEmoji = getRoleEmoji(updateData.userRole);
     const fieldEmoji = getFieldEmoji(updateData.fieldName);
 
-    const message = `📊 **تحديث حالة المشروع**
+    const message = `${addMessageSeparator()}📊 **تحديث حالة المشروع**
 
-🎬 **المشروع:** ${updateData.projectTitle}
+🎬 **المشروع:** ${removeLinks(updateData.projectTitle)}
 ${roleEmoji} **المحدث بواسطة:** ${updateData.updatedBy} (${getRoleInArabic(
       updateData.userRole
     )})
 
 ${fieldEmoji} **المجال المحدث:** ${updateData.fieldNameArabic}
-❌ **القيمة السابقة:** ${updateData.oldValue}
-✅ **القيمة الجديدة:** ${updateData.newValue}
+❌ **القيمة السابقة:** ${removeLinks(updateData.oldValue)}
+✅ **القيمة الجديدة:** ${removeLinks(updateData.newValue)}
 
-⏰ **وقت التحديث:** ${new Date().toLocaleString("ar-EG")}`;
+⏰ **وقت التحديث:** ${new Date().toLocaleString(
+      "ar-EG"
+    )}${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
@@ -335,7 +464,7 @@ export function setupBotCommands(): void {
 /**
  * Get role name in Arabic
  */
-function getRoleInArabic(role: string): string {
+export function getRoleInArabic(role: string): string {
   const roleMap: { [key: string]: string } = {
     client: "عميل",
     editor: "محرر",
@@ -379,6 +508,26 @@ function getFieldEmoji(fieldName: string): string {
     date: "📅",
   };
   return emojiMap[fieldName] || "📊";
+}
+
+/**
+ * Remove URLs from text to avoid sharing links
+ */
+function removeLinks(text: string): string {
+  if (!text) return text;
+  // Remove URLs (http/https/ftp/www patterns)
+  return text
+    .replace(/https?:\/\/[^\s]+/gi, "[رابط محذوف]")
+    .replace(/ftp:\/\/[^\s]+/gi, "[رابط محذوف]")
+    .replace(/www\.[^\s]+/gi, "[رابط محذوف]")
+    .replace(/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*/gi, "[رابط محذوف]");
+}
+
+/**
+ * Add message separator
+ */
+function addMessageSeparator(): string {
+  return "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 }
 
 /**

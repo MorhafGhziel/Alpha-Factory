@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface VoiceRecorderProps {
-  onVoiceRecorded: (hasRecording: boolean) => void;
+  onVoiceRecorded: (hasRecording: boolean, voiceUrl?: string) => void;
   className?: string;
 }
 
@@ -17,6 +17,8 @@ export default function VoiceRecorder({
   );
   const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
 
   const startRecording = async (): Promise<void> => {
     try {
@@ -30,13 +32,38 @@ export default function VoiceRecorder({
         }
       };
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         const audioBlob = new Blob(chunks, { type: "audio/webm" });
         const audioUrl = URL.createObjectURL(audioBlob);
 
         // Store the audio URL for playback
         setRecordedAudio(audioUrl);
-        onVoiceRecorded(true);
+        
+        // Upload the audio file
+        setIsUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "voice_recording.webm");
+          
+          const response = await fetch("/api/voice-upload", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setVoiceUrl(data.url);
+            onVoiceRecorded(true, data.url);
+          } else {
+            console.error("Failed to upload voice recording");
+            onVoiceRecorded(true); // Still indicate recording exists, but without upload
+          }
+        } catch (error) {
+          console.error("Error uploading voice recording:", error);
+          onVoiceRecorded(true); // Still indicate recording exists, but without upload
+        } finally {
+          setIsUploading(false);
+        }
 
         // Clean up
         stream.getTracks().forEach((track) => track.stop());
@@ -77,6 +104,7 @@ export default function VoiceRecorder({
       URL.revokeObjectURL(recordedAudio);
       setRecordedAudio(null);
       setIsPlaying(false);
+      setVoiceUrl(null);
       onVoiceRecorded(false);
     }
   };
@@ -188,7 +216,7 @@ export default function VoiceRecorder({
         </div>
 
         <div className="text-xs text-gray-400">
-          {recordedAudio ? "تسجيل صوتي جاهز" : "اضغط للتسجيل الصوتي"}
+          {isUploading ? "جاري الرفع..." : recordedAudio ? "تسجيل صوتي جاهز" : "اضغط للتسجيل الصوتي"}
         </div>
       </div>
     </div>

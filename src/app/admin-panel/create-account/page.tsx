@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 interface UserFormData {
   name: string;
   email: string;
-  phone: string;
   role: string;
 }
 
@@ -25,7 +24,7 @@ export default function CreateAccountPage() {
     telegramChatId: "",
   });
   const [users, setUsers] = useState<UserFormData[]>([
-    { name: "", email: "", phone: "", role: "" }
+    { name: "", email: "", role: "" }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -75,7 +74,7 @@ export default function CreateAccountPage() {
   };
 
   const addUser = () => {
-    setUsers([...users, { name: "", email: "", phone: "", role: "" }]);
+    setUsers([...users, { name: "", email: "", role: "" }]);
   };
 
   const removeUser = (index: number) => {
@@ -112,34 +111,19 @@ export default function CreateAccountPage() {
     }
 
     for (const user of users) {
-      if (user.role === "client") {
-        // For clients, require name, email, and phone
-        if (!user.name || !user.email || !user.phone) {
-          setSubmitError("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبان للعملاء");
-          setIsSubmitting(false);
-          return;
-        }
-        // Validate email format for clients
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(user.email)) {
-          setSubmitError("البريد الإلكتروني غير صحيح");
-          setIsSubmitting(false);
-          return;
-        }
-      } else {
-        // For other roles, require name and email
-        if (!user.name || !user.email) {
-          setSubmitError("الاسم والبريد الإلكتروني مطلوبان لكل مستخدم");
-          setIsSubmitting(false);
-          return;
-        }
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(user.email)) {
-          setSubmitError("البريد الإلكتروني غير صحيح");
-          setIsSubmitting(false);
-          return;
-        }
+      // For all users, require name, email and role
+      if (!user.name || !user.email) {
+        setSubmitError("الاسم والبريد الإلكتروني مطلوبان لجميع المستخدمين");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(user.email)) {
+        setSubmitError("البريد الإلكتروني غير صحيح");
+        setIsSubmitting(false);
+        return;
       }
       
       if (!user.role) {
@@ -449,21 +433,6 @@ export default function CreateAccountPage() {
                     />
                   </div>
 
-                  {user.role === "client" && (
-                    <div>
-                      <label className="block text-gray-300 text-sm font-medium mb-2">
-                        رقم الهاتف (واتساب) *
-                      </label>
-                      <input
-                        type="tel"
-                        value={user.phone}
-                        onChange={(e) => updateUser(index, "phone", e.target.value)}
-                        className="w-full px-4 py-3 bg-[#0B0B0B] border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-[#E9CF6B] focus:ring-1 focus:ring-[#E9CF6B] transition-colors"
-                        placeholder="مثال: 0501234567"
-                        required
-                      />
-                    </div>
-                  )}
                 </div>
               </motion.div>
             ))}

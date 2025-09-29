@@ -15,6 +15,7 @@ interface AddProjectModalProps {
     fileLinks: string;
     notes: string;
     date: string;
+    voiceNoteUrl?: string;
   }) => void;
 }
 
@@ -32,16 +33,22 @@ export default function AddProjectModal({
   const [fileLinks, setFileLinks] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
+  const [voiceNoteUrl, setVoiceNoteUrl] = useState<string>("");
 
   const handleProjectTypeChange = (type: string) => {
     setProjectType(type);
   };
 
-  const handleVoiceRecorded = (hasRecording: boolean) => {
-    if (hasRecording) {
+  const handleVoiceRecorded = (hasRecording: boolean, voiceUrl?: string) => {
+    if (hasRecording && voiceUrl) {
+      setVoiceNoteUrl(voiceUrl);
       setNotes((prev) => prev + (prev ? "\n" : "") + "🎤 [رسالة صوتية مسجلة]");
+    } else if (hasRecording) {
+      // Recording exists but no URL (upload failed)
+      setNotes((prev) => prev + (prev ? "\n" : "") + "🎤 [رسالة صوتية مسجلة محلياً]");
     } else {
-      setNotes((prev) => prev.replace(/\n?🎤 \[رسالة صوتية مسجلة\]/g, ""));
+      setVoiceNoteUrl("");
+      setNotes((prev) => prev.replace(/\n?🎤 \[رسالة صوتية مسجلة.*?\]/g, ""));
     }
   };
 
@@ -58,6 +65,7 @@ export default function AddProjectModal({
       fileLinks,
       notes,
       date: startDate,
+      voiceNoteUrl: voiceNoteUrl || undefined,
     });
 
     setTitle("");
@@ -66,6 +74,7 @@ export default function AddProjectModal({
     setFileLinks("");
     setNotes("");
     setStartDate("");
+    setVoiceNoteUrl("");
   };
 
   return (

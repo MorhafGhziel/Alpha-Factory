@@ -688,6 +688,371 @@ async function sendCredentialsEmailOnce(
 }
 
 /**
+ * Client project notification data interface
+ */
+interface ClientProjectNotification {
+  clientName: string;
+  clientEmail: string;
+  projectTitle: string;
+  projectType: string;
+  status:
+    | "created"
+    | "editing_started"
+    | "editing_completed"
+    | "design_started"
+    | "design_completed"
+    | "review_started"
+    | "review_completed"
+    | "project_completed";
+  updatedBy?: string;
+  updatedByRole?: string;
+  message?: string;
+}
+
+/**
+ * Create client project notification email template
+ */
+function createClientProjectNotificationTemplate(
+  notification: ClientProjectNotification
+): string {
+  const statusMessages = {
+    created: {
+      title: "تم استلام مشروعك بنجاح",
+      message: "تم استلام مشروعك وسيبدأ فريقنا المتخصص في العمل عليه قريباً.",
+      icon: "🎉",
+    },
+    editing_started: {
+      title: "بدء مرحلة التحرير",
+      message: "بدأ محرر الفيديو المتخصص في العمل على مشروعك.",
+      icon: "✂️",
+    },
+    editing_completed: {
+      title: "انتهاء مرحلة التحرير",
+      message: "تم الانتهاء من تحرير مشروعك وسينتقل إلى المرحلة التالية.",
+      icon: "✅",
+    },
+    design_started: {
+      title: "بدء مرحلة التصميم",
+      message: "بدأ مصمم الجرافيك في العمل على التصميمات الخاصة بمشروعك.",
+      icon: "🎨",
+    },
+    design_completed: {
+      title: "انتهاء مرحلة التصميم",
+      message: "تم الانتهاء من تصميم مشروعك وسينتقل إلى المرحلة التالية.",
+      icon: "✅",
+    },
+    review_started: {
+      title: "بدء مرحلة المراجعة",
+      message: "بدأ مراجع الجودة في فحص ومراجعة مشروعك للتأكد من الجودة.",
+      icon: "👁️",
+    },
+    review_completed: {
+      title: "انتهاء مرحلة المراجعة",
+      message: "تم الانتهاء من مراجعة مشروعك وهو الآن جاهز للتسليم.",
+      icon: "⭐",
+    },
+    project_completed: {
+      title: "تم إنجاز مشروعك بنجاح",
+      message: "تم إنجاز مشروعك بالكامل وهو جاهز للتسليم.",
+      icon: "🎊",
+    },
+  };
+
+  const statusInfo = statusMessages[notification.status];
+
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${statusInfo.title} - Alpha Factory</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0B0B0B;
+                color: #ffffff;
+                margin: 0;
+                padding: 20px;
+                direction: rtl;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: #0B0B0B;
+                border-radius: 0;
+                padding: 40px;
+            }
+            .header {
+                position: relative;
+                margin-bottom: 60px;
+            }
+            .help-link {
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #4A9EFF;
+                text-decoration: underline;
+                font-size: 14px;
+            }
+            .logo-container {
+                text-align: center;
+                margin-bottom: 40px;
+            }
+            .logo-text {
+                color: #ffffff;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .status-icon {
+                font-size: 48px;
+                text-align: center;
+                margin: 20px 0;
+            }
+            .main-title {
+                color: #E9CF6B;
+                font-size: 28px;
+                font-weight: bold;
+                text-align: center;
+                margin: 30px 0;
+            }
+            .project-info {
+                background-color: #1a1a1a;
+                border-radius: 15px;
+                padding: 25px;
+                margin: 30px 0;
+                border: 1px solid #333;
+            }
+            .info-item {
+                margin: 15px 0;
+                padding: 10px 0;
+                border-bottom: 1px solid #333;
+            }
+            .info-label {
+                color: #E9CF6B;
+                font-weight: bold;
+                margin-bottom: 5px;
+                font-size: 14px;
+            }
+            .info-value {
+                color: #fff;
+                font-size: 16px;
+            }
+            .message-box {
+                background-color: #0f0f0f;
+                border-radius: 10px;
+                padding: 20px;
+                margin: 20px 0;
+                border-right: 4px solid #E9CF6B;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #333;
+                color: #888;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="mailto:support@alphafactory.net" class="help-link">
+                    <span style="color: white;">تحتاج الى مساعدة؟</span> 
+                    <span style="color: #4A9EFF;">تواصل معنا</span>
+                </a>
+                
+                <div class="logo-container">
+                    <div class="logo-text">Alpha Factory</div>
+                </div>
+            </div>
+
+            <div class="status-icon">${statusInfo.icon}</div>
+            <div class="main-title">${statusInfo.title}</div>
+            
+            <div class="message-box">
+                <p style="color: #fff; font-size: 16px; line-height: 1.6; margin: 0;">
+                    عزيزي ${notification.clientName}،<br><br>
+                    ${statusInfo.message}
+                </p>
+            </div>
+
+            <div class="project-info">
+                <h3 style="color: #E9CF6B; text-align: center; margin-bottom: 20px;">تفاصيل المشروع</h3>
+                
+                <div class="info-item">
+                    <div class="info-label">اسم المشروع:</div>
+                    <div class="info-value">${notification.projectTitle}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">نوع المشروع:</div>
+                    <div class="info-value">${notification.projectType}</div>
+                </div>
+
+                ${
+                  notification.updatedBy
+                    ? `
+                <div class="info-item">
+                    <div class="info-label">تم التحديث بواسطة:</div>
+                    <div class="info-value">${notification.updatedBy} (${notification.updatedByRole})</div>
+                </div>
+                `
+                    : ""
+                }
+
+                <div class="info-item" style="border-bottom: none;">
+                    <div class="info-label">تاريخ التحديث:</div>
+                    <div class="info-value">${new Date().toLocaleString(
+                      "ar-EG"
+                    )}</div>
+                </div>
+            </div>
+
+            ${
+              notification.message
+                ? `
+            <div class="message-box">
+                <p style="color: #fff; font-size: 16px; line-height: 1.6; margin: 0;">
+                    <strong>ملاحظة إضافية:</strong><br>
+                    ${notification.message}
+                </p>
+            </div>
+            `
+                : ""
+            }
+
+            <div class="footer">
+                <p>شكراً لك على ثقتك في Alpha Factory</p>
+                <p>للاستفسارات: support@alphafactory.net</p>
+                <p>هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory</p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Create plain text version of client project notification
+ */
+function createClientProjectNotificationPlainText(
+  notification: ClientProjectNotification
+): string {
+  const statusMessages = {
+    created:
+      "تم استلام مشروعك بنجاح - سيبدأ فريقنا المتخصص في العمل عليه قريباً",
+    editing_started:
+      "بدء مرحلة التحرير - بدأ محرر الفيديو المتخصص في العمل على مشروعك",
+    editing_completed: "انتهاء مرحلة التحرير - تم الانتهاء من تحرير مشروعك",
+    design_started: "بدء مرحلة التصميم - بدأ مصمم الجرافيك في العمل على مشروعك",
+    design_completed: "انتهاء مرحلة التصميم - تم الانتهاء من تصميم مشروعك",
+    review_started: "بدء مرحلة المراجعة - بدأ مراجع الجودة في فحص مشروعك",
+    review_completed: "انتهاء مرحلة المراجعة - تم الانتهاء من مراجعة مشروعك",
+    project_completed: "تم إنجاز مشروعك بنجاح - مشروعك جاهز للتسليم",
+  };
+
+  return `
+Alpha Factory - تحديث حالة المشروع
+
+عزيزي ${notification.clientName}،
+
+${statusMessages[notification.status]}
+
+تفاصيل المشروع:
+اسم المشروع: ${notification.projectTitle}
+نوع المشروع: ${notification.projectType}
+${
+  notification.updatedBy
+    ? `تم التحديث بواسطة: ${notification.updatedBy} (${notification.updatedByRole})`
+    : ""
+}
+تاريخ التحديث: ${new Date().toLocaleString("ar-EG")}
+
+${notification.message ? `ملاحظة إضافية: ${notification.message}` : ""}
+
+شكراً لك على ثقتك في Alpha Factory
+
+للاستفسارات: support@alphafactory.net
+هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
+  `.trim();
+}
+
+/**
+ * Send project status notification to client
+ */
+export async function sendClientProjectNotification(
+  notification: ClientProjectNotification
+): Promise<boolean> {
+  try {
+    // Validate email format first
+    if (!isValidEmail(notification.clientEmail)) {
+      console.error(
+        `❌ Invalid client email format: ${notification.clientEmail}`
+      );
+      return false;
+    }
+
+    console.log(
+      `📧 Sending project notification to client ${notification.clientName} at ${notification.clientEmail}`
+    );
+
+    const htmlTemplate = createClientProjectNotificationTemplate(notification);
+    const textTemplate = createClientProjectNotificationPlainText(notification);
+
+    const statusTitles = {
+      created: "تم استلام مشروعك",
+      editing_started: "بدء مرحلة التحرير",
+      editing_completed: "انتهاء مرحلة التحرير",
+      design_started: "بدء مرحلة التصميم",
+      design_completed: "انتهاء مرحلة التصميم",
+      review_started: "بدء مرحلة المراجعة",
+      review_completed: "انتهاء مرحلة المراجعة",
+      project_completed: "تم إنجاز مشروعك",
+    };
+
+    const { data, error } = await resend.emails.send({
+      from: "Alpha Factory <support@alphafactory.net>",
+      to: [notification.clientEmail],
+      subject: `${statusTitles[notification.status]} - ${
+        notification.projectTitle
+      }`,
+      html: htmlTemplate,
+      text: textTemplate,
+      headers: {
+        "X-Entity-Ref-ID": `client-notification-${Date.now()}`,
+        "List-Unsubscribe":
+          "<mailto:support@alphafactory.net?subject=Unsubscribe>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+      tags: [
+        {
+          name: "category",
+          value: "client-project-notification",
+        },
+      ],
+    });
+
+    if (error) {
+      console.error(`❌ Resend error for ${notification.clientEmail}:`, error);
+      return false;
+    }
+
+    console.log(
+      `✅ Client notification sent successfully to ${notification.clientEmail}, ID: ${data?.id}`
+    );
+    return true;
+  } catch (error) {
+    console.error(
+      `❌ Exception while sending client notification to ${notification.clientEmail}:`,
+      error
+    );
+    return false;
+  }
+}
+
+/**
  * Send credentials email to user with retry mechanism
  */
 export async function sendCredentialsEmail(

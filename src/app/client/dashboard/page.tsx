@@ -40,6 +40,7 @@ export default function ClientDashboardPage() {
     useState(false);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("جميع الحالات");
+  const [searchTerm, setSearchTerm] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -64,6 +65,42 @@ export default function ClientDashboardPage() {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // Filter projects based on search term and selected filter
+  const filteredProjects = projects.filter((project) => {
+    // Search filter
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Status filter
+    let matchesStatus = true;
+    if (selectedFilter !== "جميع الحالات") {
+      switch (selectedFilter) {
+        case "في الانتظار":
+          matchesStatus = project.reviewMode === "في الانتظار" || 
+                         project.editMode === "في الانتظار" || 
+                         project.designMode === "في الانتظار";
+          break;
+        case "قيد التقدم":
+          matchesStatus = project.reviewMode === "قيد التنفيذ" || 
+                         project.editMode === "قيد التنفيذ" || 
+                         project.designMode === "قيد التنفيذ";
+          break;
+        case "مكتمل":
+          matchesStatus = project.reviewMode === "تم الانتهاء منه" || 
+                         project.editMode === "تم الانتهاء منه" || 
+                         project.designMode === "تم الانتهاء منه" ||
+                         project.reviewMode === "تمت المراجعة";
+          break;
+        case "مراجعة":
+          matchesStatus = project.reviewMode === "تمت المراجعة";
+          break;
+        default:
+          matchesStatus = true;
+      }
+    }
+    
+    return matchesSearch && matchesStatus;
+  });
 
   // Function to check if a project is verified
   const isProjectVerified = (project: Project) => {
@@ -110,6 +147,7 @@ export default function ClientDashboardPage() {
     fileLinks: string;
     notes: string;
     date: string;
+    voiceNoteUrl?: string;
   }) => {
     try {
       const response = await fetch("/api/projects", {
@@ -323,6 +361,8 @@ export default function ClientDashboardPage() {
           <input
             type="text"
             placeholder="...البحث في المشاريع"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="bg-transparent text-white placeholder-[#747474] outline-none flex-1 text-right text-sm sm:text-base min-w-0"
           />
           <svg
@@ -361,12 +401,21 @@ export default function ClientDashboardPage() {
               اضغط على &quot;مشروع جديد&quot; لإضافة مشروعك الأول
             </div>
           </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="text-center py-12 sm:py-16">
+            <div className="text-gray-400 text-base sm:text-lg mb-4">
+              لم يتم العثور على مشاريع مطابقة
+            </div>
+            <div className="text-gray-500 text-sm sm:text-base">
+              جرب تغيير مصطلح البحث أو الفلتر
+            </div>
+          </div>
         ) : (
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8"
             dir="rtl"
           >
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <div
                 key={project.id}
                 className="group relative bg-gradient-to-br from-[#0F0F0F] to-[#1a1a1a] p-6 rounded-2xl w-full border border-[#2a2a2a] hover:border-[#EAD06C]/30 hover:shadow-2xl hover:shadow-[#EAD06C]/10 transition-all duration-300 transform hover:-translate-y-1"
