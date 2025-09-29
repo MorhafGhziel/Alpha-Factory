@@ -11,6 +11,7 @@ interface CreateProjectRequest {
   fileLinks?: string;
   notes?: string;
   date: string;
+  voiceNoteUrl?: string;
 }
 
 // POST - Create a new project
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
       fileLinks,
       notes,
       date,
+      voiceNoteUrl,
     }: CreateProjectRequest = await req.json();
 
     // Validate required fields
@@ -141,6 +143,7 @@ export async function POST(req: NextRequest) {
         clientName: user.name,
         notes,
         fileLinks,
+        voiceNoteUrl,
       });
     }
 

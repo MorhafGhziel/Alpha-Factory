@@ -1,4 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
+import { createReadStream, existsSync } from "fs";
+import { join } from "path";
 
 // Telegram Bot configuration
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -193,6 +195,122 @@ export async function sendProjectUpdate(
 }
 
 /**
+ * Send voice note to Telegram chat
+ */
+export async function sendVoiceNote(
+  chatId: string,
+  voiceUrl: string,
+  projectTitle: string
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    console.log("Attempting to send voice note:", voiceUrl);
+
+    // Extract filename from URL to check if it's a local file
+    const urlParts = voiceUrl.split("/");
+    const filename = urlParts[urlParts.length - 1];
+
+    // Try to send from local file first (more reliable)
+    const localFilePath = join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "voice",
+      filename
+    );
+
+    if (existsSync(localFilePath)) {
+      console.log("Sending voice note from local file:", localFilePath);
+
+      try {
+        // Try as voice message first
+        await bot.sendVoice(chatId, createReadStream(localFilePath), {
+          caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+            projectTitle
+          )}`,
+          parse_mode: "Markdown",
+        });
+        console.log("Voice note sent successfully as voice message");
+        return true;
+      } catch (voiceError) {
+        const errorMsg =
+          voiceError instanceof Error ? voiceError.message : String(voiceError);
+        console.log("Voice format failed, trying as audio:", errorMsg);
+
+        // Fallback: Try as audio file
+        try {
+          await bot.sendAudio(chatId, createReadStream(localFilePath), {
+            caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+              projectTitle
+            )}`,
+            parse_mode: "Markdown",
+            title: "Voice Note",
+          });
+          console.log("Voice note sent successfully as audio file");
+          return true;
+        } catch (audioError) {
+          const audioErrorMsg =
+            audioError instanceof Error
+              ? audioError.message
+              : String(audioError);
+          console.log(
+            "Audio format failed, trying as document:",
+            audioErrorMsg
+          );
+
+          // Final fallback: Send as document
+          await bot.sendDocument(chatId, createReadStream(localFilePath), {
+            caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+              projectTitle
+            )}`,
+            parse_mode: "Markdown",
+          });
+          console.log("Voice note sent successfully as document");
+          return true;
+        }
+      }
+    } else {
+      // File doesn't exist locally, try using the URL
+      console.log("Local file not found, trying URL:", voiceUrl);
+
+      try {
+        await bot.sendAudio(chatId, voiceUrl, {
+          caption: `🎤 **رسالة صوتية من العميل بخصوص المشروع:** ${removeLinks(
+            projectTitle
+          )}`,
+          parse_mode: "Markdown",
+          title: "Voice Note",
+        });
+        console.log("Voice note sent successfully via URL");
+        return true;
+      } catch (urlError) {
+        const urlErrorMsg =
+          urlError instanceof Error ? urlError.message : String(urlError);
+        console.error("Failed to send via URL:", urlErrorMsg);
+        throw urlError;
+      }
+    }
+  } catch (error) {
+    console.error("Error sending voice note:", error);
+
+    // Send error message
+    try {
+      await bot.sendMessage(
+        chatId,
+        `🎤 **تم إرفاق رسالة صوتية بالمشروع ولكن حدث خطأ في الإرسال**\n\n⚠️ **تفاصيل الخطأ:** ${
+          error instanceof Error ? error.message : String(error)
+        }\n📂 **الملف:** ${voiceUrl}`
+      );
+    } catch (msgError) {
+      console.error("Failed to send error message:", msgError);
+    }
+
+    return false;
+  }
+}
+
+/**
  * Send new project notification to the team
  */
 export async function sendNewProjectNotification(
@@ -205,6 +323,7 @@ export async function sendNewProjectNotification(
     clientName: string;
     notes?: string;
     fileLinks?: string;
+    voiceNoteUrl?: string;
   }
 ): Promise<boolean> {
   if (!bot) return false;
@@ -227,6 +346,11 @@ ${projectData.notes ? `📝 **ملاحظات:** ${removeLinks(projectData.notes)
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
     });
+
+    // Send voice note if provided
+    if (projectData.voiceNoteUrl) {
+      await sendVoiceNote(chatId, projectData.voiceNoteUrl, projectData.title);
+    }
 
     return true;
   } catch (error) {

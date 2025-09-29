@@ -147,6 +147,7 @@ export default function ClientDashboardPage() {
     fileLinks: string;
     notes: string;
     date: string;
+    voiceNoteUrl?: string;
   }) => {
     try {
       const response = await fetch("/api/projects", {
