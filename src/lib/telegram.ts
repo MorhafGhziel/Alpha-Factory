@@ -98,22 +98,25 @@ async function setupGroupBot(
 
   try {
     // Send welcome message to the group
-    const welcomeMessage = `🎉 مرحباً بكم في مجموعة Alpha Factory!
+    // Filter out client names from the team list
+    const teamMembers = users
+      .filter((user) => user.role !== "client") // Don't show client names
+      .map((user) => `• ${user.name} - ${getRoleInArabic(user.role)}`)
+      .join("\n");
 
-📋 **اسم المشروع:** ${groupName}
+    const welcomeMessage = `${addMessageSeparator()}🎉 مرحباً بكم في مجموعة Alpha Factory!
+
+📋 **اسم المشروع:** ${removeLinks(groupName)}
 
 👥 **أعضاء الفريق:**
-${users
-  .map((user) => `• ${user.name} - ${getRoleInArabic(user.role)}`)
-  .join("\n")}
+${teamMembers || "• سيتم إضافة أعضاء الفريق قريباً"}
 
 🤖 **أنا بوت Alpha Factory وسأقوم بإرسال التحديثات التالية:**
 • إشعارات إنجاز المهام
 • تحديثات حالة المشروع
 • تنبيهات مهمة
 
-
-🚀 بالتوفيق في مشروعكم!`;
+🚀 بالتوفيق في مشروعكم!${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, welcomeMessage, {
       parse_mode: "Markdown",
@@ -137,15 +140,15 @@ export async function notifyAdmin(
 
   try {
     const roleArabic = getRoleInArabic(role);
-    const message = `✅ **تم إنجاز مهمة جديدة!**
+    const message = `${addMessageSeparator()}✅ **تم إنجاز مهمة جديدة!**
 
 👤 **المنجز:** ${completedBy}
 🎯 **الدور:** ${roleArabic}
-📋 **نوع المهمة:** ${taskType}
-🏷️ **المشروع:** ${projectName}
+📋 **نوع المهمة:** ${removeLinks(taskType)}
+🏷️ **المشروع:** ${removeLinks(projectName)}
 ⏰ **الوقت:** ${new Date().toLocaleString("ar-EG")}
 
-@admin يرجى مراجعة العمل المنجز.`;
+@admin يرجى مراجعة العمل المنجز.${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
@@ -170,11 +173,13 @@ export async function sendProjectUpdate(
   if (!bot) return false;
 
   try {
-    const updateMessage = `📢 **تحديث المشروع: ${projectName}**
+    const updateMessage = `${addMessageSeparator()}📢 **تحديث المشروع: ${removeLinks(
+      projectName
+    )}**
 
-🔔 **نوع التحديث:** ${updateType}
-📝 **التفاصيل:** ${message}
-⏰ **الوقت:** ${new Date().toLocaleString("ar-EG")}`;
+🔔 **نوع التحديث:** ${removeLinks(updateType)}
+📝 **التفاصيل:** ${removeLinks(message)}
+⏰ **الوقت:** ${new Date().toLocaleString("ar-EG")}${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, updateMessage, {
       parse_mode: "Markdown",
@@ -205,21 +210,19 @@ export async function sendNewProjectNotification(
   if (!bot) return false;
 
   try {
-    const message = `🎬 **مشروع جديد متاح للعمل!**
+    const message = `${addMessageSeparator()}🎬 **مشروع جديد متاح للعمل!**
 
-📋 **العنوان:** ${projectData.title}
-🎥 **النوع:** ${projectData.type}
+📋 **العنوان:** ${removeLinks(projectData.title)}
+🎥 **النوع:** ${removeLinks(projectData.type)}
 📅 **التاريخ:** ${projectData.date}
 📸 **حالة التصوير:** ${projectData.filmingStatus}
-👤 **العميل:** ${projectData.clientName}
 
-${projectData.notes ? `📝 **ملاحظات:** ${projectData.notes}` : ""}
-${projectData.fileLinks ? `🔗 **الملفات:** ${projectData.fileLinks}` : ""}
+${projectData.notes ? `📝 **ملاحظات:** ${removeLinks(projectData.notes)}` : ""}
 
 🚀 **الفريق جاهز للبدء في العمل!**
-⏰ **تم الإنشاء:** ${new Date().toLocaleString("ar-EG")}
-
-`;
+⏰ **تم الإنشاء:** ${new Date().toLocaleString(
+      "ar-EG"
+    )}${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
@@ -253,18 +256,20 @@ export async function sendProjectStatusUpdate(
     const roleEmoji = getRoleEmoji(updateData.userRole);
     const fieldEmoji = getFieldEmoji(updateData.fieldName);
 
-    const message = `📊 **تحديث حالة المشروع**
+    const message = `${addMessageSeparator()}📊 **تحديث حالة المشروع**
 
-🎬 **المشروع:** ${updateData.projectTitle}
+🎬 **المشروع:** ${removeLinks(updateData.projectTitle)}
 ${roleEmoji} **المحدث بواسطة:** ${updateData.updatedBy} (${getRoleInArabic(
       updateData.userRole
     )})
 
 ${fieldEmoji} **المجال المحدث:** ${updateData.fieldNameArabic}
-❌ **القيمة السابقة:** ${updateData.oldValue}
-✅ **القيمة الجديدة:** ${updateData.newValue}
+❌ **القيمة السابقة:** ${removeLinks(updateData.oldValue)}
+✅ **القيمة الجديدة:** ${removeLinks(updateData.newValue)}
 
-⏰ **وقت التحديث:** ${new Date().toLocaleString("ar-EG")}`;
+⏰ **وقت التحديث:** ${new Date().toLocaleString(
+      "ar-EG"
+    )}${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
@@ -379,6 +384,26 @@ function getFieldEmoji(fieldName: string): string {
     date: "📅",
   };
   return emojiMap[fieldName] || "📊";
+}
+
+/**
+ * Remove URLs from text to avoid sharing links
+ */
+function removeLinks(text: string): string {
+  if (!text) return text;
+  // Remove URLs (http/https/ftp/www patterns)
+  return text
+    .replace(/https?:\/\/[^\s]+/gi, "[رابط محذوف]")
+    .replace(/ftp:\/\/[^\s]+/gi, "[رابط محذوف]")
+    .replace(/www\.[^\s]+/gi, "[رابط محذوف]")
+    .replace(/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*/gi, "[رابط محذوف]");
+}
+
+/**
+ * Add message separator
+ */
+function addMessageSeparator(): string {
+  return "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
 }
 
 /**
