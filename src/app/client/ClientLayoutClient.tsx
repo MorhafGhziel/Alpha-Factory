@@ -5,6 +5,7 @@ import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
 import ComingSoonModal from "@/components/ComingSoonModal";
+import SignOutButton from "@/components/ui/SignOutButton";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 
 export default function ClientLayoutClient({
@@ -82,6 +83,34 @@ export default function ClientLayoutClient({
               text: "قريباً",
               onClick: openComingSoonModal,
             },
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              text: "",
+              isBorder: true,
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "Sign Out",
+              text: "تسجيل الخروج",
+              onClick: async () => {
+                try {
+                  const response = await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                } catch (error) {
+                  console.error('Error signing out:', error);
+                }
+              },
+            },
           ]}
           animated={true}
         />
@@ -126,7 +155,36 @@ export default function ClientLayoutClient({
               tooltip: "قريباً",
               onClick: openComingSoonModal,
             },
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              tooltip: "",
+              isBorder: true,
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "Sign Out",
+              tooltip: "تسجيل الخروج",
+              onClick: async () => {
+                try {
+                  const response = await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                } catch (error) {
+                  console.error('Error signing out:', error);
+                }
+              },
+            },
           ]}
+          spacing="space-y-4"
         />
 
         {/* Main Content */}

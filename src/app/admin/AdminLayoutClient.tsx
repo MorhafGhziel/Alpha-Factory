@@ -6,6 +6,7 @@ import { createNewTeam, removeTeamById, TeamContext } from "@/src/utils";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
+import SignOutButton from "@/components/ui/SignOutButton";
 import { auth } from "../../lib/auth";
 
 export default function AdminLayoutClient({
@@ -104,6 +105,34 @@ export default function AdminLayoutClient({
               alt: "Manage Account",
               text: "ادارة الحسابات",
             },
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              text: "",
+              isBorder: true,
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "Sign Out",
+              text: "تسجيل الخروج",
+              onClick: async () => {
+                try {
+                  const response = await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                } catch (error) {
+                  console.error('Error signing out:', error);
+                }
+              },
+            },
           ]}
           animated={false}
         />
@@ -150,12 +179,40 @@ export default function AdminLayoutClient({
               alt: "Manage Account",
               tooltip: "ادارة الحسابات",
             },
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              tooltip: "",
+              isBorder: true,
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "Sign Out",
+              tooltip: "تسجيل الخروج",
+              onClick: async () => {
+                try {
+                  const response = await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                } catch (error) {
+                  console.error('Error signing out:', error);
+                }
+              },
+            },
           ]}
           width="w-20"
           bgColor="bg-[#0f0f0f]"
-          iconSize={34}
+          iconSize={20}
           tooltipPosition="left"
-          spacing="space-y-6"
+          spacing="space-y-4"
         />
 
         {/* Main Content */}

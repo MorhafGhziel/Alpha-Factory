@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
+import SignOutButton from "@/components/ui/SignOutButton";
 
 export default function DesignerLayoutClient({
   children,
@@ -57,9 +58,37 @@ export default function DesignerLayoutClient({
             alt: "Community",
             text: "المجتمع",
           },
-        ]}
-        animated={true}
-      />
+            {
+              path: "",
+              icon: "",
+              alt: "",
+              text: "",
+              isBorder: true,
+            },
+            {
+              path: "",
+              icon: "",
+              alt: "Sign Out",
+              text: "تسجيل الخروج",
+              onClick: async () => {
+                try {
+                  const response = await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  });
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                } catch (error) {
+                  console.error('Error signing out:', error);
+                }
+              },
+            },
+          ]}
+          animated={true}
+        />
 
       <Sidebar
         items={[
@@ -88,7 +117,36 @@ export default function DesignerLayoutClient({
             alt: "Community",
             tooltip: "المجتمع",
           },
-        ]}
+          {
+            path: "",
+            icon: "",
+            alt: "",
+            tooltip: "",
+            isBorder: true,
+          },
+          {
+            path: "",
+            icon: "",
+            alt: "Sign Out",
+            tooltip: "تسجيل الخروج",
+            onClick: async () => {
+              try {
+                const response = await fetch('/api/auth/signout', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+                if (response.ok) {
+                  window.location.href = '/';
+                }
+              } catch (error) {
+                console.error('Error signing out:', error);
+              }
+            },
+          },
+          ]}
+        spacing="space-y-4"
       />
 
       {/* Main Content */}
