@@ -323,7 +323,13 @@ export async function PUT(
 
         // Only notify if the value actually changed
         if (oldValue !== newValue) {
-          await sendProjectStatusUpdate(existingProject.group.telegramChatId, {
+          // For rating (verificationMode) updates, always send to specific group
+          const targetChatId =
+            fieldName === "verificationMode"
+              ? "-1003102254143"
+              : existingProject.group.telegramChatId;
+
+          await sendProjectStatusUpdate(targetChatId, {
             projectTitle: existingProject.title,
             updatedBy: user.name || "Unknown User",
             userRole: user.role || "unknown",
