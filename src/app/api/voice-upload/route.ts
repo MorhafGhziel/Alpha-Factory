@@ -26,8 +26,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), "public", "uploads", "voice");
+    // In production (Vercel), use /tmp directory as it's writable
+    const isProduction = process.env.NODE_ENV === "production";
+    const uploadsDir = isProduction
+      ? join("/tmp", "voice")
+      : join(process.cwd(), "public", "uploads", "voice");
+
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true });
     }
@@ -43,8 +47,10 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
 
-    // Return the public URL
-    const publicUrl = `/uploads/voice/${filename}`;
+    // Return the appropriate URL
+    const publicUrl = isProduction
+      ? `/api/voice-file/${filename}`
+      : `/uploads/voice/${filename}`;
 
     // Get the full URL from the request headers
     const host = req.headers.get("host") || "localhost:3000";
@@ -53,7 +59,13 @@ export async function POST(req: NextRequest) {
       (host.includes("localhost") ? "http" : "https");
     const fullUrl = `${protocol}://${host}${publicUrl}`;
 
-    console.log("Voice file uploaded:", { filename, publicUrl, fullUrl });
+    console.log("Voice file uploaded:", {
+      filename,
+      publicUrl,
+      fullUrl,
+      isProduction,
+      uploadsDir,
+    });
 
     return NextResponse.json({
       success: true,
