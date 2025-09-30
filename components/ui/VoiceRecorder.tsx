@@ -18,7 +18,6 @@ export default function VoiceRecorder({
   const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
 
   const startRecording = async (): Promise<void> => {
     try {
@@ -52,7 +51,6 @@ export default function VoiceRecorder({
           
           if (response.ok) {
             const data = await response.json();
-            setVoiceUrl(data.url);
             onVoiceRecorded(true, data.url);
           } else {
             console.error("Failed to upload voice recording");
@@ -104,7 +102,6 @@ export default function VoiceRecorder({
       URL.revokeObjectURL(recordedAudio);
       setRecordedAudio(null);
       setIsPlaying(false);
-      setVoiceUrl(null);
       onVoiceRecorded(false);
     }
   };

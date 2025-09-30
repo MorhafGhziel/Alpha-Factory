@@ -28,7 +28,19 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function processUpdate(update: any) {
+async function processUpdate(update: {
+  message?: {
+    chat: { id: number };
+    text: string;
+    from: { id: number; first_name?: string; username?: string };
+  };
+  callback_query?: {
+    id: string;
+    data: string;
+    from: { id: number };
+    message: { chat: { id: number } };
+  };
+}) {
   const bot = getBotInstance();
   if (!bot) return;
 
@@ -38,7 +50,9 @@ async function processUpdate(update: any) {
     const text = update.message.text;
     const userId = update.message.from.id;
     const userName =
-      update.message.from.first_name || update.message.from.username;
+      update.message.from.first_name ||
+      update.message.from.username ||
+      "Unknown";
 
     // Handle commands
     if (text.startsWith("/")) {
@@ -130,7 +144,12 @@ async function handleMessage(
   }
 }
 
-async function handleCallbackQuery(callbackQuery: any) {
+async function handleCallbackQuery(callbackQuery: {
+  id: string;
+  data: string;
+  from: { id: number };
+  message: { chat: { id: number } };
+}) {
   const bot = getBotInstance();
   if (!bot) return;
 
@@ -377,6 +396,6 @@ function getRoleInArabic(role: string): string {
 }
 
 // GET endpoint for webhook verification (if needed)
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   return NextResponse.json({ status: "Telegram webhook endpoint is active" });
 }

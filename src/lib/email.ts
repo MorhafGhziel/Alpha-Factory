@@ -664,7 +664,7 @@ async function sendCredentialsEmailOnce(
 
       // Check for specific error types
       if (typeof error === "object" && error !== null) {
-        const errorObj = error as any;
+        const errorObj = error as unknown as Record<string, unknown>;
         if (errorObj.code) {
           console.error(`Error code: ${errorObj.code}`);
         }

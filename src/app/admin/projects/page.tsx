@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Project } from "../../../types";
+import { Project, User } from "../../../types";
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -40,9 +40,9 @@ export default function AdminProjectsPage() {
         const users = data.users || [];
         
         setTeamMembers({
-          editors: users.filter((user: any) => user.role === "editor"),
-          designers: users.filter((user: any) => user.role === "designer"),
-          reviewers: users.filter((user: any) => user.role === "reviewer"),
+          editors: users.filter((user: User) => user.role === "editor"),
+          designers: users.filter((user: User) => user.role === "designer"),
+          reviewers: users.filter((user: User) => user.role === "reviewer"),
         });
       }
     } catch (error) {
@@ -254,7 +254,7 @@ function AssignmentForm({
     designers: Array<{ id: string; name: string; email: string }>;
     reviewers: Array<{ id: string; name: string; email: string }>;
   };
-  onAssign: (projectId: string, assignments: any) => void;
+  onAssign: (projectId: string, assignments: { editorId?: string; designerId?: string; reviewerId?: string }) => void;
   onCancel: () => void;
 }) {
   const [editorId, setEditorId] = useState(project.editorId || "");
@@ -264,9 +264,9 @@ function AssignmentForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAssign(project.id, {
-      editorId: editorId || null,
-      designerId: designerId || null,
-      reviewerId: reviewerId || null,
+      editorId: editorId || undefined,
+      designerId: designerId || undefined,
+      reviewerId: reviewerId || undefined,
     });
   };
 

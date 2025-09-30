@@ -14,7 +14,7 @@ interface Group {
   id: string;
   name: string;
   createdAt: string;
-  users: any[];
+  users: UserFormData[];
 }
 
 export default function CreateAccountPage() {
@@ -29,7 +29,7 @@ export default function CreateAccountPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
-  const [generatedCredentials, setGeneratedCredentials] = useState<any[]>([]);
+  const [generatedCredentials, setGeneratedCredentials] = useState<Array<{ name: string; email: string; username: string; password: string; role?: string }>>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [createNewGroup, setCreateNewGroup] = useState(true);
@@ -56,7 +56,7 @@ export default function CreateAccountPage() {
   // Clear client roles when switching to standalone mode
   useEffect(() => {
     if (createStandalone) {
-      setUsers(users.map(user => 
+      setUsers(prevUsers => prevUsers.map(user => 
         user.role === "client" ? { ...user, role: "" } : user
       ));
     }
@@ -136,7 +136,7 @@ export default function CreateAccountPage() {
 
     try {
       let endpoint: string;
-      let requestBody: any;
+      let requestBody: Record<string, unknown>;
 
       if (createStandalone) {
         // Create standalone accounts without groups
@@ -197,7 +197,7 @@ export default function CreateAccountPage() {
     const credentialsText = generatedCredentials
       .map(
         (cred) =>
-          `الاسم: ${cred.name}\nاسم المستخدم: ${cred.username}\nكلمة المرور: ${cred.password}\nالدور: ${cred.role}\n---`
+          `الاسم: ${cred.name}\nاسم المستخدم: ${cred.username}\nكلمة المرور: ${cred.password}${cred.role ? `\nالدور: ${cred.role}` : ''}\n---`
       )
       .join("\n");
     

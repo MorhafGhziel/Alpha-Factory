@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let createdUserIds: string[] = [];
+    const createdUserIds: string[] = [];
     let createdGroupId: string | null = null;
 
     try {
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Update user with group and phone if needed
-        const updateData: any = {
+        const updateData: { groupId?: string; phone?: string } = {
           groupId: targetGroup?.id,
         };
 

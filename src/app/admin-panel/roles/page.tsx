@@ -120,10 +120,10 @@ export default function RoleManagementPage() {
     return roleObj ? roleObj.label : role;
   };
 
-  const getRoleColor = (role: string) => {
-    const roleObj = roles.find(r => r.value === role);
-    return roleObj ? roleObj.color : 'bg-gray-500';
-  };
+  // const getRoleColor = (role: string) => {
+  //   const roleObj = roles.find(r => r.value === role);
+  //   return roleObj ? roleObj.color : 'bg-gray-500';
+  // };
 
   const groupedUsers = roles.reduce((acc, role) => {
     acc[role.value] = users.filter(user => user.role === role.value);

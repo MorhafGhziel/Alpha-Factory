@@ -23,6 +23,17 @@ export interface TeamGroup {
   createdAt: Date;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  groupId?: string;
+  phone?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Project {
   id: string;
   title: string;

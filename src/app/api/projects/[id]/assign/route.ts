@@ -63,8 +63,12 @@ export async function PUT(
     }
 
     // Validate that assigned users exist and have correct roles
-    const updates: any = {};
-    let assignmentMessages: string[] = [];
+    const updates: {
+      editorId?: string | null;
+      designerId?: string | null;
+      reviewerId?: string | null;
+    } = {};
+    const assignmentMessages: string[] = [];
 
     if (editorId !== undefined) {
       if (editorId) {

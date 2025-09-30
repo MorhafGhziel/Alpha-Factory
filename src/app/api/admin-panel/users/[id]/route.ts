@@ -25,7 +25,7 @@ export async function PUT(
 
     // Validate the update data
     const allowedFields = ["name", "email", "phone", "role"];
-    const filteredData: any = {};
+    const filteredData: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(updateData)) {
       if (allowedFields.includes(key)) {

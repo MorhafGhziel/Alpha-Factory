@@ -42,14 +42,14 @@ export default function SettingsPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setSuccessMessage("تم حفظ الإعدادات بنجاح");
-    } catch (err) {
+    } catch (_err) {
       setError("فشل في حفظ الإعدادات");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean | number) => {
     setSettings(prev => ({
       ...prev,
       [field]: value

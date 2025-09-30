@@ -22,8 +22,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { type, taskType, message, projectId }: NotificationRequest =
-      await req.json();
+    const {
+      type,
+      taskType,
+      message,
+      projectId: _projectId,
+    }: NotificationRequest = await req.json();
 
     // Validate input
     if (!type) {

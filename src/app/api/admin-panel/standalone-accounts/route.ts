@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let createdUserIds: string[] = [];
+    const createdUserIds: string[] = [];
 
     try {
       // Create users

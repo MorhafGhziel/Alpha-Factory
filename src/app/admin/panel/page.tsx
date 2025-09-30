@@ -35,7 +35,7 @@ export default async function AdminPanelDashboard() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Owner Dashboard</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Welcome back, {session?.user?.name}. Here's an overview of your system.
+          Welcome back, {session?.user?.name}. Here&apos;s an overview of your system.
         </p>
       </div>
 

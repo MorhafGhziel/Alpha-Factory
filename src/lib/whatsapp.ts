@@ -104,18 +104,26 @@ https://alphafactory.com
     } else {
       throw new Error("Invalid response from WhatsApp API");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error sending WhatsApp message:", error);
 
     let errorMessage = "Failed to send WhatsApp message";
-    if (error.response) {
-      errorMessage = `WhatsApp API error: ${error.response.status} - ${
-        error.response.data?.error?.message || error.response.statusText
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as {
+        response: {
+          status: number;
+          statusText: string;
+          data?: { error?: { message?: string } };
+        };
+      };
+      errorMessage = `WhatsApp API error: ${axiosError.response.status} - ${
+        axiosError.response.data?.error?.message ||
+        axiosError.response.statusText
       }`;
-    } else if (error.request) {
+    } else if (error && typeof error === "object" && "request" in error) {
       errorMessage = "No response from WhatsApp API";
-    } else {
-      errorMessage = error.message || "Unknown error";
+    } else if (error && typeof error === "object" && "message" in error) {
+      errorMessage = (error as { message: string }).message || "Unknown error";
     }
 
     return {
@@ -192,13 +200,21 @@ https://alphafactory.com
     } else {
       throw new Error("Invalid response from WhatsApp API");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error sending WhatsApp project update:", error);
 
     let errorMessage = "Failed to send WhatsApp message";
-    if (error.response) {
-      errorMessage = `WhatsApp API error: ${error.response.status} - ${
-        error.response.data?.error?.message || error.response.statusText
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as {
+        response: {
+          status: number;
+          statusText: string;
+          data?: { error?: { message?: string } };
+        };
+      };
+      errorMessage = `WhatsApp API error: ${axiosError.response.status} - ${
+        axiosError.response.data?.error?.message ||
+        axiosError.response.statusText
       }`;
     }
 
