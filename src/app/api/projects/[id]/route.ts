@@ -265,6 +265,19 @@ export async function PUT(
       );
     }
 
+    // Special authorization check for rating (verificationMode) - only clients and admins can update ratings
+    if (updateData.verificationMode !== undefined) {
+      const canUpdateRating =
+        user.role === "admin" || existingProject.clientId === user.id;
+
+      if (!canUpdateRating) {
+        return NextResponse.json(
+          { error: "Only clients and admins can update project ratings" },
+          { status: 403 }
+        );
+      }
+    }
+
     // Prepare update data
     const updates: any = {};
 

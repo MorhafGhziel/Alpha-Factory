@@ -538,13 +538,7 @@ export default function ClientTrackingBoardPage() {
                           <LoadingSpinner size="w-6 h-6" />
                         </div>
                       ) : isClient ? (
-                        // Read-only display for clients
-                        <div className="w-full px-3 py-2 text-xs font-medium text-center bg-[#1A1A1A] rounded">
-                          <span className="text-gray-300">
-                            {project.verificationMode || "لا شيء"}
-                          </span>
-                        </div>
-                      ) : (
+                        // Dropdown for clients to give ratings
                         <CustomDropdown
                           options={[
                             "ممتاز",
@@ -561,6 +555,13 @@ export default function ClientTrackingBoardPage() {
                           }
                           className="w-full"
                         />
+                      ) : (
+                        // Read-only display for non-clients
+                        <div className="w-full px-3 py-2 text-xs font-medium text-center bg-[#1A1A1A] rounded">
+                          <span className="text-gray-300">
+                            {project.verificationMode || "لا شيء"}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -987,13 +988,7 @@ export default function ClientTrackingBoardPage() {
                               <LoadingSpinner size="w-6 h-6" />
                             </div>
                           ) : isClient ? (
-                            // Read-only display for clients
-                            <div className="min-w-[120px] px-3 py-2 text-xs font-medium text-center">
-                              <span className="text-gray-300">
-                                {project.verificationMode || "لا شيء"}
-                              </span>
-                            </div>
-                          ) : (
+                            // Dropdown for clients to give ratings
                             <CustomDropdown
                               options={[
                                 "ممتاز",
@@ -1010,6 +1005,13 @@ export default function ClientTrackingBoardPage() {
                               }
                               className="min-w-[120px]"
                             />
+                          ) : (
+                            // Read-only display for non-clients
+                            <div className="min-w-[120px] px-3 py-2 text-xs font-medium text-center">
+                              <span className="text-gray-300">
+                                {project.verificationMode || "لا شيء"}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -1021,10 +1023,17 @@ export default function ClientTrackingBoardPage() {
                             </div>
                           ) : (
                             <>
-                              <button
-                            
-                                className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
-                              >
+                              {isClient && (
+                                <button
+                                  onClick={async () => {
+                                    // Toggle verification status manually
+                                    const currentStatus = project.verificationMode;
+                                    const newStatus =
+                                      currentStatus === "متميز" ? "لا شيء" : "متميز";
+                                    await updateRating(project.id, newStatus);
+                                  }}
+                                  className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
+                                >
                                 <div className="relative w-6 h-6">
                                   {/* Verified Badge */}
                                   <div
@@ -1060,7 +1069,8 @@ export default function ClientTrackingBoardPage() {
                                     <div className="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
                                   </div>
                                 </div>
-                              </button>
+                                </button>
+                              )}
                               <span
                                 className={`text-xs font-medium ${
                                   project.verificationMode &&

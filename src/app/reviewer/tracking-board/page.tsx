@@ -107,21 +107,18 @@ export default function ReviewerTrackingBoardPage() {
                   <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
                     حالة المراجعة
                   </th>
-                  <th className="py-4 px-4 text-center text-[#CCCCCC] bg-[#161616] border-l border-[#3F3F3F] whitespace-nowrap">
-                    تقييم المشروع
-                  </th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-gray-400">
+                    <td colSpan={8} className="py-8 text-center text-gray-400">
                       جاري تحميل المشاريع...
                     </td>
                   </tr>
                 ) : projects.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-gray-400">
+                    <td colSpan={8} className="py-8 text-center text-gray-400">
                       لا توجد مشاريع معينة لك حالياً
                     </td>
                   </tr>
@@ -214,24 +211,6 @@ export default function ReviewerTrackingBoardPage() {
                           <option value="في الانتظار">في الانتظار</option>
                           <option value="قيد المراجعة">قيد المراجعة</option>
                           <option value="تمت المراجعة">تمت المراجعة</option>
-                        </select>
-                      </td>
-                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
-                        <select
-                          value={project.verificationMode || "لا شيء"}
-                          onChange={(e) =>
-                            updateProjectStatus(project.id, {
-                              verificationMode: e.target.value,
-                            })
-                          }
-                          className="bg-[#0B0B0B] text-[#EAD06C] px-2 py-1 rounded text-xs outline-none"
-                        >
-                          <option value="لا شيء">لا شيء</option>
-                          <option value="قيد التطوير">قيد التطوير</option>
-                          <option value="جيد">جيد</option>
-                          <option value="جيد جدًا">جيد جدًا</option>
-                          <option value="ممتاز">ممتاز</option>
-                          <option value="متميز">متميز</option>
                         </select>
                       </td>
                     </tr>
