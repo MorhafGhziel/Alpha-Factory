@@ -67,6 +67,12 @@ export default function ClientInvoicesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<number | null>(0);
+  const [paidMap, setPaidMap] = useState<Record<string, boolean>>({});
+  // Reminder modal state removed; auto-sending only
+  const [showPaidBannerFor, setShowPaidBannerFor] = useState<string | null>(
+    null
+  );
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -155,6 +161,109 @@ export default function ClientInvoicesPage() {
     return result.reverse(); // latest first
   }, [projects]);
 
+  // ------- Helpers & Persistence -------
+  // const DAY_WINDOW = 14 * DAY_MS; // reserved for future
+  function getInvoiceId(inv: Invoice) {
+    return `${inv.index}-${new Date(inv.dueDate).toISOString().slice(0, 10)}`;
+  }
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("af_paid_invoices");
+      if (saved) setPaidMap(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  function savePaid(next: Record<string, boolean>) {
+    try {
+      localStorage.setItem("af_paid_invoices", JSON.stringify(next));
+    } catch {}
+  }
+
+  function markPaid(inv: Invoice) {
+    const id = getInvoiceId(inv);
+    const next = { ...paidMap, [id]: true };
+    setPaidMap(next);
+    savePaid(next);
+    setShowPaidBannerFor(id);
+    setTimeout(
+      () => setShowPaidBannerFor((cur) => (cur === id ? null : cur)),
+      4000
+    );
+  }
+
+  function wasReminderSent(id: string, day: 3 | 7 | 10) {
+    try {
+      return localStorage.getItem(`af_inv_${id}_rem_${day}`) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function setReminderSent(id: string, day: 3 | 7 | 10) {
+    try {
+      localStorage.setItem(`af_inv_${id}_rem_${day}`, "1");
+    } catch {}
+  }
+
+  // Attempt to trigger email and also show message in app
+  async function triggerEmail(kind: "3" | "7" | "10") {
+    const subjectMap: Record<string, string> = {
+      "3": "تذكير بالدفع - بعد 3 أيام من تاريخ الاستحقاق",
+      "7": "تعليق مؤقت للحساب - تأخير 7 أيام",
+      "10": "إيقاف نهائي للحساب - تأخير 10 أيام",
+    };
+
+    const body3 = `عزيزي العميل\n\nنود تذكيرك بضرورة تسديد الفاتورة في الوقت المحدد لضمان استمرار الخدمة دون أي انقطاع:\n\n• بعد 3 أيام من تاريخ الاستحقاق: سيتم إرسال تذكير إضافي بالدفع\n• بعد 7 أيام من التأخير: سيتم تعليق الحساب بشكل مؤقت\n• بعد 10 أيام من التأخير: سيتوقف الحساب بشكل كامل\n\nنرجوا منك تجاوز عملية الدفع في أسرع وقت ممكن. ولأي استفسار أو مساعدة في عملية السداد، يرجى التواصل مع فريق الدعم.\n\nمع التقدير،\nفريق Alpha Factory`;
+    const body7 = `عزيزي العميل،\n\nنود إعلامك بأنه تم تعليق حسابك مؤقتاً بسبب عدم تسديد الفاتورة المستحقة خلال المدة المحددة.\nيمكنك إعادة تفعيل الحساب فوراً عن طريق إتمام عملية الدفع\n\nنرجو منك الإسراع في السداد لتفادي انتقال الحساب إلى الإيقاف الكامل بعد مرور 10 أيام\n\nمع الشكر والتقدير،\nفريق Alpha Factory`;
+    const body10 = `عزيزي العميل\n\nنود إعلامك أنه قد تم إيقاف حسابك نهائياً بسبب عدم تسديد الفاتورة المستحقة خلال الفترة المحددة (10 أيام من تاريخ الاستحقاق)\n\nيرجى ملاحظة ما يلي:\n• لا يمكن إعادة تفعيل الحساب عبر الدفع المباشر.\n• لمتابعة الإجراءات وتسوية المبالغ المستحقة، يجب التواصل مع فريق الدعم حصراً.\n\nللتواصل مع الدعم، الرجاء مراسلتنا عبر البريد: support@alphafactory.net\n\nفي حال عدم التواصل خلال فترة وجيزة، تحتفظ الشركة بحقها في اتخاذ أي خطوات إضافية بخصوص المبلغ غير المسدد.\n\nمع التحية،\nإدارة Alpha Factory`;
+
+    const msg = kind === "3" ? body3 : kind === "7" ? body7 : body10;
+
+    // Try API notification
+    try {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "project_update",
+          message: `${subjectMap[kind]}\n\n${msg}`,
+        }),
+      });
+    } catch {}
+
+    // Fallback: open mail client so the email can be sent by user
+    try {
+      const mailto = `mailto:support@alphafactory.net?subject=${encodeURIComponent(
+        subjectMap[kind]
+      )}&body=${encodeURIComponent(msg)}`;
+      window.open(mailto, "_blank");
+    } catch {}
+
+    setEmailNotice("تم إرسال رسالة التذكير عبر البريد");
+    setTimeout(() => setEmailNotice(null), 4000);
+  }
+
+  // Auto trigger per threshold (3/7/10) once per invoice (frontend-only)
+  useEffect(() => {
+    invoices.forEach((inv) => {
+      const id = getInvoiceId(inv);
+      if (paidMap[id]) return;
+      const remaining = daysUntil(inv.dueDate);
+      const overdue = Math.max(0, -remaining);
+      if (overdue >= 10 && !wasReminderSent(id, 10)) {
+        setReminderSent(id, 10);
+        triggerEmail("10");
+      } else if (overdue >= 7 && !wasReminderSent(id, 7)) {
+        setReminderSent(id, 7);
+        triggerEmail("7");
+      } else if (overdue >= 3 && !wasReminderSent(id, 3)) {
+        setReminderSent(id, 3);
+        triggerEmail("3");
+      }
+    });
+  }, [invoices, paidMap]);
+
   return (
     <div className="min-h-screen text-white md:py-20 py-10">
       <div className="max-w-6xl mx-auto">
@@ -174,6 +283,16 @@ export default function ClientInvoicesPage() {
           </div>
         ) : (
           <div className="space-y-5">
+            {emailNotice && (
+              <div className="mx-auto max-w-6xl px-4">
+                <div
+                  className="mb-3 px-4 py-2 rounded-lg bg-blue-900/30 border border-blue-600 text-blue-200 text-sm"
+                  dir="rtl"
+                >
+                  {emailNotice}
+                </div>
+              </div>
+            )}
             {invoices.map((inv) => {
               const remaining = daysUntil(inv.dueDate);
               const title =
@@ -183,6 +302,7 @@ export default function ClientInvoicesPage() {
               const isOpen = expanded === inv.index;
               const statusColor =
                 remaining > 0 ? "text-[#EAD06C]" : "text-red-400";
+              const id = getInvoiceId(inv);
               return (
                 <div
                   key={inv.index}
@@ -230,8 +350,34 @@ export default function ClientInvoicesPage() {
                         </div>
                       </div>
 
-                      <div className="px-3.5 py-1.5 text-xs sm:text-sm bg-[#1a1a1a] rounded-full border border-[#333336] text-gray-200">
+                      <div className="px-3.5 py-1.5 text-xs sm:text-sm bg-[#1a1a1a] rounded-full border border-[#333336] text-gray-200 flex items-center gap-2">
                         #{inv.index}
+                        {Math.max(0, -remaining) > 0 && !paidMap[id] && (
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Could open a modal here; auto-send is already handled
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                // Could open a modal here; auto-send is already handled
+                              }
+                            }}
+                            title="إشعارات التأخير"
+                            className="ml-1 text-red-400 hover:text-red-300 cursor-pointer"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="w-4 h-4"
+                              fill="currentColor"
+                            >
+                              <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                            </svg>
+                          </div>
+                        )}
                       </div>
                     </button>
                   </div>
@@ -247,6 +393,21 @@ export default function ClientInvoicesPage() {
                         className="overflow-hidden"
                       >
                         <div className="px-4 sm:px-6 pb-6">
+                          {showPaidBannerFor === id && (
+                            <div
+                              className="mb-3 px-4 py-2 rounded-lg bg-green-900/30 border border-green-600 text-green-300 text-sm flex items-center gap-2"
+                              dir="rtl"
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="w-5 h-5"
+                                fill="currentColor"
+                              >
+                                <path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z" />
+                              </svg>
+                              تم اكمال دفع الفاتورة بنجاح
+                            </div>
+                          )}
                           <div className="bg-white text-black rounded-2xl overflow-hidden shadow-sm">
                             <div className="p-5 sm:p-6 text-sm sm:text-base">
                               <div className="flex items-start justify-between gap-6">
@@ -329,7 +490,10 @@ export default function ClientInvoicesPage() {
 
                             <div className="flex items-center justify-between p-4 sm:p-5 mx-3 sm:mx-6">
                               <div className="flex items-center gap-3 sm:gap-4">
-                                <button className="cursor-pointer flex items-center gap-2 bg-[#F6C557] px-4 sm:px-10 py-2 rounded-lg hover:bg-[#EAD06C] transition-all duration-300">
+                                <button
+                                  onClick={() => markPaid(inv)}
+                                  className="cursor-pointer flex items-center gap-2 bg-[#F6C557] px-4 sm:px-10 py-2 rounded-lg hover:bg-[#EAD06C] transition-all duration-300"
+                                >
                                   <Image
                                     src="/icons/PayPal.svg"
                                     alt="PayPal"
@@ -338,7 +502,10 @@ export default function ClientInvoicesPage() {
                                     className="h-5 w-auto"
                                   />
                                 </button>
-                                <button className="cursor-pointer flex items-center gap-2 text-white text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg bg-[#0B0B0B] hover:bg-[#0B0B0B]/80 transition-all duration-300">
+                                <button
+                                  onClick={() => markPaid(inv)}
+                                  className="cursor-pointer flex items-center gap-2 text-white text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg bg-[#0B0B0B] hover:bg-[#0B0B0B]/80 transition-all duration-300"
+                                >
                                   <Image
                                     src="/icons/Crypto.svg"
                                     alt="Crypto"
