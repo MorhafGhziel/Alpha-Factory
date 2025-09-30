@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../lib/auth";
 import prisma from "../../../../../../lib/prisma";
-import bcrypt from "bcryptjs";
 import { sendPasswordChangeEmail } from "../../../../../../lib/email";
 
 // PUT - Change user password (owner only)
@@ -54,8 +53,9 @@ export async function PUT(
       );
     }
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    // Use better-auth's internal password hashing
+    const ctx = await auth.$context;
+    const hashedPassword = await ctx.password.hash(newPassword);
 
     // Update password in account
     await prisma.account.update({

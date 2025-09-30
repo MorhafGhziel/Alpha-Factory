@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../lib/auth";
 import prisma from "../../../../../../lib/prisma";
-import { hash } from "bcryptjs";
 import { sendPasswordChangeEmail } from "../../../../../../lib/email";
 
 // PUT - Change user password
@@ -59,8 +58,9 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Hash the new password
-    const hashedPassword = await hash(newPassword, 12);
+    // Use better-auth's internal password hashing
+    const ctx = await auth.$context;
+    const hashedPassword = await ctx.password.hash(newPassword);
 
     // Update the password in the account table (better-auth stores passwords there)
     await prisma.account.updateMany({
