@@ -51,9 +51,11 @@ export default function VoiceRecorder({
           
           if (response.ok) {
             const data = await response.json();
+            console.log("Voice upload successful:", data);
             onVoiceRecorded(true, data.url);
           } else {
-            console.error("Failed to upload voice recording");
+            const errorText = await response.text();
+            console.error("Failed to upload voice recording:", response.status, errorText);
             onVoiceRecorded(true); // Still indicate recording exists, but without upload
           }
         } catch (error) {

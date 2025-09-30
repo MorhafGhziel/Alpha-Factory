@@ -224,13 +224,10 @@ export async function sendVoiceNote(
     }
 
     // Try to send from local file first (more reliable)
-    const localFilePath = join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "voice",
-      filename
-    );
+    const isProduction = process.env.NODE_ENV === "production";
+    const localFilePath = isProduction
+      ? join("/tmp", "voice", filename)
+      : join(process.cwd(), "public", "uploads", "voice", filename);
 
     if (existsSync(localFilePath)) {
       console.log("Sending voice note from local file:", localFilePath);
