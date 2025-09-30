@@ -21,6 +21,8 @@ export default function ClientDashboardPage() {
         return "bg-[#db8351] text-white";
       case "لم يبدأ":
         return "bg-[#262626] text-white";
+      case "غير مطلوب":
+        return "bg-[#6b7280] text-white";
       default:
         return "bg-[#ef3c54] text-white";
     }
@@ -32,9 +34,43 @@ export default function ClientDashboardPage() {
         return "bg-[#5dc239] text-white";
       case "لم يتم الانتهاء منه":
         return "bg-[#ef3c54] text-white";
+      case "غير مطلوب":
+        return "bg-[#6b7280] text-white";
       default:
         return "bg-[#ef3c54] text-white";
     }
+  };
+
+  // Get appropriate status text for enhancement projects
+  const getEnhancementStatusText = (project: Project, mode: 'edit' | 'design') => {
+    // Check for design enhancement
+    const isDesignEnhancement = project.type && (
+      project.type.includes("تحسين التصميم") || 
+      (project.type.includes("تحسين") && project.type.includes("التصميم"))
+    );
+
+    // Check for production enhancement
+    const isProductionEnhancement = project.type && (
+      project.type.includes("تحسين الإنتاج") || 
+      (project.type.includes("تحسين") && project.type.includes("الإنتاج"))
+    );
+
+    if (isDesignEnhancement) {
+      // Design enhancement project
+      if (mode === 'edit') {
+        return "غير مطلوب"; // Not required for editors
+      }
+      return project.designMode || "لم يبدأ";
+    } else if (isProductionEnhancement) {
+      // Production enhancement project
+      if (mode === 'design') {
+        return "غير مطلوب"; // Not required for designers
+      }
+      return project.editMode || "لم يبدأ";
+    }
+    
+    // Regular project - show normal status
+    return mode === 'edit' ? (project.editMode || "لم يبدأ") : (project.designMode || "لم يبدأ");
   };
   const [isRequestImprovementModalOpen, setIsRequestImprovementModalOpen] =
     useState(false);
@@ -184,15 +220,63 @@ export default function ClientDashboardPage() {
     setIsFilterDropdownOpen(false);
   };
 
-  const handleRequestImprovement = (improvementData: {
+  const handleRequestImprovement = async (improvementData: {
     projectId: string;
     title: string;
     description: string;
     department: string;
+    hasVoiceRecording?: boolean;
+    voiceUrl?: string;
+    isVerified?: boolean;
   }) => {
-    console.log("Improvement request:", improvementData);
-    // Here you can add logic to send the request to the appropriate department
-    closeRequestImprovementModal();
+    try {
+      // Get the original project details
+      const originalProject = projects.find(p => p.id === improvementData.projectId);
+      if (!originalProject) {
+        alert("المشروع الأصلي غير موجود");
+        return;
+      }
+
+      // Create a new project for the enhancement request
+      const enhancementProjectData = {
+        title: `تحسين: ${originalProject.title}`,
+        type: `تحسين ${improvementData.department === 'design' ? 'التصميم' : 'الإنتاج'}`,
+        filmingStatus: "تم الانتـــهاء مــنه", // Enhancement projects don't need filming
+        fileLinks: originalProject.fileLinks || "", // Reference to original files
+        notes: `طلب تحسين للمشروع: ${originalProject.title}\n\nوصف التحسين:\n${improvementData.description}\n\nالقسم المطلوب: ${improvementData.department === 'design' ? 'قسم التصميم' : 'قسم الإنتاج'}`,
+        date: new Date().toISOString().split('T')[0],
+        voiceNoteUrl: improvementData.voiceUrl || undefined,
+        // Set appropriate initial statuses based on department
+        editMode: improvementData.department === 'design' ? 'تم الانتهاء منه' : 'لم يبدأ',
+        designMode: improvementData.department === 'design' ? 'في الانتظار' : 'تم الانتهاء منه',
+        reviewMode: 'في الانتظار',
+        verificationMode: 'لا شيء' // Both types start unverified until work is complete
+      };
+
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(enhancementProjectData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Enhancement request created successfully:", data);
+        // Refresh the projects list
+        await fetchProjects();
+        closeRequestImprovementModal();
+        alert("تم إنشاء طلب التحسين بنجاح!");
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to create enhancement request:", errorData);
+        alert(`فشل في إنشاء طلب التحسين: ${errorData.error || "خطأ غير معروف"}`);
+      }
+    } catch (error) {
+      console.error("Error creating enhancement request:", error);
+      alert("حدث خطأ أثناء إنشاء طلب التحسين");
+    }
   };
 
   return (
@@ -493,10 +577,10 @@ export default function ClientDashboardPage() {
                     </div>
                     <span
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(
-                        project.editMode || "لم يبدأ"
+                        getEnhancementStatusText(project, 'edit')
                       )} shadow-lg`}
                     >
-                      {project.editMode || "لم يبدأ"}
+                      {getEnhancementStatusText(project, 'edit')}
                     </span>
                   </div>
 
@@ -510,10 +594,10 @@ export default function ClientDashboardPage() {
                     </div>
                     <span
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(
-                        project.designMode || "لم يبدأ"
+                        getEnhancementStatusText(project, 'design')
                       )} shadow-lg`}
                     >
-                      {project.designMode || "لم يبدأ"}
+                      {getEnhancementStatusText(project, 'design')}
                     </span>
                   </div>
 
@@ -584,6 +668,7 @@ export default function ClientDashboardPage() {
         isOpen={isRequestImprovementModalOpen}
         onClose={closeRequestImprovementModal}
         onSubmit={handleRequestImprovement}
+        projects={projects}
       />
     </div>
   );

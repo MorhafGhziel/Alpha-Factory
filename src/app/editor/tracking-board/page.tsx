@@ -13,7 +13,12 @@ export default function EditorDashboardPage() {
       const response = await fetch("/api/projects");
       if (response.ok) {
         const data = await response.json();
-        setProjects(data.projects || []);
+        // Filter out design-only enhancement projects for editors
+        const filteredProjects = (data.projects || []).filter((project: Project) => {
+          // Exclude design-only enhancement projects
+          return !(project.type && project.type.includes("تحسين التصميم"));
+        });
+        setProjects(filteredProjects);
       } else {
         console.error("Failed to fetch projects");
       }

@@ -12,6 +12,11 @@ interface CreateProjectRequest {
   notes?: string;
   date: string;
   voiceNoteUrl?: string;
+  // Optional status overrides for enhancement projects
+  editMode?: string;
+  designMode?: string;
+  reviewMode?: string;
+  verificationMode?: string;
 }
 
 // POST - Create a new project
@@ -34,6 +39,10 @@ export async function POST(req: NextRequest) {
       notes,
       date,
       voiceNoteUrl,
+      editMode,
+      designMode,
+      reviewMode,
+      verificationMode,
     }: CreateProjectRequest = await req.json();
 
     // Validate required fields
@@ -94,6 +103,11 @@ export async function POST(req: NextRequest) {
         endDate: null,
         clientId: user.id,
         groupId: user.groupId,
+        // Use provided status overrides or fall back to defaults
+        editMode: editMode || undefined, // Will use database default if not provided
+        designMode: designMode || undefined,
+        reviewMode: reviewMode || undefined,
+        verificationMode: verificationMode || undefined,
       },
       include: {
         client: {

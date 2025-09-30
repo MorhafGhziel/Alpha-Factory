@@ -2,19 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useProjects } from "@/contexts/ProjectContext";
 import CustomDropdown from "./CustomDropdown";
 import VoiceRecorder from "./VoiceRecorder";
+import { Project } from "../../src/types";
 
 interface RequestImprovementModalProps {
   isOpen: boolean;
   onClose: () => void;
+  projects: Project[];
   onSubmit: (improvementData: {
     projectId: string;
     title: string;
     description: string;
     department: string;
     hasVoiceRecording?: boolean;
+    voiceUrl?: string;
     isVerified?: boolean;
   }) => void;
 }
@@ -23,12 +25,13 @@ export default function RequestImprovementModal({
   isOpen,
   onClose,
   onSubmit,
+  projects,
 }: RequestImprovementModalProps) {
-  const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [department, setDepartment] = useState<string>("");
   const [hasVoiceRecording, setHasVoiceRecording] = useState<boolean>(false);
+  const [voiceUrl, setVoiceUrl] = useState<string>("");
   const [isVerified, setIsVerified] = useState<boolean>(false);
 
   // Auto-verification logic: verify when all fields are completed
@@ -41,8 +44,13 @@ export default function RequestImprovementModal({
     }
   }, [selectedProjectId, description, department]);
 
-  const handleVoiceRecorded = (hasRecording: boolean) => {
+  const handleVoiceRecorded = (hasRecording: boolean, voiceUrlParam?: string) => {
     setHasVoiceRecording(hasRecording);
+    if (hasRecording && voiceUrlParam) {
+      setVoiceUrl(voiceUrlParam);
+    } else {
+      setVoiceUrl("");
+    }
   };
 
   const handleManualVerificationToggle = () => {
@@ -67,6 +75,7 @@ export default function RequestImprovementModal({
       description,
       department,
       hasVoiceRecording,
+      voiceUrl: voiceUrl || undefined,
       isVerified,
     });
 
@@ -74,6 +83,7 @@ export default function RequestImprovementModal({
     setDescription("");
     setDepartment("");
     setHasVoiceRecording(false);
+    setVoiceUrl("");
     setIsVerified(false);
   };
 
@@ -154,7 +164,7 @@ export default function RequestImprovementModal({
                 </div>
                 {projects.length === 0 ? (
                   <div className="w-full bg-[#0B0B0B] text-gray-400 px-4 py-3 rounded-xl text-center border border-[#333336]">
-                    لا توجد مشاريع متاحة. قم بإنشاء مشروع جديد أولاً.
+                    لا توجد مشاريع متاحة للتحسين. قم بإنشاء مشروع جديد أولاً.
                   </div>
                 ) : (
                   <CustomDropdown

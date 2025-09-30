@@ -214,6 +214,101 @@ export default function ClientTrackingBoardPage() {
     return status || "غير محدد";
   };
 
+  // Get appropriate status text for enhancement projects
+  const getEnhancementStatusText = (project: Project, mode: 'edit' | 'design') => {
+    // Check for design enhancement (more flexible matching)
+    const isDesignEnhancement = project.type && (
+      project.type.includes("تحسين التصميم") || 
+      project.type.includes("تحسين") && project.type.includes("التصميم")
+    );
+
+    // Check for production enhancement (more flexible matching)
+    const isProductionEnhancement = project.type && (
+      project.type.includes("تحسين الإنتاج") || 
+      project.type.includes("تحسين") && project.type.includes("الإنتاج")
+    );
+
+    if (isDesignEnhancement) {
+      // Design enhancement project
+      if (mode === 'edit') {
+        return "غير مطلوب"; // Not required for editors
+      }
+      return getStatusText(project.designMode);
+    } else if (isProductionEnhancement) {
+      // Production enhancement project
+      if (mode === 'design') {
+        return "غير مطلوب"; // Not required for designers
+      }
+      return getStatusText(project.editMode);
+    }
+    
+    // Regular project - show normal status
+    return mode === 'edit' ? getStatusText(project.editMode) : getStatusText(project.designMode);
+  };
+
+  // Get appropriate status style for enhancement projects
+  const getEnhancementStatusStyle = (project: Project, mode: 'edit' | 'design') => {
+    // Check for design enhancement (more flexible matching)
+    const isDesignEnhancement = project.type && (
+      project.type.includes("تحسين التصميم") || 
+      project.type.includes("تحسين") && project.type.includes("التصميم")
+    );
+
+    // Check for production enhancement (more flexible matching)
+    const isProductionEnhancement = project.type && (
+      project.type.includes("تحسين الإنتاج") || 
+      project.type.includes("تحسين") && project.type.includes("الإنتاج")
+    );
+
+    if (isDesignEnhancement) {
+      // Design enhancement project
+      if (mode === 'edit') {
+        return { backgroundColor: "#6b7280", borderColor: "#6b7280" }; // Gray for "not required"
+      }
+      return getStatusStyle(project.designMode);
+    } else if (isProductionEnhancement) {
+      // Production enhancement project
+      if (mode === 'design') {
+        return { backgroundColor: "#6b7280", borderColor: "#6b7280" }; // Gray for "not required"
+      }
+      return getStatusStyle(project.editMode);
+    }
+    
+    // Regular project - show normal style
+    return mode === 'edit' ? getStatusStyle(project.editMode) : getStatusStyle(project.designMode);
+  };
+
+  // Check if project should show as verified based on type
+  const isProjectVerified = (project: Project) => {
+    // First check if it's already verified in the database
+    if (project.verificationMode === "موثق" || project.verificationMode === "متميز") {
+      return true;
+    }
+
+    // Check for design enhancement (more flexible matching)
+    const isDesignEnhancement = project.type && (
+      project.type.includes("تحسين التصميم") || 
+      project.type.includes("تحسين") && project.type.includes("التصميم")
+    );
+
+    // Check for production enhancement (more flexible matching)
+    const isProductionEnhancement = project.type && (
+      project.type.includes("تحسين الإنتاج") || 
+      project.type.includes("تحسين") && project.type.includes("الإنتاج")
+    );
+
+    if (isDesignEnhancement) {
+      // Design enhancement: verified when design and review are complete
+      return project.designMode === "تم الانتهاء منه" && project.reviewMode === "تمت المراجعة";
+    } else if (isProductionEnhancement) {
+      // Production enhancement: only verified when editing and review are complete
+      return project.editMode === "تم الانتهاء منه" && project.reviewMode === "تمت المراجعة";
+    }
+    
+    // Regular project: use the actual verificationMode
+    return project.verificationMode && project.verificationMode !== "لا شيء";
+  };
+
   // Handle filming files modal
   const openFilmingFilesModal = (projectId: string, currentContent: string) => {
     setFilmingFilesModal({
@@ -321,14 +416,32 @@ export default function ClientTrackingBoardPage() {
     const project = projects.find((p) => p.id === projectId);
     if (!project) return;
 
-    // Check if all required fields are completed
-    const isComplete =
-      project.filmingStatus === "تم الانتـــهاء مــنه" &&
-      project.fileLinks &&
-      project.fileLinks.trim() !== "" &&
-      project.editMode === "تم الانتهاء منه" &&
-      project.reviewMode === "تمت المراجعة" &&
-      project.designMode === "تم الانتهاء منه";
+    // Check completion based on project type
+    let isComplete = false;
+
+    if (project.type && project.type.includes("تحسين التصميم")) {
+      // For design enhancement projects, only design and review matter
+      isComplete =
+        project.filmingStatus === "تم الانتـــهاء مــنه" &&
+        Boolean(project.fileLinks && project.fileLinks.trim() !== "") &&
+        project.designMode === "تم الانتهاء منه" &&
+        project.reviewMode === "تمت المراجعة";
+    } else if (project.type && project.type.includes("تحسين الإنتاج")) {
+      // For editing enhancement projects, only editing and review matter
+      isComplete =
+        project.filmingStatus === "تم الانتـــهاء مــنه" &&
+        Boolean(project.fileLinks && project.fileLinks.trim() !== "") &&
+        project.editMode === "تم الانتهاء منه" &&
+        project.reviewMode === "تمت المراجعة";
+    } else {
+      // For regular projects, all departments must be complete
+      isComplete =
+        project.filmingStatus === "تم الانتـــهاء مــنه" &&
+        Boolean(project.fileLinks && project.fileLinks.trim() !== "") &&
+        project.editMode === "تم الانتهاء منه" &&
+        project.reviewMode === "تمت المراجعة" &&
+        project.designMode === "تم الانتهاء منه";
+    }
 
     // If project is complete and not already verified, auto-verify
     if (isComplete && project.verificationMode !== "متميز") {
@@ -611,30 +724,27 @@ export default function ClientTrackingBoardPage() {
                               </div>
 
                               {/* Unverified Badge */}
-                              <div
-                                className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
-                                  project.verificationMode &&
-                                  project.verificationMode !== "لا شيء"
-                                    ? "opacity-0 scale-75 rotate-180"
-                                    : "opacity-100 scale-100 rotate-0"
-                                }`}
-                              >
+                                  <div
+                                    className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
+                                      isProjectVerified(project)
+                                        ? "opacity-0 scale-75 rotate-180"
+                                        : "opacity-100 scale-100 rotate-0"
+                                    }`}
+                                  >
                                 <div className="w-3 h-3 rounded-full bg-gray-300 group-hover:bg-blue-400 transition-all duration-300"></div>
                               </div>
                             </div>
                           </button>
                           <span
                             className={`text-xs font-medium ${
-                              project.verificationMode &&
-                              project.verificationMode !== "لا شيء"
+                              isProjectVerified(project)
                                 ? "text-blue-400"
                                 : "text-gray-400"
                             }`}
                           >
-                            {project.verificationMode &&
-                            project.verificationMode !== "لا شيء"
+                            {isProjectVerified(project)
                               ? "موثق"
-                              : "غير محقق"}
+                              : "غير موثق"}
                           </span>
                         </>
                       )}
@@ -897,12 +1007,10 @@ export default function ClientTrackingBoardPage() {
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <div className="flex flex-col items-center gap-2">
                           <span
-                            className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
-                              project.editMode
-                            )}`}
-                            style={getStatusStyle(project.editMode)}
+                            className={`px-3 py-2 rounded-full text-xs font-medium text-white border`}
+                            style={getEnhancementStatusStyle(project, 'edit')}
                           >
-                            {getStatusText(project.editMode)}
+                            {getEnhancementStatusText(project, 'edit')}
                           </span>
                           {project.editor && (
                             <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded">
@@ -914,12 +1022,10 @@ export default function ClientTrackingBoardPage() {
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <div className="flex flex-col items-center gap-2">
                           <span
-                            className={`px-3 py-2 rounded-full text-xs font-medium ${getStatusColor(
-                              project.designMode
-                            )}`}
-                            style={getStatusStyle(project.designMode)}
+                            className={`px-3 py-2 rounded-full text-xs font-medium text-white border`}
+                            style={getEnhancementStatusStyle(project, 'design')}
                           >
-                            {getStatusText(project.designMode)}
+                            {getEnhancementStatusText(project, 'design')}
                           </span>
                           {project.designer && (
                             <div className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded">
@@ -1032,8 +1138,7 @@ export default function ClientTrackingBoardPage() {
                                   {/* Verified Badge */}
                                   <div
                                     className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
-                                      project.verificationMode &&
-                                      project.verificationMode !== "لا شيء"
+                                      isProjectVerified(project)
                                         ? "opacity-100 scale-100 rotate-0"
                                         : "opacity-0 scale-75 rotate-180"
                                     }`}
@@ -1054,8 +1159,7 @@ export default function ClientTrackingBoardPage() {
                                   {/* Unverified Badge */}
                                   <div
                                     className={`absolute inset-0 border-2 border-gray-400 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out group-hover:border-blue-400 group-hover:bg-blue-50 ${
-                                      project.verificationMode &&
-                                      project.verificationMode !== "لا شيء"
+                                      isProjectVerified(project)
                                         ? "opacity-0 scale-75 rotate-180"
                                         : "opacity-100 scale-100 rotate-0"
                                     }`}
@@ -1067,14 +1171,12 @@ export default function ClientTrackingBoardPage() {
                               )}
                               <span
                                 className={`text-xs font-medium ${
-                                  project.verificationMode &&
-                                  project.verificationMode !== "لا شيء"
+                                  isProjectVerified(project)
                                     ? "text-blue-400"
                                     : "text-gray-400"
                                 }`}
                               >
-                                {project.verificationMode &&
-                                project.verificationMode !== "لا شيء"
+                                {isProjectVerified(project)
                                   ? "تم التوثيق"
                                   : "غير موثق"}
                               </span>

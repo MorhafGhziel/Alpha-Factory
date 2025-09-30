@@ -207,9 +207,21 @@ export async function sendVoiceNote(
   try {
     console.log("Attempting to send voice note:", voiceUrl);
 
+    // Validate voice URL
+    if (!voiceUrl || typeof voiceUrl !== "string" || voiceUrl.trim() === "") {
+      console.error("Invalid voice URL provided:", voiceUrl);
+      return false;
+    }
+
     // Extract filename from URL to check if it's a local file
     const urlParts = voiceUrl.split("/");
     const filename = urlParts[urlParts.length - 1];
+
+    // Validate filename
+    if (!filename || filename.length < 5) {
+      console.error("Invalid filename extracted from URL:", filename);
+      return false;
+    }
 
     // Try to send from local file first (more reliable)
     const localFilePath = join(

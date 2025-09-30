@@ -13,7 +13,12 @@ export default function DesignerTrackingBoardPage() {
       const response = await fetch("/api/projects");
       if (response.ok) {
         const data = await response.json();
-        setProjects(data.projects || []);
+        // Filter out editing-only enhancement projects for designers
+        const filteredProjects = (data.projects || []).filter((project: Project) => {
+          // Exclude editing-only enhancement projects
+          return !(project.type && project.type.includes("تحسين الإنتاج"));
+        });
+        setProjects(filteredProjects);
       } else {
         console.error("Failed to fetch projects");
       }
