@@ -93,7 +93,9 @@ export default function ClientProfilePage() {
           </p>
           <input
             type="text"
-            value="Abdullah"
+            value={
+              session?.data?.user?.name || session?.data?.user?.username || "—"
+            }
             readOnly
             className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#222224] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
           />
