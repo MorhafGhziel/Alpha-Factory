@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import prisma from "../../../../lib/prisma";
 import {
-  notifyAdmin,
-  sendProjectUpdate,
+  // notifyAdmin,
+  // sendProjectUpdate,
   sendProjectStatusUpdate,
 } from "../../../../lib/telegram";
 import { sendClientProjectNotification } from "../../../../lib/email";
@@ -279,7 +279,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
 
     // Parse date if provided
     if (updateData.date) {
@@ -319,7 +319,9 @@ export async function PUT(
       for (const [fieldName, newValue] of Object.entries(updates)) {
         if (fieldName === "startDate" || fieldName === "endDate") continue; // Skip date objects
 
-        const oldValue = (existingProject as any)[fieldName];
+        const oldValue = (existingProject as Record<string, unknown>)[
+          fieldName
+        ];
 
         // Only notify if the value actually changed
         if (oldValue !== newValue) {
@@ -347,7 +349,9 @@ export async function PUT(
       for (const [fieldName, newValue] of Object.entries(updates)) {
         if (fieldName === "startDate" || fieldName === "endDate") continue; // Skip date objects
 
-        const oldValue = (existingProject as any)[fieldName];
+        const oldValue = (existingProject as Record<string, unknown>)[
+          fieldName
+        ];
 
         // Only notify if the value actually changed and it's a significant status change
         if (oldValue !== newValue) {

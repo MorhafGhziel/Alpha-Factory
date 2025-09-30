@@ -26,7 +26,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const testResults: any = {
+    const testResults: {
+      step1_findUser: unknown;
+      step2_emailResolution: unknown;
+      step3_authAttempt: unknown;
+      step4_accountCheck: unknown;
+    } = {
       step1_findUser: null,
       step2_emailResolution: null,
       step3_authAttempt: null,
@@ -137,13 +142,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      success: testResults.step3_authAttempt.success,
+      success: (testResults.step3_authAttempt as { success: boolean })?.success,
       testResults,
       recommendation: !credentialAccount
         ? "Missing credential account - user was not properly created"
         : !credentialAccount.password
         ? "Password not set in account table"
-        : testResults.step3_authAttempt.success
+        : (testResults.step3_authAttempt as { success: boolean })?.success
         ? "Authentication successful"
         : "Authentication failed - check password or email mismatch",
     });

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     const account = user.accounts[0];
 
-    const result: any = {
+    const result: Record<string, unknown> = {
       email: user.email,
       name: user.name,
       role: user.role,

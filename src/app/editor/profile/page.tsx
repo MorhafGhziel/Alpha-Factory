@@ -6,7 +6,7 @@ import { authClient } from "../../../lib/auth-client";
 import { useEffect, useState } from "react";
 
 export default function EditorProfilePage() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function EditorProfilePage() {
           </p>
           <input
             type="text"
-            value={session?.data?.user?.email || "No email available"}
+            value={(session as { data?: { user?: { email?: string } } })?.data?.user?.email || "No email available"}
             readOnly
             className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#222224] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
           />
@@ -119,7 +119,7 @@ export default function EditorProfilePage() {
           </p>
           <input
             type="text"
-            value={session?.data?.user?.role || "No role available"}
+            value={(session as { data?: { user?: { role?: string } } })?.data?.user?.role || "No role available"}
             readOnly
             className="w-full px-4 sm:px-5 py-2.5 sm:py-3 bg-[#1a1a1a] text-white rounded-full text-right focus:outline-none cursor-not-allowed opacity-75 text-sm sm:text-base"
           />

@@ -134,7 +134,11 @@ export async function POST(req: NextRequest) {
       const reviewers = user.group.users.filter((u) => u.role === "reviewer");
 
       // Auto-assign first available team members (you can implement more sophisticated logic)
-      const updates: any = {};
+      const updates: {
+        editorId?: string;
+        designerId?: string;
+        reviewerId?: string;
+      } = {};
       if (editors.length > 0) updates.editorId = editors[0].id;
       if (designers.length > 0) updates.designerId = designers[0].id;
       if (reviewers.length > 0) updates.reviewerId = reviewers[0].id;

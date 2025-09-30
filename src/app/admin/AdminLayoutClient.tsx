@@ -6,8 +6,6 @@ import { createNewTeam, removeTeamById, TeamContext } from "@/src/utils";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
-import SignOutButton from "@/components/ui/SignOutButton";
-import { auth } from "../../lib/auth";
 
 export default function AdminLayoutClient({
   children,

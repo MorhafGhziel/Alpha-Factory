@@ -200,7 +200,11 @@ export async function POST(req: NextRequest) {
         // Update each user with groupId, username, and phone (for clients)
         for (let i = 0; i < createdUserIds.length; i++) {
           const userData = usersWithCredentials[i];
-          const updateData: any = {
+          const updateData: {
+            groupId: string;
+            username: string;
+            phone?: string;
+          } = {
             groupId: group.id,
             username: userData.username,
           };

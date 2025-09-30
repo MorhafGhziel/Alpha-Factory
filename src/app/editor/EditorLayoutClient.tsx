@@ -4,7 +4,6 @@ import { useState } from "react";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
-import SignOutButton from "@/components/ui/SignOutButton";
 
 export default function EditorLayoutClient({
   children,

@@ -44,7 +44,7 @@ export default function AccountManagement() {
       if (data.users) {
         setUsers(data.users);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export default function AccountManagement() {
       } else {
         toast.error(data.error || "Failed to create user");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to create user");
     }
   };
@@ -96,7 +96,7 @@ export default function AccountManagement() {
       } else {
         toast.error(data.error || "Failed to update user");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update user");
     }
   };
@@ -119,7 +119,7 @@ export default function AccountManagement() {
       } else {
         toast.error(data.error || "Failed to delete user");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete user");
     }
   };
@@ -146,7 +146,7 @@ export default function AccountManagement() {
       } else {
         toast.error(data.error || "Failed to change password");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to change password");
     }
   };

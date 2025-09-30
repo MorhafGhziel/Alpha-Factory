@@ -547,27 +547,6 @@ function addMessageSeparator(): string {
 }
 
 /**
- * Get field name in Arabic
- */
-function getFieldNameInArabic(fieldName: string): string {
-  const fieldMap: { [key: string]: string } = {
-    filmingStatus: "حالة التصوير",
-    editMode: "حالة التحرير",
-    designMode: "حالة التصميم",
-    reviewMode: "حالة المراجعة",
-    verificationMode: "تقييم المشروع",
-    reviewLinks: "روابط المراجعة",
-    designLinks: "روابط التصميم",
-    fileLinks: "ملفات المشروع",
-    notes: "الملاحظات",
-    title: "عنوان المشروع",
-    type: "نوع المشروع",
-    date: "تاريخ المشروع",
-  };
-  return fieldMap[fieldName] || fieldName;
-}
-
-/**
  * Validate Telegram bot configuration
  */
 export function isTelegramConfigured(): boolean {

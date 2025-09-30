@@ -32,7 +32,7 @@ export const auth = betterAuth({
         },
         handler: async (ctx: {
           user: { role: string };
-          redirect: (arg0: string) => any;
+          redirect: (arg0: string) => Response | void;
         }) => {
           if (ctx.user?.role) {
             const dashboardPath = getRoleDashboardPath(ctx.user.role);
