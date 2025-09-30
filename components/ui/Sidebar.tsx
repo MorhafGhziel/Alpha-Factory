@@ -10,6 +10,7 @@ export interface SidebarItem {
   alt: string;
   tooltip: string;
   isBorder?: boolean;
+  isSpacer?: boolean;
   onClick?: () => void;
 }
 
@@ -34,6 +35,9 @@ export default function Sidebar({
   const pathname = usePathname();
 
   const renderSidebarItem = (item: SidebarItem, index: number) => {
+    if (item.isSpacer) {
+      return <div key={`spacer-${index}`} className="flex-1" />;
+    }
     if (item.isBorder) {
       return <div key={`border-${index}`} className="w-8 h-px bg-[#222224]" />;
     }
@@ -54,7 +58,11 @@ export default function Sidebar({
         <button
           onClick={handleClick}
           className={`w-12 h-12 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
-            isActive ? "bg-[#222224]" : isSignOut ? "hover:bg-red-600/20" : "hover:bg-[#222224]"
+            isActive
+              ? "bg-[#222224]"
+              : isSignOut
+              ? "hover:bg-red-600/20"
+              : "hover:bg-[#222224]"
           }`}
         >
           {isSignOut ? (
