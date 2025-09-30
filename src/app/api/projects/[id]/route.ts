@@ -326,7 +326,7 @@ export async function PUT(
           // For rating (verificationMode) updates, always send to specific group
           const targetChatId =
             fieldName === "verificationMode"
-              ? "-1003102254143"
+              ? "-1003191822981"
               : existingProject.group.telegramChatId;
 
           await sendProjectStatusUpdate(targetChatId, {
