@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
 
     if (
       !session?.user ||
-      (session.user.role !== "admin" && session.user.role !== "owner")
+      (session.user.role !== "admin" &&
+        session.user.role !== "owner" &&
+        session.user.role !== "supervisor")
     ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

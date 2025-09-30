@@ -31,7 +31,7 @@ export default function AccountManagement() {
     password: "",
   });
 
-  const roles = ["owner", "admin", "client", "designer", "reviewer", "editor"];
+  const roles = ["owner", "admin", "supervisor", "client", "designer", "reviewer", "editor"];
 
   useEffect(() => {
     fetchUsers();

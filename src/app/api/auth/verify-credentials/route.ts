@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
         console.log("🔍 User role type:", typeof userRole);
 
         // Determine if OTP is required based on role
-        const requiresOTP = userRole === "admin" || userRole === "owner";
+        const requiresOTP =
+          userRole === "admin" ||
+          userRole === "owner" ||
+          userRole === "supervisor";
         console.log("🔐 OTP required:", requiresOTP);
         console.log(
           "🔍 Role comparison - admin:",

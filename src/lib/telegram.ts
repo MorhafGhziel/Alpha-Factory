@@ -471,6 +471,8 @@ export function getRoleInArabic(role: string): string {
     designer: "مصمم",
     reviewer: "مُراجع",
     admin: "مدير",
+    supervisor: "مشرف",
+    owner: "مالك",
   };
   return roleMap[role] || role;
 }
@@ -484,7 +486,9 @@ function getRoleEmoji(role: string): string {
     editor: "✂️",
     designer: "🎨",
     reviewer: "👁️",
-    admin: "👑",
+    admin: "👨‍💼",
+    supervisor: "👨‍💼",
+    owner: "👑",
   };
   return emojiMap[role] || "👤";
 }

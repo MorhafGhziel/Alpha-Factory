@@ -22,9 +22,12 @@ export async function POST(req: NextRequest) {
       headers: req.headers,
     });
 
-    if (!session?.user || session.user.role !== "owner") {
+    if (
+      !session?.user ||
+      (session.user.role !== "owner" && session.user.role !== "supervisor")
+    ) {
       return NextResponse.json(
-        { error: "Unauthorized - Owner access required" },
+        { error: "Unauthorized - Owner or Supervisor access required" },
         { status: 401 }
       );
     }
@@ -39,7 +42,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate users data
-    const allowedRoles = ["admin", "editor", "designer", "reviewer"];
+    const allowedRoles = [
+      "admin",
+      "supervisor",
+      "editor",
+      "designer",
+      "reviewer",
+    ];
 
     for (const user of users) {
       if (!user.name || !user.role) {
@@ -54,7 +63,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "Only admin, editor, designer, and reviewer roles are allowed for standalone accounts",
+              "Only admin, supervisor, editor, designer, and reviewer roles are allowed for standalone accounts",
           },
           { status: 400 }
         );

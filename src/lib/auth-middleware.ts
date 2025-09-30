@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 export type UserRole =
   | "owner"
   | "admin"
+  | "supervisor"
   | "client"
   | "designer"
   | "reviewer"
@@ -84,6 +85,8 @@ export function getRoleDashboardPath(role: string): string {
     case "owner":
       return "/admin";
     case "admin":
+      return "/admin";
+    case "supervisor":
       return "/admin";
     case "client":
       return "/client";

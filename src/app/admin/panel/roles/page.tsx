@@ -36,6 +36,12 @@ export default async function RoleManagement() {
       color: "bg-red-100 text-red-800",
     },
     {
+      name: "supervisor",
+      description: "مشرف - Supervisor with limited admin access",
+      permissions: ["Add accounts", "View groups", "Basic user management"],
+      color: "bg-orange-100 text-orange-800",
+    },
+    {
       name: "client",
       description: "Client users who can create and manage projects",
       permissions: ["Create projects", "View own projects", "Update project status"],

@@ -11,7 +11,7 @@ export default async function AdminLayout({
   const user = session?.user;
   if (!user) {
     unauthorized();
-  } else if (user.role !== "admin" && user.role !== "owner") {
+  } else if (user.role !== "admin" && user.role !== "owner" && user.role !== "supervisor") {
     unauthorized();
   } 
 

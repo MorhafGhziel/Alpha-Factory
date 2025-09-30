@@ -30,6 +30,7 @@ export default function ManageAccountPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<{
     id: string;
     field: 'name' | 'email' | 'phone';
@@ -72,6 +73,19 @@ export default function ManageAccountPage() {
     }
   }, [error]);
 
+  // Fetch current user role
+  const fetchCurrentUserRole = async () => {
+    try {
+      const response = await fetch('/api/auth/session');
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUserRole(data.user?.role || null);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
   // Fetch groups from API
   const fetchGroups = async () => {
     try {
@@ -91,6 +105,7 @@ export default function ManageAccountPage() {
   };
 
   useEffect(() => {
+    fetchCurrentUserRole();
     fetchGroups();
   }, []);
 
@@ -400,15 +415,17 @@ export default function ManageAccountPage() {
                   </p>
                   
                   {/* Delete Group Button */}
-                  <button
-                    onClick={() => handleDeleteGroup(group.id, group.name, group.users.length)}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors duration-200 shadow-lg"
-                    title="حذف المجموعة وجميع الحسابات"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  {currentUserRole !== "supervisor" && (
+                    <button
+                      onClick={() => handleDeleteGroup(group.id, group.name, group.users.length)}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors duration-200 shadow-lg"
+                      title="حذف المجموعة وجميع الحسابات"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
                 {/* Telegram Group Section */}
@@ -497,18 +514,22 @@ export default function ManageAccountPage() {
                           </div>
                         </div>
                         <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleChangePassword(user.id, user.name)}
-                            className="text-gray-400 cursor-pointer hover:text-blue-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-blue-900/20"
-                          >
-                            تغيير كلمة المرور
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id, user.name)}
-                            className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
-                          >
-                            حذف الحساب
-                          </button>
+                          {currentUserRole !== "supervisor" && (
+                            <button
+                              onClick={() => handleChangePassword(user.id, user.name)}
+                              className="text-gray-400 cursor-pointer hover:text-blue-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-blue-900/20"
+                            >
+                              تغيير كلمة المرور
+                            </button>
+                          )}
+                          {currentUserRole !== "supervisor" && (
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.name)}
+                              className="text-gray-400 cursor-pointer hover:text-red-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-red-900/20"
+                            >
+                              حذف الحساب
+                            </button>
+                          )}
                         </div>
                       </div>
 

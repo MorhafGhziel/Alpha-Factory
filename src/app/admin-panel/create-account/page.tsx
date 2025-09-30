@@ -37,6 +37,7 @@ export default function CreateAccountPage() {
 
   const roles = [
     { value: "admin", label: "مدير" },
+    { value: "supervisor", label: "مشرف" },
     { value: "client", label: "عميل" },
     { value: "editor", label: "محرر" },
     { value: "designer", label: "مصمم" },

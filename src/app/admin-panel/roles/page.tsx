@@ -26,10 +26,11 @@ export default function RoleManagementPage() {
 
   const roles = [
     { value: "admin", label: "مدير", color: "bg-red-500" },
+    { value: "supervisor", label: "مشرف", color: "bg-orange-500" },
     { value: "client", label: "عميل", color: "bg-blue-500" },
     { value: "editor", label: "محرر", color: "bg-green-500" },
     { value: "designer", label: "مصمم", color: "bg-purple-500" },
-    { value: "reviewer", label: "مراجع", color: "bg-orange-500" },
+    { value: "reviewer", label: "مراجع", color: "bg-yellow-500" },
   ];
 
   useEffect(() => {
