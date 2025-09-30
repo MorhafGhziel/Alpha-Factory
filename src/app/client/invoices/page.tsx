@@ -507,7 +507,7 @@ export default function ClientInvoicesPage() {
                                   className="cursor-pointer flex items-center gap-2 text-white text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg bg-[#0B0B0B] hover:bg-[#0B0B0B]/80 transition-all duration-300"
                                 >
                                   <Image
-                                    src="/icons/Crypto.svg"
+                                    src="/icons/crypto.svg"
                                     alt="Crypto"
                                     width={18}
                                     height={18}
