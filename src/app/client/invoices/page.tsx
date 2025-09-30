@@ -5,11 +5,23 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { Project } from "@/src/types";
 
+type InvoiceItem = {
+  id: string;
+  projectId: string;
+  projectName: string;
+  projectType: string;
+  unitPrice?: number; // to be provided by backend
+  quantity?: number; // optional if you decide to multiply
+  total?: number; // computed by backend or derived from unitPrice*quantity
+  workDate?: Date; // optional
+};
+
 type Invoice = {
   index: number;
   startDate: Date;
   dueDate: Date;
-  projects: Project[];
+  items: InvoiceItem[];
+  grandTotal?: number; // optional aggregate from backend
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -19,6 +31,19 @@ function formatDate(d: Date) {
   const mm = (d.getMonth() + 1).toString().padStart(2, "0");
   const yyyy = d.getFullYear();
   return `${dd}-${mm}-${yyyy}`;
+}
+
+function formatCurrency(value?: number) {
+  if (value === undefined || value === null || Number.isNaN(value))
+    return "\u00A0";
+  try {
+    return new Intl.NumberFormat("ar-EG", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  } catch {
+    return String(value);
+  }
 }
 
 function daysUntil(date: Date) {
@@ -106,11 +131,19 @@ export default function ClientInvoicesPage() {
         return completedAt >= periodStart && completedAt < periodEnd;
       });
 
+      const items: InvoiceItem[] = bucket.map((p) => ({
+        id: `${p.id}`,
+        projectId: p.id,
+        projectName: p.title,
+        projectType: p.type,
+        // unitPrice, quantity, total and workDate intentionally left undefined for backend to fill
+      }));
+
       result.push({
         index: idx,
         startDate: new Date(periodStart),
         dueDate: new Date(periodEnd),
-        projects: bucket,
+        items,
       });
 
       idx += 1;
@@ -261,31 +294,37 @@ export default function ClientInvoicesPage() {
                                   المجموع
                                 </div>
                               </div>
-                              {(inv.projects.length
-                                ? inv.projects
-                                : new Array(5).fill(null)
-                              ).map((p, i) => (
-                                <div
-                                  key={i}
-                                  className={`grid grid-cols-4 text-sm sm:text-base border-t ${
-                                    i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
-                                  }`}
-                                  dir="rtl"
-                                >
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {p && p.title ? p.title : "\u00A0"}
+                              {(
+                                (inv.items.length
+                                  ? inv.items
+                                  : new Array<InvoiceItem | null>(5).fill(
+                                      null
+                                    )) as (InvoiceItem | null)[]
+                              ).map((item, i) => {
+                                const it = item as InvoiceItem | null;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`grid grid-cols-4 text-sm sm:text-base border-t ${
+                                      i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
+                                    }`}
+                                    dir="rtl"
+                                  >
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {it?.projectName ?? "\u00A0"}
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {it?.projectType ?? "\u00A0"}
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {formatCurrency(it?.unitPrice)}
+                                    </div>
+                                    <div className="px-4 py-3 text-right">
+                                      {formatCurrency(it?.total)}
+                                    </div>
                                   </div>
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {p && p.type ? p.type : "\u00A0"}
-                                  </div>
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {p ? "\u00A0" : "\u00A0"}
-                                  </div>
-                                  <div className="px-4 py-3 text-right">
-                                    {p ? "\u00A0" : "\u00A0"}
-                                  </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
 
                             <div className="flex items-center justify-between p-4 sm:p-5 mx-3 sm:mx-6">
@@ -315,7 +354,10 @@ export default function ClientInvoicesPage() {
                                 dir="rtl"
                               >
                                 <span style={{ unicodeBidi: "plaintext" }}>
-                                  المجموع الكلي :
+                                  المجموع الكلي{" "}
+                                  {inv.grandTotal !== undefined
+                                    ? `: ${formatCurrency(inv.grandTotal)}`
+                                    : ":"}
                                 </span>
                               </div>
                             </div>
