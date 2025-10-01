@@ -23,7 +23,15 @@ function getClientNotificationStatus(
   | "review_started"
   | "review_completed"
   | "project_completed"
+  | "filming_completed"
   | null {
+  // Filming status changes - when client updates filming to completed
+  if (fieldName === "filmingStatus") {
+    if (newValue === "تم الانتـــهاء مــنه" && userRole === "client") {
+      return "filming_completed";
+    }
+  }
+
   // Editor status changes
   if (fieldName === "editMode") {
     if (newValue === "قيد التنفيذ" && userRole === "editor") {

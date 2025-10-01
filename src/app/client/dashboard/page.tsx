@@ -194,7 +194,6 @@ export default function ClientDashboardPage() {
     voiceNoteUrl?: string;
   }) => {
     try {
-      console.log("Sending project data:", projectData);
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: {
