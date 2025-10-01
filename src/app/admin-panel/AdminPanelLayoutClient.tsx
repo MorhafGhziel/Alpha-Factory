@@ -130,17 +130,6 @@ export default function AdminPanelLayoutClient({
                   <span className="mr-3">{item.name}</span>
                 </Link>
               ))}
-              
-              {/* Sign Out Button */}
-              <div className="mt-auto pt-4 border-t border-gray-700">
-                <div className="px-2">
-                  <SignOutButton 
-                    showText={true} 
-                    iconSize={20} 
-                    className="w-full text-red-400 hover:text-red-300 hover:bg-red-600/10 p-2 rounded-md transition-colors" 
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </motion.aside>
@@ -162,14 +151,6 @@ export default function AdminPanelLayoutClient({
           )}
         </AnimatePresence>
 
-        {/* Mobile Sign Out Button */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden fixed bottom-6 left-6 z-50">
-            <div className="bg-[#0f0f0f] border border-[#222224] rounded-lg p-3">
-              <SignOutButton showText={true} iconSize={20} className="text-red-400 hover:text-red-300" />
-            </div>
-          </div>
-        )}
 
         {/* Main Content */}
         <div className="flex-1 lg:ml-64">

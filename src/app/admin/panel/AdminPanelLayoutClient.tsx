@@ -75,15 +75,6 @@ export default function AdminPanelLayoutClient({
               </Link>
             ))}
           </nav>
-          
-          {/* Mobile Sign Out Button */}
-          <div className="p-4 border-t border-gray-200">
-            <SignOutButton 
-              showText={true} 
-              iconSize={20} 
-              className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors" 
-            />
-          </div>
         </div>
       </div>
 
@@ -116,13 +107,6 @@ export default function AdminPanelLayoutClient({
             >
               ← Back to Admin Dashboard
             </Link>
-            
-            {/* Desktop Sign Out Button */}
-            <SignOutButton 
-              showText={true} 
-              iconSize={20} 
-              className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors" 
-            />
           </div>
         </div>
       </div>

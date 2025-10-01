@@ -156,34 +156,6 @@ export default function AdminLayoutClient({
               alt: "Manage Account",
               tooltip: "ادارة الحسابات",
             },
-            {
-              path: "",
-              icon: "",
-              alt: "",
-              tooltip: "",
-              isBorder: true,
-            },
-            {
-              path: "",
-              icon: "",
-              alt: "Sign Out",
-              tooltip: "تسجيل الخروج",
-              onClick: async () => {
-                try {
-                  const response = await fetch('/api/auth/signout', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                  });
-                  if (response.ok) {
-                    window.location.href = '/';
-                  }
-                } catch (error) {
-                  console.error('Error signing out:', error);
-                }
-              },
-            },
           ]}
           width="w-20"
           bgColor="bg-[#0f0f0f]"
