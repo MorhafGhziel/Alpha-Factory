@@ -132,34 +132,6 @@ export default function ClientLayoutClient({
               text: "الدعم",
               onClick: copySupport,
             },
-            {
-              path: "",
-              icon: "",
-              alt: "",
-              text: "",
-              isBorder: true,
-            },
-            {
-              path: "",
-              icon: "",
-              alt: "Sign Out",
-              text: "تسجيل الخروج",
-              onClick: async () => {
-                try {
-                  const response = await fetch("/api/auth/signout", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  });
-                  if (response.ok) {
-                    window.location.href = "/";
-                  }
-                } catch (error) {
-                  console.error("Error signing out:", error);
-                }
-              },
-            },
           ]}
           animated={true}
         />
@@ -238,27 +210,6 @@ export default function ClientLayoutClient({
               alt: "",
               tooltip: "",
               isBorder: true,
-            },
-            {
-              path: "",
-              icon: "",
-              alt: "Sign Out",
-              tooltip: "تسجيل الخروج",
-              onClick: async () => {
-                try {
-                  const response = await fetch("/api/auth/signout", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  });
-                  if (response.ok) {
-                    window.location.href = "/";
-                  }
-                } catch (error) {
-                  console.error("Error signing out:", error);
-                }
-              },
             },
           ]}
           spacing="space-y-4"

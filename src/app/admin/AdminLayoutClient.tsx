@@ -110,27 +110,6 @@ export default function AdminLayoutClient({
               text: "",
               isBorder: true,
             },
-            {
-              path: "",
-              icon: "",
-              alt: "Sign Out",
-              text: "تسجيل الخروج",
-              onClick: async () => {
-                try {
-                  const response = await fetch('/api/auth/signout', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                  });
-                  if (response.ok) {
-                    window.location.href = '/';
-                  }
-                } catch (error) {
-                  console.error('Error signing out:', error);
-                }
-              },
-            },
           ]}
           animated={false}
         />
