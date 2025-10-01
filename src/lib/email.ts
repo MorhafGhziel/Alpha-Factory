@@ -232,7 +232,7 @@ function createClientCredentialsEmailTemplate(user: UserCredentials): string {
             <!-- Platform Login -->
             <div class="action-section">
                 <div class="action-number">تسجيل الدخول الى منصة ألفا فاكتوري</div>
-                <a href="https://alphafactory.net/login" class="btn btn-gold">تسجيل دخول</a>
+                <a href="https://www.alphafactory.net/" class="btn btn-gold">تسجيل دخول</a>
             </div>
 
             <!-- Credentials Information -->
@@ -454,7 +454,7 @@ function createEmployeeCredentialsEmailTemplate(user: UserCredentials): string {
             <div class="action-section">
                 <div class="action-number">٢. تسجيل الدخول الى منصة ألفا فاكتوري لبدء العمل</div>
                 
-                <a href="https://alphafactory.net/login" class="btn btn-gold">تسجيل دخول</a>
+                <a href="https://www.alphafactory.net/" class="btn btn-gold">تسجيل دخول</a>
             </div>
 
             <!-- Credentials Information -->
@@ -533,7 +533,7 @@ Alpha Factory - مرحباً بك في Alpha Factory
 تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول إلى المنصة ومتابعة مشاريعك.
 
 تسجيل الدخول الى منصة ألفا فاكتوري:
-https://alphafactory.net/login
+https://www.alphafactory.net/
 
 بيانات الدخول الخاصة بك:
 الاسم: ${user.name}
@@ -583,7 +583,7 @@ ${
 }
 
 ٢. تسجيل الدخول الى منصة ألفا فاكتوري لبدء العمل
-https://alphafactory.net/login
+https://www.alphafactory.net/
 
 بيانات الدخول الخاصة بك:
 الاسم: ${user.name}
@@ -1697,7 +1697,7 @@ function createProjectDeadlineReminderTemplate(
             </div>
 
             <div style="text-align: center;">
-                <a href="https://alphafactory.net/client/tracking-board" class="action-button">
+                <a href="https://www.alphafactory.net/" class="action-button">
                     تحديث حالة المشروع
                 </a>
             </div>
@@ -1737,7 +1737,7 @@ Alpha Factory - تذكير بموعد المشروع
 ⚠️ تنبيه مهم
 يرجى إكمال التصوير وتحديث حالة المشروع لتجنب أي تأخير إضافي في المراحل التالية.
 
-تحديث حالة المشروع: https://alphafactory.net/client/tracking-board
+تحديث حالة المشروع: https://www.alphafactory.net/
 
 شكراً لك على ثقتك في Alpha Factory
 
