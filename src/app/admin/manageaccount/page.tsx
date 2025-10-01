@@ -57,6 +57,9 @@ export default function ManageAccountPage() {
   } | null>(null);
   
   const [passwordError, setPasswordError] = useState('');
+  
+  // Expanded groups state
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Auto-hide messages after 5 seconds
   useEffect(() => {
@@ -299,6 +302,18 @@ export default function ManageAccountPage() {
     setDeleteGroupConfirm(null);
   };
 
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="min-h-screen md:py-20 py-10">
       {/* Header */}
@@ -406,7 +421,22 @@ export default function ManageAccountPage() {
                 }}
               >
                 {/* Group Header */}
-                <div className="bg-[#E9CF6B] px-6 py-4 relative">
+                <div className="bg-[#E9CF6B] px-6 py-4 relative cursor-pointer" onClick={() => toggleGroupExpansion(group.id)}>
+                  {/* Expand/Collapse Button */}
+                  <button
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/10 hover:bg-black/20 text-black p-2 rounded-full transition-colors duration-200"
+                    title={expandedGroups.has(group.id) ? "إخفاء التفاصيل" : "عرض التفاصيل"}
+                  >
+                    <svg 
+                      className={`w-5 h-5 transition-transform duration-200 ${expandedGroups.has(group.id) ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
                   <h2 className="text-black text-xl font-bold text-center">
                     مجموعة: {group.name}
                   </h2>
@@ -419,11 +449,17 @@ export default function ManageAccountPage() {
                       return `${year}/${month}/${day}`;
                     })()}
                   </p>
+                  <p className="text-black/60 text-xs text-center mt-1">
+                    {group.users.length} مستخدم
+                  </p>
                   
                   {/* Delete Group Button */}
                   {currentUserRole !== "supervisor" && (
                     <button
-                      onClick={() => handleDeleteGroup(group.id, group.name, group.users.length)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteGroup(group.id, group.name, group.users.length);
+                      }}
                       className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors duration-200 shadow-lg"
                       title="حذف المجموعة وجميع الحسابات"
                     >
@@ -434,8 +470,18 @@ export default function ManageAccountPage() {
                   )}
                 </div>
 
-                {/* Telegram Group Section */}
-                {group.telegramInviteLink && (
+                {/* Collapsible Content */}
+                <AnimatePresence>
+                  {expandedGroups.has(group.id) && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      {/* Telegram Group Section */}
+                      {group.telegramInviteLink && (
                   <motion.div
                     className="bg-[#1a1a1a] mx-6 mt-6 rounded-2xl p-4"
                     initial={{ y: 20, opacity: 0 }}
@@ -695,7 +741,10 @@ export default function ManageAccountPage() {
                       </div>
                     </motion.div>
                   ))}
-                </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
           </div>
