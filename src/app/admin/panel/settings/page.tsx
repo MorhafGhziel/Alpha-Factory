@@ -71,13 +71,25 @@ export default async function SystemSettings() {
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-sm font-medium text-gray-700">Oldest User Created</span>
               <span className="text-sm text-gray-900">
-                {oldestUser ? new Date(oldestUser.createdAt).toLocaleDateString() : 'N/A'}
+                {oldestUser ? (() => {
+                  const date = new Date(oldestUser.createdAt);
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, '0');
+                  const day = String(date.getDate()).padStart(2, '0');
+                  return `${year}/${month}/${day}`;
+                })() : 'N/A'}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-sm font-medium text-gray-700">Newest User Created</span>
               <span className="text-sm text-gray-900">
-                {newestUser ? new Date(newestUser.createdAt).toLocaleDateString() : 'N/A'}
+                {newestUser ? (() => {
+                  const date = new Date(newestUser.createdAt);
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, '0');
+                  const day = String(date.getDate()).padStart(2, '0');
+                  return `${year}/${month}/${day}`;
+                })() : 'N/A'}
               </span>
             </div>
             <div className="flex justify-between items-center py-2">

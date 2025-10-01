@@ -411,7 +411,13 @@ export default function ManageAccountPage() {
                     مجموعة: {group.name}
                   </h2>
                   <p className="text-black/70 text-sm text-center mt-1">
-                    تاريخ الإنشاء: {new Date(group.createdAt).toLocaleDateString('ar-EG')}
+                    تاريخ الإنشاء: {(() => {
+                      const date = new Date(group.createdAt);
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      return `${year}/${month}/${day}`;
+                    })()}
                   </p>
                   
                   {/* Delete Group Button */}
@@ -714,7 +720,13 @@ export default function ManageAccountPage() {
                     >
                       <div className="text-gray-400 text-sm mb-1">تاريخ الإنشاء:</div>
                       <div className="text-gray-200 text-sm">
-                        {new Date(user.createdAt).toLocaleDateString('ar-EG')}
+                        {(() => {
+                          const date = new Date(user.createdAt);
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          return `${year}/${month}/${day}`;
+                        })()}
                       </div>
                     </motion.div>
 

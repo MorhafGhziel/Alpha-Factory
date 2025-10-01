@@ -19,9 +19,13 @@ export default function CustomDatePicker({
 }: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(
-    value ? new Date(value) : null
-  );
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    if (value) {
+      const [year, month, day] = value.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return null;
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,18 +44,19 @@ export default function CustomDatePicker({
 
   useEffect(() => {
     if (value) {
-      setSelectedDate(new Date(value));
+      // Parse date string as YYYY-MM-DD without timezone conversion
+      const [year, month, day] = value.split('-').map(Number);
+      setSelectedDate(new Date(year, month - 1, day));
     } else {
       setSelectedDate(null);
     }
   }, [value]);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("ar-SA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -77,7 +82,11 @@ export default function CustomDatePicker({
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    onChange(date.toISOString().split("T")[0]);
+    // Format date as YYYY-MM-DD without timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    onChange(`${year}-${month}-${day}`);
     setIsOpen(false);
   };
 

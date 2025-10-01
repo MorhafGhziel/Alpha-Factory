@@ -210,7 +210,13 @@ export default function AccountManagement() {
                     </div>
                     <div className="text-sm text-gray-500">{user.email}</div>
                     <div className="text-xs text-gray-400">
-                      Created: {new Date(user.createdAt).toLocaleDateString()}
+                        Created: {(() => {
+                          const date = new Date(user.createdAt);
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          return `${year}/${month}/${day}`;
+                        })()}
                     </div>
                   </div>
                 </div>

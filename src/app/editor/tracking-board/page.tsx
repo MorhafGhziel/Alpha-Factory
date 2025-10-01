@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import { Project } from "../../../types";
 
+const formatDate = (date: Date | string) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+};
+
 export default function EditorDashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -164,14 +172,7 @@ export default function EditorDashboardPage() {
                     >
                       <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.startDate
-                          ? new Date(project.startDate).toLocaleDateString(
-                              "ar-SA",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                              }
-                            )
+                          ? formatDate(project.startDate)
                           : project.date}
                       </td>
                       <td className="py-4 px-4 text-center text-[#EAD06C] border-l border-[#3F3F3F] whitespace-nowrap">

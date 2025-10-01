@@ -7,6 +7,14 @@ import TextEditModal from "../../../../components/ui/TextEditModal";
 import TableTooltip from "../../../../components/ui/TableTooltip";
 import { authClient } from "../../../lib/auth-client";
 
+const formatDate = (date: Date | string) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+};
+
 export default function ClientTrackingBoardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -501,14 +509,7 @@ export default function ClientTrackingBoardPage() {
                   </div>
                   <div className="text-gray-400 text-sm">
                     {project.startDate
-                      ? new Date(project.startDate).toLocaleDateString(
-                          "ar-SA",
-                          {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                          }
-                        )
+                      ? formatDate(project.startDate)
                       : project.date}
                   </div>
                   <div className="text-white text-sm mt-1">{project.type}</div>
@@ -879,14 +880,7 @@ export default function ClientTrackingBoardPage() {
                         </div>
                         <div className="text-gray-400 text-xs mt-1">
                           {project.startDate
-                            ? new Date(project.startDate).toLocaleDateString(
-                                "ar-SA",
-                                {
-                                  year: "numeric",
-                                  month: "2-digit",
-                                  day: "2-digit",
-                                }
-                              )
+                            ? formatDate(project.startDate)
                             : project.date}
                         </div>
                       </td>
