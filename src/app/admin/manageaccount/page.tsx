@@ -57,6 +57,9 @@ export default function ManageAccountPage() {
   } | null>(null);
   
   const [passwordError, setPasswordError] = useState('');
+  
+  // Expanded groups state
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Auto-hide messages after 5 seconds
   useEffect(() => {
@@ -299,6 +302,18 @@ export default function ManageAccountPage() {
     setDeleteGroupConfirm(null);
   };
 
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="min-h-screen md:py-20 py-10">
       {/* Header */}
@@ -406,18 +421,45 @@ export default function ManageAccountPage() {
                 }}
               >
                 {/* Group Header */}
-                <div className="bg-[#E9CF6B] px-6 py-4 relative">
+                <div className="bg-[#E9CF6B] px-6 py-4 relative cursor-pointer" onClick={() => toggleGroupExpansion(group.id)}>
+                  {/* Expand/Collapse Button */}
+                  <button
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/10 hover:bg-black/20 text-black p-2 rounded-full transition-colors duration-200"
+                    title={expandedGroups.has(group.id) ? "إخفاء التفاصيل" : "عرض التفاصيل"}
+                  >
+                    <svg 
+                      className={`w-5 h-5 transition-transform duration-200 ${expandedGroups.has(group.id) ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
                   <h2 className="text-black text-xl font-bold text-center">
                     مجموعة: {group.name}
                   </h2>
                   <p className="text-black/70 text-sm text-center mt-1">
-                    تاريخ الإنشاء: {new Date(group.createdAt).toLocaleDateString('ar-EG')}
+                    تاريخ الإنشاء: {(() => {
+                      const date = new Date(group.createdAt);
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      return `${year}/${month}/${day}`;
+                    })()}
+                  </p>
+                  <p className="text-black/60 text-xs text-center mt-1">
+                    {group.users.length} مستخدم
                   </p>
                   
                   {/* Delete Group Button */}
                   {currentUserRole !== "supervisor" && (
                     <button
-                      onClick={() => handleDeleteGroup(group.id, group.name, group.users.length)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteGroup(group.id, group.name, group.users.length);
+                      }}
                       className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors duration-200 shadow-lg"
                       title="حذف المجموعة وجميع الحسابات"
                     >
@@ -428,8 +470,18 @@ export default function ManageAccountPage() {
                   )}
                 </div>
 
-                {/* Telegram Group Section */}
-                {group.telegramInviteLink && (
+                {/* Collapsible Content */}
+                <AnimatePresence>
+                  {expandedGroups.has(group.id) && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      {/* Telegram Group Section */}
+                      {group.telegramInviteLink && (
                   <motion.div
                     className="bg-[#1a1a1a] mx-6 mt-6 rounded-2xl p-4"
                     initial={{ y: 20, opacity: 0 }}
@@ -581,103 +633,52 @@ export default function ManageAccountPage() {
                       )}
                     </motion.div>
 
-                    {/* Email/Phone Field - Show phone for clients, email for others */}
-                    {user.role === "client" ? (
-                      <motion.div
-                        className="bg-[#0B0B0B] rounded-lg px-4 py-3"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.4 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="text-gray-400 text-sm mb-1">رقم الهاتف (واتساب):</div>
+                    {/* Email Field */}
+                    <motion.div
+                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.4 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="text-gray-400 text-sm mb-1">البريد الإلكتروني:</div>
+                        <button
+                          onClick={() => handleEditStart(user.id, 'email', user.email)}
+                          className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
+                        >
+                          تعديل
+                        </button>
+                      </div>
+                      {editingUser?.id === user.id && editingUser?.field === 'email' ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="email"
+                            value={editingUser.value}
+                            onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
+                            className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleEditSave();
+                              if (e.key === 'Escape') handleEditCancel();
+                            }}
+                          />
                           <button
-                            onClick={() => handleEditStart(user.id, 'phone', user.phone || '')}
-                            className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
+                            onClick={handleEditSave}
+                            className="text-green-400 hover:text-green-300 text-xs"
                           >
-                            تعديل
+                            ✓
+                          </button>
+                          <button
+                            onClick={handleEditCancel}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            ✕
                           </button>
                         </div>
-                        {editingUser?.id === user.id && editingUser?.field === 'phone' ? (
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="tel"
-                              value={editingUser.value}
-                              onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
-                              className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
-                              autoFocus
-                              placeholder="مثال: 0501234567"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleEditSave();
-                                if (e.key === 'Escape') handleEditCancel();
-                              }}
-                            />
-                            <button
-                              onClick={handleEditSave}
-                              className="text-green-400 hover:text-green-300 text-xs"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              onClick={handleEditCancel}
-                              className="text-red-400 hover:text-red-300 text-xs"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="text-gray-200 text-sm">
-                            {user.phone || 'لم يتم إدخال رقم الهاتف'}
-                          </div>
-                        )}
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        className="bg-[#0B0B0B] rounded-lg px-4 py-3"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.4 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="text-gray-400 text-sm mb-1">البريد الإلكتروني:</div>
-                          <button
-                            onClick={() => handleEditStart(user.id, 'email', user.email)}
-                            className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
-                          >
-                            تعديل
-                          </button>
-                        </div>
-                        {editingUser?.id === user.id && editingUser?.field === 'email' ? (
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="email"
-                              value={editingUser.value}
-                              onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
-                              className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleEditSave();
-                                if (e.key === 'Escape') handleEditCancel();
-                              }}
-                            />
-                            <button
-                              onClick={handleEditSave}
-                              className="text-green-400 hover:text-green-300 text-xs"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              onClick={handleEditCancel}
-                              className="text-red-400 hover:text-red-300 text-xs"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="text-gray-200 text-sm">{user.email}</div>
-                        )}
-                      </motion.div>
-                    )}
+                      ) : (
+                        <div className="text-gray-200 text-sm">{user.email}</div>
+                      )}
+                    </motion.div>
 
                     {/* Username Field - Read Only */}
                     <motion.div
@@ -714,22 +715,16 @@ export default function ManageAccountPage() {
                     >
                       <div className="text-gray-400 text-sm mb-1">تاريخ الإنشاء:</div>
                       <div className="text-gray-200 text-sm">
-                        {new Date(user.createdAt).toLocaleDateString('ar-EG')}
+                        {(() => {
+                          const date = new Date(user.createdAt);
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          return `${year}/${month}/${day}`;
+                        })()}
                       </div>
                     </motion.div>
 
-                    {/* Email Verified Status */}
-                    <motion.div
-                      className="bg-[#0B0B0B] rounded-lg px-4 py-3"
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.7 + groupIndex * 0.1 + userIndex * 0.05, duration: 0.2 }}
-                    >
-                      <div className="text-gray-400 text-sm mb-1">حالة التحقق:</div>
-                      <div className={`text-sm ${user.emailVerified ? 'text-green-400' : 'text-red-400'}`}>
-                        {user.emailVerified ? 'محقق' : 'غير محقق'}
-                      </div>
-                    </motion.div>
 
                     {/* User ID - Read Only */}
                     <motion.div
@@ -746,7 +741,10 @@ export default function ManageAccountPage() {
                       </div>
                     </motion.div>
                   ))}
-                </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
           </div>

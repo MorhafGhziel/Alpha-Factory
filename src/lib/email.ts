@@ -697,6 +697,7 @@ interface ClientProjectNotification {
   projectType: string;
   status:
     | "created"
+    | "filming_completed"
     | "editing_started"
     | "editing_completed"
     | "design_started"
@@ -717,6 +718,11 @@ function createClientProjectNotificationTemplate(
 ): string {
   const statusMessages = {
     created: {
+      title: "تم استلام مشروعك بنجاح",
+      message: "تم استلام مشروعك وسيبدأ فريقنا المتخصص في العمل عليه قريباً.",
+      icon: "🎉",
+    },
+    filming_completed: {
       title: "تم استلام مشروعك بنجاح",
       message: "تم استلام مشروعك وسيبدأ فريقنا المتخصص في العمل عليه قريباً.",
       icon: "🎉",
@@ -943,6 +949,8 @@ function createClientProjectNotificationPlainText(
   const statusMessages = {
     created:
       "تم استلام مشروعك بنجاح - سيبدأ فريقنا المتخصص في العمل عليه قريباً",
+    filming_completed:
+      "تم استلام مشروعك بنجاح - سيبدأ فريقنا المتخصص في العمل عليه قريباً",
     editing_started:
       "بدء مرحلة التحرير - بدأ محرر الفيديو المتخصص في العمل على مشروعك",
     editing_completed: "انتهاء مرحلة التحرير - تم الانتهاء من تحرير مشروعك",
@@ -1003,6 +1011,7 @@ export async function sendClientProjectNotification(
 
     const statusTitles = {
       created: "تم استلام مشروعك",
+      filming_completed: "تم استلام مشروعك",
       editing_started: "بدء مرحلة التحرير",
       editing_completed: "انتهاء مرحلة التحرير",
       design_started: "بدء مرحلة التصميم",

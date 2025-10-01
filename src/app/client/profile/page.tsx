@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { authClient } from "../../../lib/auth-client";
 import { useEffect, useState } from "react";
+import SignOutButton from "@/components/ui/SignOutButton";
 
 export default function ClientProfilePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -162,6 +163,20 @@ export default function ClientProfilePage() {
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z" />
             </svg>
           </div>
+        </motion.div>
+
+        {/* Sign Out Button */}
+        <motion.div
+          className="flex justify-center"
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.0, duration: 0.5 }}
+        >
+          <SignOutButton 
+            className="w-full max-w-sm sm:max-w-md px-4 sm:px-5 py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors text-sm sm:text-base"
+            showText={true}
+            text="تسجيل الخروج"
+          />
         </motion.div>
       </motion.div>
     </div>

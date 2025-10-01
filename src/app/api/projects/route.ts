@@ -165,20 +165,28 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Send email notification to client
-    try {
-      await sendClientProjectNotification({
-        clientName: user.name,
-        clientEmail: user.email,
-        projectTitle: title,
-        projectType: type,
-        status: "created",
-        message: notes ? `ملاحظات المشروع: ${notes}` : undefined,
-      });
-      console.log(`✅ Client notification sent for project: ${title}`);
-    } catch (emailError) {
-      console.error("❌ Error sending client notification:", emailError);
-      // Don't fail project creation if email fails
+    // Send email notification to client only if filming is completed
+    if (filmingStatus === "تم الانتـــهاء مــنه") {
+      try {
+        await sendClientProjectNotification({
+          clientName: user.name,
+          clientEmail: user.email,
+          projectTitle: title,
+          projectType: type,
+          status: "created",
+          message: notes ? `ملاحظات المشروع: ${notes}` : undefined,
+        });
+        console.log(
+          `✅ Client notification sent for project: ${title} (filming completed)`
+        );
+      } catch (emailError) {
+        console.error("❌ Error sending client notification:", emailError);
+        // Don't fail project creation if email fails
+      }
+    } else {
+      console.log(
+        `📝 Project created but no email sent - filming status: ${filmingStatus}`
+      );
     }
 
     return NextResponse.json({

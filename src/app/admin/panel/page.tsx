@@ -182,7 +182,13 @@ export default async function AdminPanelDashboard() {
                               <p className="text-sm text-gray-500">{user.email}</p>
                             </div>
                             <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                              {new Date(user.createdAt).toLocaleDateString()}
+                              {(() => {
+                                const date = new Date(user.createdAt);
+                                const year = date.getFullYear();
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                return `${year}/${month}/${day}`;
+                              })()}
                             </div>
                           </div>
                         </div>

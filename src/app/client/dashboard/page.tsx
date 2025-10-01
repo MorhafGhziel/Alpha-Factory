@@ -6,6 +6,14 @@ import AddProjectModal from "@/components/ui/AddProjectModal";
 import RequestImprovementModal from "@/components/ui/RequestImprovementModal";
 import { Project } from "../../../types";
 
+const formatDate = (date: Date | string) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+};
+
 export default function ClientDashboardPage() {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
 
@@ -201,7 +209,17 @@ export default function ClientDashboardPage() {
         await fetchProjects();
         closeAddProjectModal();
       } else {
-        const errorData = await response.json();
+        console.error("Response status:", response.status);
+        console.error("Response statusText:", response.statusText);
+        
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          console.error("Failed to parse error response:", parseError);
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
         console.error("Failed to create project:", errorData);
         alert(`فشل في إنشاء المشروع: ${errorData.error || "خطأ غير معروف"}`);
       }
@@ -535,14 +553,7 @@ export default function ClientDashboardPage() {
                     </svg>
                     <span>
                       {project.startDate
-                        ? new Date(project.startDate).toLocaleDateString(
-                            "ar-SA",
-                            {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            }
-                          )
+                        ? formatDate(project.startDate)
                         : project.date}
                     </span>
                   </div>
