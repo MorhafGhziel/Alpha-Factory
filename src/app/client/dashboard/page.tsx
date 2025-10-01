@@ -194,6 +194,7 @@ export default function ClientDashboardPage() {
     voiceNoteUrl?: string;
   }) => {
     try {
+      console.log("Sending project data:", projectData);
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: {
@@ -209,7 +210,17 @@ export default function ClientDashboardPage() {
         await fetchProjects();
         closeAddProjectModal();
       } else {
-        const errorData = await response.json();
+        console.error("Response status:", response.status);
+        console.error("Response statusText:", response.statusText);
+        
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          console.error("Failed to parse error response:", parseError);
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
         console.error("Failed to create project:", errorData);
         alert(`فشل في إنشاء المشروع: ${errorData.error || "خطأ غير معروف"}`);
       }

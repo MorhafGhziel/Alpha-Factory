@@ -31,6 +31,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const requestData: CreateProjectRequest = await req.json();
+    console.log("Received project data:", requestData);
+
     const {
       title,
       type,
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
       designMode,
       reviewMode,
       verificationMode,
-    }: CreateProjectRequest = await req.json();
+    } = requestData;
 
     // Validate required fields
     if (!title || !type || !filmingStatus || !date) {
@@ -88,7 +91,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse date if provided
+    console.log("Received date:", date);
     const parsedStartDate = date ? new Date(date) : null;
+    console.log("Parsed startDate:", parsedStartDate);
 
     // Create the project
     const project = await prisma.project.create({
