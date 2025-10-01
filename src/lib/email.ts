@@ -1508,3 +1508,334 @@ export async function sendPasswordChangeEmail(
 
   return false;
 }
+
+// Project Deadline Reminder Email Functionality
+
+interface ProjectDeadlineReminder {
+  clientName: string;
+  clientEmail: string;
+  projectTitle: string;
+  projectType: string;
+  projectDate: string;
+  daysOverdue: number;
+}
+
+/**
+ * Email template for project deadline reminder
+ */
+function createProjectDeadlineReminderTemplate(
+  reminder: ProjectDeadlineReminder
+): string {
+  return `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>تذكير موعد المشروع - Alpha Factory</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0B0B0B;
+                color: #ffffff;
+                margin: 0;
+                padding: 20px;
+                direction: rtl;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: #0B0B0B;
+                border-radius: 0;
+                padding: 40px;
+            }
+            .header {
+                position: relative;
+                margin-bottom: 60px;
+            }
+            .help-link {
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #4A9EFF;
+                text-decoration: underline;
+                font-size: 14px;
+            }
+            .logo-container {
+                text-align: center;
+                margin-bottom: 40px;
+            }
+            .logo-text {
+                color: #ffffff;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .reminder-icon {
+                font-size: 48px;
+                text-align: center;
+                margin: 20px 0;
+            }
+            .main-title {
+                color: #E9CF6B;
+                font-size: 28px;
+                font-weight: bold;
+                text-align: center;
+                margin: 30px 0;
+            }
+            .project-info {
+                background-color: #1a1a1a;
+                border-radius: 15px;
+                padding: 25px;
+                margin: 30px 0;
+                border: 1px solid #333;
+            }
+            .info-item {
+                margin: 15px 0;
+                padding: 10px 0;
+                border-bottom: 1px solid #333;
+            }
+            .info-label {
+                color: #E9CF6B;
+                font-weight: bold;
+                margin-bottom: 5px;
+                font-size: 14px;
+            }
+            .info-value {
+                color: #fff;
+                font-size: 16px;
+            }
+            .message-box {
+                background-color: #0f0f0f;
+                border-radius: 10px;
+                padding: 20px;
+                margin: 20px 0;
+                border-right: 4px solid #E9CF6B;
+            }
+            .urgent-notice {
+                background-color: #2a1f1f;
+                border: 1px solid #d73027;
+                color: #ffcdd2;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 30px 0;
+                text-align: center;
+            }
+            .action-button {
+                display: inline-block;
+                padding: 15px 40px;
+                border-radius: 25px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 16px;
+                margin: 20px 0;
+                background: linear-gradient(135deg, #E9CF6B, #C48829);
+                color: #000000;
+                text-align: center;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #333;
+                color: #888;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="mailto:support@alphafactory.net" class="help-link">
+                    <span style="color: white;">تحتاج الى مساعدة؟</span> 
+                    <span style="color: #4A9EFF;">تواصل معنا</span>
+                </a>
+                
+                <div class="logo-container">
+                    <div class="logo-text">Alpha Factory</div>
+                </div>
+            </div>
+
+            <div class="reminder-icon">⏰</div>
+            <div class="main-title">تذكير بموعد المشروع</div>
+            
+            <div class="message-box">
+                <p style="color: #fff; font-size: 16px; line-height: 1.6; margin: 0;">
+                    عزيزي ${reminder.clientName}،<br><br>
+                    نود تذكيرك بأن موعد مشروعك قد تجاوز التاريخ المحدد بـ ${reminder.daysOverdue} يوم، 
+                    ولم يتم الانتهاء من مرحلة التصوير بعد. يرجى إكمال التصوير وتحديث حالة المشروع 
+                    في أقرب وقت ممكن لضمان سير العمل بسلاسة.
+                </p>
+            </div>
+
+            <div class="project-info">
+                <h3 style="color: #E9CF6B; text-align: center; margin-bottom: 20px;">تفاصيل المشروع</h3>
+                
+                <div class="info-item">
+                    <div class="info-label">اسم المشروع:</div>
+                    <div class="info-value">${reminder.projectTitle}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">نوع المشروع:</div>
+                    <div class="info-value">${reminder.projectType}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">التاريخ المحدد:</div>
+                    <div class="info-value">${reminder.projectDate}</div>
+                </div>
+
+                <div class="info-item" style="border-bottom: none;">
+                    <div class="info-label">عدد الأيام المتأخرة:</div>
+                    <div class="info-value" style="color: #d73027; font-weight: bold;">${reminder.daysOverdue} يوم</div>
+                </div>
+            </div>
+
+            <div class="urgent-notice">
+                <strong>⚠️ تنبيه مهم</strong><br><br>
+                يرجى إكمال التصوير وتحديث حالة المشروع لتجنب أي تأخير إضافي في المراحل التالية.
+            </div>
+
+            <div style="text-align: center;">
+                <a href="https://alphafactory.net/client/tracking-board" class="action-button">
+                    تحديث حالة المشروع
+                </a>
+            </div>
+
+            <div class="footer">
+                <p>شكراً لك على ثقتك في Alpha Factory</p>
+                <p>للاستفسارات: support@alphafactory.net</p>
+                <p>هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory</p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Create plain text version of project deadline reminder
+ */
+function createProjectDeadlineReminderPlainText(
+  reminder: ProjectDeadlineReminder
+): string {
+  return `
+Alpha Factory - تذكير بموعد المشروع
+
+عزيزي ${reminder.clientName}،
+
+نود تذكيرك بأن موعد مشروعك قد تجاوز التاريخ المحدد بـ ${reminder.daysOverdue} يوم، 
+ولم يتم الانتهاء من مرحلة التصوير بعد. يرجى إكمال التصوير وتحديث حالة المشروع 
+في أقرب وقت ممكن لضمان سير العمل بسلاسة.
+
+تفاصيل المشروع:
+اسم المشروع: ${reminder.projectTitle}
+نوع المشروع: ${reminder.projectType}
+التاريخ المحدد: ${reminder.projectDate}
+عدد الأيام المتأخرة: ${reminder.daysOverdue} يوم
+
+⚠️ تنبيه مهم
+يرجى إكمال التصوير وتحديث حالة المشروع لتجنب أي تأخير إضافي في المراحل التالية.
+
+تحديث حالة المشروع: https://alphafactory.net/client/tracking-board
+
+شكراً لك على ثقتك في Alpha Factory
+
+للاستفسارات: support@alphafactory.net
+هذا البريد الإلكتروني تم إرساله تلقائياً من فريق Alpha Factory
+  `.trim();
+}
+
+/**
+ * Send project deadline reminder email (single attempt)
+ */
+async function sendProjectDeadlineReminderOnce(
+  reminder: ProjectDeadlineReminder
+): Promise<boolean> {
+  try {
+    // Validate email format first
+    if (!isValidEmail(reminder.clientEmail)) {
+      console.error(`❌ Invalid email format: ${reminder.clientEmail}`);
+      return false;
+    }
+
+    console.log(
+      `📧 Sending project deadline reminder to ${reminder.clientName} at ${reminder.clientEmail}`
+    );
+
+    const htmlTemplate = createProjectDeadlineReminderTemplate(reminder);
+    const textTemplate = createProjectDeadlineReminderPlainText(reminder);
+
+    const { data, error } = await resend.emails.send({
+      from: "Alpha Factory <support@alphafactory.net>",
+      to: [reminder.clientEmail],
+      subject: `تذكير بموعد المشروع - ${reminder.projectTitle}`,
+      html: htmlTemplate,
+      text: textTemplate,
+      headers: {
+        "X-Entity-Ref-ID": `project-deadline-reminder-${Date.now()}`,
+        "List-Unsubscribe":
+          "<mailto:support@alphafactory.net?subject=Unsubscribe>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+      tags: [
+        {
+          name: "category",
+          value: "project-deadline-reminder",
+        },
+      ],
+    });
+
+    if (error) {
+      console.error(`❌ Resend API error for ${reminder.clientEmail}:`, error);
+      return false;
+    }
+
+    console.log(
+      `✅ Project deadline reminder sent successfully to ${reminder.clientEmail}, ID: ${data?.id}`
+    );
+    return true;
+  } catch (error) {
+    console.error(
+      `❌ Exception while sending project deadline reminder to ${reminder.clientEmail}:`,
+      error
+    );
+    return false;
+  }
+}
+
+/**
+ * Send project deadline reminder email with retry mechanism
+ */
+export async function sendProjectDeadlineReminder(
+  reminder: ProjectDeadlineReminder
+): Promise<boolean> {
+  // Skip retry for invalid emails
+  if (!isValidEmail(reminder.clientEmail)) {
+    console.error(
+      `❌ Invalid email format, skipping retry: ${reminder.clientEmail}`
+    );
+    return false;
+  }
+
+  // Use similar retry mechanism as other emails
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    console.log(
+      `📧 Attempt ${attempt}/2 to send project deadline reminder to ${reminder.clientEmail}`
+    );
+
+    const success = await sendProjectDeadlineReminderOnce(reminder);
+    if (success) {
+      return true;
+    }
+
+    if (attempt < 2) {
+      // Wait before retrying (exponential backoff)
+      const delay = Math.pow(2, attempt) * 1000; // 2s, 4s
+      console.log(`⏳ Waiting ${delay}ms before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  return false;
+}
