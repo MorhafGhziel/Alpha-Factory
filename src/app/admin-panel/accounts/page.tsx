@@ -471,93 +471,47 @@ export default function AccountsManagementPage() {
           )}
         </div>
 
-        {/* Email/Phone Field */}
-        {user.role === "client" ? (
-          <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-gray-400 text-sm">رقم الهاتف (واتساب):</div>
+        {/* Email Field */}
+        <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-gray-400 text-sm">البريد الإلكتروني:</div>
+            <button
+              onClick={() => handleEditStart(user.id, 'email', user.email)}
+              className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
+            >
+              تعديل
+            </button>
+          </div>
+          {editingUser?.id === user.id && editingUser?.field === 'email' ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="email"
+                value={editingUser.value}
+                onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
+                className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleEditSave();
+                  if (e.key === 'Escape') handleEditCancel();
+                }}
+              />
               <button
-                onClick={() => handleEditStart(user.id, 'phone', user.phone || '')}
-                className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
+                onClick={handleEditSave}
+                className="text-green-400 hover:text-green-300 text-xs"
               >
-                تعديل
+                ✓
+              </button>
+              <button
+                onClick={handleEditCancel}
+                className="text-red-400 hover:text-red-300 text-xs"
+              >
+                ✕
               </button>
             </div>
-            {editingUser?.id === user.id && editingUser?.field === 'phone' ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="tel"
-                  value={editingUser.value}
-                  onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
-                  className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
-                  autoFocus
-                  placeholder="مثال: 0501234567"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleEditSave();
-                    if (e.key === 'Escape') handleEditCancel();
-                  }}
-                />
-                <button
-                  onClick={handleEditSave}
-                  className="text-green-400 hover:text-green-300 text-xs"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={handleEditCancel}
-                  className="text-red-400 hover:text-red-300 text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div className="text-gray-200 text-sm">
-                {user.phone || 'لم يتم إدخال رقم الهاتف'}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-gray-400 text-sm">البريد الإلكتروني:</div>
-              <button
-                onClick={() => handleEditStart(user.id, 'email', user.email)}
-                className="text-xs text-[#E9CF6B] hover:text-white transition-colors"
-              >
-                تعديل
-              </button>
-            </div>
-            {editingUser?.id === user.id && editingUser?.field === 'email' ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="email"
-                  value={editingUser.value}
-                  onChange={(e) => setEditingUser({ ...editingUser, value: e.target.value })}
-                  className="flex-1 bg-[#1a1a1a] text-white px-2 py-1 rounded text-sm"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleEditSave();
-                    if (e.key === 'Escape') handleEditCancel();
-                  }}
-                />
-                <button
-                  onClick={handleEditSave}
-                  className="text-green-400 hover:text-green-300 text-xs"
-                >
-                  ✓
-                </button>
-                <button
-                  onClick={handleEditCancel}
-                  className="text-red-400 hover:text-red-300 text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div className="text-gray-200 text-sm">{user.email}</div>
-            )}
-          </div>
-        )}
+          ) : (
+            <div className="text-gray-200 text-sm">{user.email}</div>
+          )}
+        </div>
 
         {/* Username Field - Read Only */}
         <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
@@ -581,11 +535,11 @@ export default function AccountsManagementPage() {
           </div>
         </div>
 
-        {/* Email Verified Status */}
+        {/* User ID - Read Only */}
         <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
-          <div className="text-gray-400 text-sm mb-2">حالة التحقق:</div>
-          <div className={`text-sm ${user.emailVerified ? 'text-green-400' : 'text-red-400'}`}>
-            {user.emailVerified ? 'محقق' : 'غير محقق'}
+          <div className="text-gray-400 text-sm mb-2">معرف المستخدم:</div>
+          <div className="text-gray-200 text-xs font-mono break-all">
+            {user.id}
           </div>
         </div>
       </div>
