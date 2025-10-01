@@ -10,6 +10,23 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: "better-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax", // Safari-compatible setting
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      },
+    },
+  },
   user: {
     additionalFields: {
       role: {
