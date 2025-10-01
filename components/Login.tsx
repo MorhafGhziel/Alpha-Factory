@@ -38,6 +38,9 @@ const Login = ({}: LoginProps = {}) => {
     setError("");
     setIsVerifyingOTP(true);
 
+    // Safari-specific: Add a small delay to ensure form submission is properly handled
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     try {
       const response = await fetch('/api/auth/verify-otp', {
         method: 'POST',
@@ -48,6 +51,7 @@ const Login = ({}: LoginProps = {}) => {
           email: userEmail, 
           otp: otpCode 
         }),
+        credentials: 'same-origin', // Safari-specific: Ensure cookies are included
       });
 
       if (!response.ok) {
@@ -65,15 +69,19 @@ const Login = ({}: LoginProps = {}) => {
 
       if (error) {
         setError(error.message || "حدث خطأ ما");
-      } else if (data?.user && "role" in data.user) {
-        const dashboardPath = getRoleDashboardPath(
-          (data.user as { role: string }).role
-        );
-        router.push(dashboardPath);
       } else {
-        router.refresh();
+        // Safari-specific: Use intermediate redirect page for better compatibility
+        if (typeof window !== 'undefined') {
+          // Add a small delay before redirect to ensure session is properly set
+          setTimeout(() => {
+            window.location.href = "/auth-redirect";
+          }, 100);
+        } else {
+          router.push("/auth-redirect");
+        }
       }
-    } catch {
+    } catch (err) {
+      console.error("OTP verification error:", err);
       setError("حدث خطأ في التحقق من الرمز");
     } finally {
       setIsVerifyingOTP(false);
@@ -89,6 +97,9 @@ const Login = ({}: LoginProps = {}) => {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
     };
 
+    // Safari-specific: Add a small delay to ensure form submission is properly handled
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     try {
       let emailForAuth = username;
 
@@ -101,6 +112,7 @@ const Login = ({}: LoginProps = {}) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ identifier: username }),
+            credentials: 'same-origin', // Safari-specific: Ensure cookies are included
           });
 
           if (!response.ok) {
@@ -129,6 +141,7 @@ const Login = ({}: LoginProps = {}) => {
           email: emailForAuth, 
           password 
         }),
+        credentials: 'same-origin', // Safari-specific: Ensure cookies are included
       });
 
       if (!verifyResponse.ok) {
@@ -154,6 +167,7 @@ const Login = ({}: LoginProps = {}) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ email: emailForAuth }),
+          credentials: 'same-origin', // Safari-specific: Ensure cookies are included
         });
 
         if (!otpResponse.ok) {
@@ -176,16 +190,20 @@ const Login = ({}: LoginProps = {}) => {
 
         if (error) {
           setError(error.message || "حدث خطأ ما");
-        } else if (data?.user && "role" in data.user) {
-          const dashboardPath = getRoleDashboardPath(
-            (data.user as { role: string }).role
-          );
-          router.push(dashboardPath);
         } else {
-          router.refresh();
+          // Safari-specific: Use intermediate redirect page for better compatibility
+          if (typeof window !== 'undefined') {
+            // Add a small delay before redirect to ensure session is properly set
+            setTimeout(() => {
+              window.location.href = "/auth-redirect";
+            }, 100);
+          } else {
+            router.push("/auth-redirect");
+          }
         }
       }
-    } catch {
+    } catch (err) {
+      console.error("Login error:", err);
       setError("حدث خطأ في تسجيل الدخول");
     }
   };
@@ -394,7 +412,12 @@ const Login = ({}: LoginProps = {}) => {
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Form fields */}
-            <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-6 w-full max-w-sm"
+              method="post"
+              action="#"
+            >
               <div>
                 <input
                   type="text"
@@ -466,7 +489,12 @@ const Login = ({}: LoginProps = {}) => {
               </p>
             </div>
             
-            <form onSubmit={handleOTPVerification} className="space-y-6 w-full max-w-sm">
+            <form 
+              onSubmit={handleOTPVerification} 
+              className="space-y-6 w-full max-w-sm"
+              method="post"
+              action="#"
+            >
               <div>
                 <input
                   type="text"
