@@ -4,21 +4,25 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { authClient } from "../src/lib/auth-client";
+import { User } from "../src/lib/auth";
+import { getRoleDashboardPath } from "../src/lib/auth-middleware";
 
-const credentials = {
-  Admin0e2: { password: "Admin123", route: "/admin/addaccount" },
-  Client0e2: { password: "Client123", route: "/client" },
-  Editor0e2: { password: "Editor123", route: "/editor" },
-  Reviewer0e2: { password: "Reviewer123", route: "/reviewer" },
-  Designer0e2: { password: "Designer123", route: "/designer" },
-};
 
-const Login = () => {
+interface LoginProps {
+  user?: User;
+}
+
+const Login = ({}: LoginProps = {}) => {
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [error, setError] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
   const router = useRouter();
 
   const handleLoginClick = () => {
@@ -29,19 +33,178 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleOTPVerification = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setIsVerifyingOTP(true);
+
+    // Safari-specific: Add a small delay to ensure form submission is properly handled
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: userEmail, 
+          otp: otpCode 
+        }),
+        credentials: 'same-origin', // Safari-specific: Ensure cookies are included
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || "رمز التحقق غير صحيح");
+        return;
+      }
+
+      // OTP verified successfully, proceed with login
+      const { data, error } = await authClient.signIn.email({
+        email: userEmail,
+        password,
+        callbackURL: "/api/auth/callback",
+      });
+
+      if (error) {
+        setError(error.message || "حدث خطأ ما");
+      } else {
+        // Safari-specific: Use intermediate redirect page for better compatibility
+        if (typeof window !== 'undefined') {
+          // Add a small delay before redirect to ensure session is properly set
+          setTimeout(() => {
+            window.location.href = "/auth-redirect";
+          }, 100);
+        } else {
+          router.push("/auth-redirect");
+        }
+      }
+    } catch (err) {
+      console.error("OTP verification error:", err);
+      setError("حدث خطأ في التحقق من الرمز");
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
-    if (credentials[username as keyof typeof credentials]) {
-      const userCreds = credentials[username as keyof typeof credentials];
-      if (userCreds.password === password) {
-        router.push(userCreds.route);
-      } else {
-        setError("كلمة المرور خاطئة");
+    // Helper function to check if input is email format
+    const isEmail = (input: string): boolean => {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+    };
+
+    // Safari-specific: Add a small delay to ensure form submission is properly handled
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    try {
+      let emailForAuth = username;
+
+      // If the input is not an email format, find the user's email by username
+      if (!isEmail(username)) {
+        try {
+          const response = await fetch('/api/auth/find-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ identifier: username }),
+            credentials: 'same-origin', // Safari-specific: Ensure cookies are included
+          });
+
+          if (!response.ok) {
+            if (response.status === 404) {
+              setError("اسم المستخدم غير موجود");
+              return;
+            }
+            throw new Error('Failed to find user');
+          }
+
+          const userData = await response.json();
+          emailForAuth = userData.email;
+        } catch {
+          setError("حدث خطأ في البحث عن المستخدم");
+          return;
+        }
       }
-    } else {
-      setError("اسم المستخدم خاطئ");
+
+      // First verify credentials without logging in
+      const verifyResponse = await fetch('/api/auth/verify-credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: emailForAuth, 
+          password 
+        }),
+        credentials: 'same-origin', // Safari-specific: Ensure cookies are included
+      });
+
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json();
+        setError(errorData.error || "بيانات الدخول غير صحيحة");
+        return;
+      }
+
+      const verifyData = await verifyResponse.json();
+      console.log("📥 Full verify response:", verifyData);
+      
+      const { requiresOTP, userRole } = verifyData;
+      console.log("🔐 User role:", userRole, "- OTP required:", requiresOTP);
+      console.log("🔍 RequiresOTP type:", typeof requiresOTP, "value:", requiresOTP);
+
+      if (requiresOTP) {
+        // Admin/Owner - requires OTP verification
+        console.log("🛡️ Admin/Owner login - sending OTP");
+        
+        const otpResponse = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: emailForAuth }),
+          credentials: 'same-origin', // Safari-specific: Ensure cookies are included
+        });
+
+        if (!otpResponse.ok) {
+          setError("حدث خطأ في إرسال رمز التحقق");
+          return;
+        }
+
+        // Store email for OTP verification and show OTP form
+        setUserEmail(emailForAuth);
+        setShowOTP(true);
+      } else {
+        // Regular user - proceed directly to login
+        console.log("✅ Regular user login - proceeding directly");
+        
+        const { data, error } = await authClient.signIn.email({
+          email: emailForAuth,
+          password,
+          callbackURL: "/api/auth/callback",
+        });
+
+        if (error) {
+          setError(error.message || "حدث خطأ ما");
+        } else {
+          // Safari-specific: Use intermediate redirect page for better compatibility
+          if (typeof window !== 'undefined') {
+            // Add a small delay before redirect to ensure session is properly set
+            setTimeout(() => {
+              window.location.href = "/auth-redirect";
+            }, 100);
+          } else {
+            router.push("/auth-redirect");
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("حدث خطأ في تسجيل الدخول");
     }
   };
 
@@ -209,7 +372,7 @@ const Login = () => {
                   scale: { duration: 0.2 },
                 }}
               >
-                {/* Lightning effect overlay */}
+                {/* Lightning effect overla */}
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                   initial={{ x: "-100%" }}
@@ -244,16 +407,21 @@ const Login = () => {
           </motion.div>
           <motion.div
             initial={{ x: 1000, opacity: 0 }}
-            animate={showForm ? { x: 0, opacity: 1 } : { x: 1000, opacity: 0 }}
+            animate={showForm && !showOTP ? { x: 0, opacity: 1 } : { x: 1000, opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Form fields */}
-            <form onSubmit={handleLogin} className="space-y-6 w-full max-w-sm">
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-6 w-full max-w-sm"
+              method="post"
+              action="#"
+            >
               <div>
                 <input
                   type="text"
-                  placeholder="اسم المستخدم"
+                  placeholder="البريد الإلكتروني"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all"
@@ -304,6 +472,66 @@ const Login = () => {
               >
                 الاستمرار
               </button>
+            </form>
+          </motion.div>
+
+          {/* OTP Verification Form */}
+          <motion.div
+            initial={{ x: 1000, opacity: 0 }}
+            animate={showOTP ? { x: 0, opacity: 1 } : { x: 1000, opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-white text-xl mb-2">رمز التحقق</h3>
+              <p className="text-white/70 text-sm">
+                تم إرسال رمز التحقق إلى بريدك الإلكتروني
+              </p>
+            </div>
+            
+            <form 
+              onSubmit={handleOTPVerification} 
+              className="space-y-6 w-full max-w-sm"
+              method="post"
+              action="#"
+            >
+              <div>
+                <input
+                  type="text"
+                  placeholder="أدخل رمز التحقق"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="bg-gradient-to-r from-[#C48829] to-[#EAD06C] text-[#1e1e1e] px-8 py-2 rounded-3xl placeholder-[#1e1e1e]/70 placeholder:text-[24px] placeholder:font-bold font-medium text-center focus:outline-none focus:border-[#a68857] focus:border-2 transition-all w-full"
+                  required
+                  maxLength={6}
+                />
+              </div>
+              
+              {error && (
+                <div className="text-red-400 text-sm text-center">{error}</div>
+              )}
+              
+              <div className="flex space-x-4 justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOTP(false);
+                    setOtpCode("");
+                    setError("");
+                  }}
+                  className="bg-gradient-to-r from-[#6B6B6B] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer"
+                >
+                  رجوع
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isVerifyingOTP}
+                  className="bg-gradient-to-r from-[#434343] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isVerifyingOTP ? "جاري التحقق..." : "تحقق"}
+                </button>
+              </div>
             </form>
           </motion.div>
         </div>

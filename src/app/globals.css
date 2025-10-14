@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: black;
+  }
+}
+
+body {
+  background: var(--background);
+  font-family: var(--font-noto), "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+/* Ensure Noto Sans Arabic font is applied to all text */
+* {
+  font-family: var(--font-noto), "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+/* Custom scrollbar for table overflow */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #3f3f3f;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}

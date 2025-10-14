@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id
+  name             String
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  image            String?
+  username         String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
+  role             String?
+  groupId          String?
+  phone            String?   @unique
+  accounts         Account[]
+  clientProjects   Project[] @relation("ClientProjects")
+  designerProjects Project[] @relation("DesignerProjects")
+  editorProjects   Project[] @relation("EditorProjects")
+  reviewerProjects Project[] @relation("ReviewerProjects")
+  sessions         Session[]
+  group            Group?    @relation(fields: [groupId], references: [id])
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+model Group {
+  id                 String    @id @default(cuid())
+  name               String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  telegramChatId     String?
+  telegramGroupName  String?
+  telegramInviteLink String?
+  projects           Project[]
+  users              User[]
+
+  @@map("group")
+}
+
+model Project {
+  id               String    @id @default(cuid())
+  title            String
+  type             String
+  filmingStatus    String
+  fileLinks        String?
+  notes            String?
+  date             String
+  startDate        DateTime?
+  endDate          DateTime?
+  editMode         String    @default("لم يبدأ")
+  reviewMode       String    @default("في الانتظار")
+  designMode       String    @default("في الانتظار")
+  verificationMode String    @default("لا شيء")
+  reviewLinks      String?
+  designLinks      String?
+  documentation    String?
+  clientId         String
+  groupId          String?
+  editorId         String?
+  designerId       String?
+  reviewerId       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  client           User      @relation("ClientProjects", fields: [clientId], references: [id], onDelete: Cascade)
+  designer         User?     @relation("DesignerProjects", fields: [designerId], references: [id])
+  editor           User?     @relation("EditorProjects", fields: [editorId], references: [id])
+  group            Group?    @relation(fields: [groupId], references: [id])
+  reviewer         User?     @relation("ReviewerProjects", fields: [reviewerId], references: [id])
+
+  @@map("project")
+}

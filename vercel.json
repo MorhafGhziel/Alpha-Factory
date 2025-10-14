@@ -1,0 +1,17 @@
+{
+  "buildCommand": "prisma generate --no-engine && next build",
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "PRISMA_GENERATE_SKIP_AUTOINSTALL": "true"
+  },
+  "crons": [
+    {
+      "path": "/api/cron/daily-reminders",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

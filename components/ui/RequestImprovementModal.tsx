@@ -1,35 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import CustomDropdown from "./CustomDropdown";
+import VoiceRecorder from "./VoiceRecorder";
+import { Project } from "../../src/types";
 
 interface RequestImprovementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (improvementData: { title: string; description: string }) => void;
+  projects: Project[];
+  onSubmit: (improvementData: {
+    projectId: string;
+    title: string;
+    description: string;
+    department: string;
+    hasVoiceRecording?: boolean;
+    voiceUrl?: string;
+    isVerified?: boolean;
+  }) => void;
 }
 
 export default function RequestImprovementModal({
   isOpen,
   onClose,
   onSubmit,
+  projects,
 }: RequestImprovementModalProps) {
-  const [title, setTitle] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [department, setDepartment] = useState<string>("");
+  const [hasVoiceRecording, setHasVoiceRecording] = useState<boolean>(false);
+  const [voiceUrl, setVoiceUrl] = useState<string>("");
+  const [isVerified, setIsVerified] = useState<boolean>(false);
+
+  // Auto-verification logic: verify when all fields are completed
+  useEffect(() => {
+    const allFieldsCompleted = selectedProjectId && description && department;
+    if (allFieldsCompleted) {
+      setIsVerified(true);
+    } else {
+      setIsVerified(false);
+    }
+  }, [selectedProjectId, description, department]);
+
+  const handleVoiceRecorded = (hasRecording: boolean, voiceUrlParam?: string) => {
+    setHasVoiceRecording(hasRecording);
+    if (hasRecording && voiceUrlParam) {
+      setVoiceUrl(voiceUrlParam);
+    } else {
+      setVoiceUrl("");
+    }
+  };
+
+  const handleManualVerificationToggle = () => {
+    setIsVerified(!isVerified);
+  };
 
   const handleSubmit = () => {
-    if (!title || !description) {
+    if (!selectedProjectId || !description || !department) {
       alert("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
+    const selectedProject = projects.find((p) => p.id === selectedProjectId);
+    if (!selectedProject) {
+      alert("المشروع المحدد غير موجود");
+      return;
+    }
+
     onSubmit({
-      title,
+      projectId: selectedProjectId,
+      title: selectedProject.title,
       description,
+      department,
+      hasVoiceRecording,
+      voiceUrl: voiceUrl || undefined,
+      isVerified,
     });
 
-    setTitle("");
+    setSelectedProjectId("");
     setDescription("");
+    setDepartment("");
+    setHasVoiceRecording(false);
+    setVoiceUrl("");
+    setIsVerified(false);
   };
 
   return (
@@ -77,24 +132,80 @@ export default function RequestImprovementModal({
 
             <div className="space-y-10">
               <div>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-full focus:outline-none text-right"
-                  placeholder="عنوان المشروع"
-                />
+                <div className="text-white text-right mb-3 text-sm">
+                  :اختر القسم
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setDepartment("editing")}
+                    className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 cursor-pointer ${
+                      department === "editing"
+                        ? "bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black shadow-lg shadow-yellow-500/25"
+                        : "bg-[#0B0B0B] text-white border border-[#333336] hover:bg-[#1a1a1a] hover:border-[#555555]"
+                    }`}
+                  >
+                    قسم الإنتاج
+                  </button>
+                  <button
+                    onClick={() => setDepartment("design")}
+                    className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 cursor-pointer ${
+                      department === "design"
+                        ? "bg-gradient-to-r from-[#EAD06C] to-[#C48829] text-black shadow-lg shadow-yellow-500/25"
+                        : "bg-[#0B0B0B] text-white border border-[#333336] hover:bg-[#1a1a1a] hover:border-[#555555]"
+                    }`}
+                  >
+                    قسم التصميم
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div className="text-white text-right mb-3 text-sm">
+                  اختر المشروع:
+                </div>
+                {projects.length === 0 ? (
+                  <div className="w-full bg-[#0B0B0B] text-gray-400 px-4 py-3 rounded-xl text-center border border-[#333336]">
+                    لا توجد مشاريع متاحة للتحسين. قم بإنشاء مشروع جديد أولاً.
+                  </div>
+                ) : (
+                  <CustomDropdown
+                    options={projects.map((project) => project.title)}
+                    placeholder="اختر مشروع من القائمة"
+                    selectedValue={
+                      projects.find((p) => p.id === selectedProjectId)?.title ||
+                      ""
+                    }
+                    onSelect={(selectedTitle) => {
+                      const project = projects.find(
+                        (p) => p.title === selectedTitle
+                      );
+                      if (project) {
+                        setSelectedProjectId(project.id);
+                      }
+                    }}
+                  />
+                )}
               </div>
 
               <div>
+                <div className="text-white text-right mb-3 text-sm">
+                  وصف التحسين:
+                </div>
                 <textarea
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-2xl focus:outline-none text-right resize-none"
+                  className="w-full bg-[#0B0B0B] text-white px-4 py-2 rounded-2xl focus:outline-none text-right resize-none border border-[#3F3F3F] focus:border-[#EAD06C]"
                   placeholder="اضف تحسيناتك"
                 />
+
+                {/* Voice Recording Section */}
+                <VoiceRecorder
+                  onVoiceRecorded={handleVoiceRecorded}
+                  className="mt-3"
+                />
               </div>
+
+             
 
               <div className="pt-4">
                 <div className="flex justify-center">
