@@ -309,12 +309,17 @@ export default function ClientTrackingBoardPage() {
       // Design enhancement: verified when design and review are complete
       return project.designMode === "تم الانتهاء منه" && project.reviewMode === "تمت المراجعة";
     } else if (isProductionEnhancement) {
-      // Production enhancement: only verified when editing and review are complete
+      // Production enhancement: verified when editing and review are complete
       return project.editMode === "تم الانتهاء منه" && project.reviewMode === "تمت المراجعة";
     }
     
-    // Regular project: use the actual verificationMode
-    return project.verificationMode && project.verificationMode !== "لا شيء";
+    // Regular project: automatically verified when all main work is complete
+    const editDone = project.editMode === "تم الانتهاء منه";
+    const designDone = project.designMode === "تم الانتهاء منه";
+    const reviewDone = project.reviewMode === "تمت المراجعة";
+    
+    // Auto-verify when edit, design, and review are all complete
+    return editDone && designDone && reviewDone;
   };
 
   // Handle filming files modal

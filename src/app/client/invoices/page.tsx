@@ -78,9 +78,9 @@ function isProjectBillable(p: Project): boolean {
     p.designMode === "تم الانتهاء منه" || 
     p.designMode === "قيد التنفيذ" ||
     p.reviewMode === "تمت المراجعة" ||
-    (p.fileLinks && p.fileLinks.trim() !== "");
+    Boolean(p.fileLinks && p.fileLinks.trim() !== "");
     
-  return hasAnyWork;
+  return Boolean(hasAnyWork);
 }
 
 export default function ClientInvoicesPage() {
