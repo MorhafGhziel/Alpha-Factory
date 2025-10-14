@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Project } from "@/src/types";
+import PayPalButton from "@/components/ui/PayPalButton";
 
 type InvoiceItem = {
   id: string;
@@ -73,6 +75,9 @@ export default function ClientInvoicesPage() {
     null
   );
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -89,6 +94,49 @@ export default function ClientInvoicesPage() {
     };
     fetchProjects();
   }, []);
+
+  // Handle PayPal return
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const cancelled = searchParams.get('cancelled');
+    const token = searchParams.get('token');
+    const payerId = searchParams.get('PayerID');
+
+    const handlePayPalReturn = async (token: string, payerId: string | null) => {
+      try {
+        const response = await fetch(`/api/paypal/handle-return?token=${token}&PayerID=${payerId || ''}`);
+        const data = await response.json();
+        
+        if (data.success && data.status === 'COMPLETED') {
+          // Mark invoice as paid based on reference ID
+          if (data.referenceId) {
+            const invoiceId = data.referenceId.replace('invoice_', '');
+            const next = { ...paidMap, [invoiceId]: true };
+            setPaidMap(next);
+            savePaid(next);
+            setShowPaidBannerFor(invoiceId);
+            setTimeout(() => setShowPaidBannerFor(null), 4000);
+          }
+          setPaymentStatus('تم الدفع بنجاح! شكراً لك');
+        } else {
+          setPaymentStatus('فشل في معالجة الدفع');
+        }
+      } catch (error) {
+        console.error('Error handling PayPal return:', error);
+        setPaymentStatus('حدث خطأ في معالجة الدفع');
+      }
+      
+      setTimeout(() => setPaymentStatus(null), 5000);
+    };
+
+    if (success === 'true' && token) {
+      // Handle successful payment
+      handlePayPalReturn(token, payerId);
+    } else if (cancelled === 'true') {
+      setPaymentStatus('تم إلغاء الدفع');
+      setTimeout(() => setPaymentStatus(null), 5000);
+    }
+  }, [searchParams, paidMap, savePaid]);
 
   const invoices = useMemo<Invoice[]>(() => {
     if (!projects.length) return [];
@@ -283,14 +331,30 @@ export default function ClientInvoicesPage() {
           </div>
         ) : (
           <div className="space-y-5">
-            {emailNotice && (
+            {(emailNotice || paymentStatus) && (
               <div className="mx-auto max-w-6xl px-4">
-                <div
-                  className="mb-3 px-4 py-2 rounded-lg bg-blue-900/30 border border-blue-600 text-blue-200 text-sm"
-                  dir="rtl"
-                >
-                  {emailNotice}
-                </div>
+                {emailNotice && (
+                  <div
+                    className="mb-3 px-4 py-2 rounded-lg bg-blue-900/30 border border-blue-600 text-blue-200 text-sm"
+                    dir="rtl"
+                  >
+                    {emailNotice}
+                  </div>
+                )}
+                {paymentStatus && (
+                  <div
+                    className={`mb-3 px-4 py-2 rounded-lg text-sm ${
+                      paymentStatus.includes('نجاح') 
+                        ? 'bg-green-900/30 border border-green-600 text-green-200'
+                        : paymentStatus.includes('إلغاء')
+                        ? 'bg-yellow-900/30 border border-yellow-600 text-yellow-200'
+                        : 'bg-red-900/30 border border-red-600 text-red-200'
+                    }`}
+                    dir="rtl"
+                  >
+                    {paymentStatus}
+                  </div>
+                )}
               </div>
             )}
             {invoices.map((inv) => {
@@ -490,31 +554,52 @@ export default function ClientInvoicesPage() {
 
                             <div className="flex items-center justify-between p-4 sm:p-5 mx-3 sm:mx-6">
                               <div className="flex items-center gap-3 sm:gap-4">
-                                <button
-                                  onClick={() => markPaid(inv)}
-                                  className="cursor-pointer flex items-center gap-2 bg-[#F6C557] px-4 sm:px-10 py-2 rounded-lg hover:bg-[#EAD06C] transition-all duration-300"
-                                >
-                                  <Image
-                                    src="/icons/PayPal.svg"
-                                    alt="PayPal"
-                                    width={70}
-                                    height={20}
-                                    className="h-5 w-auto"
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => markPaid(inv)}
-                                  className="cursor-pointer flex items-center gap-2 text-white text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg bg-[#0B0B0B] hover:bg-[#0B0B0B]/80 transition-all duration-300"
-                                >
-                                  <Image
-                                    src="/icons/crypto.svg"
-                                    alt="Crypto"
-                                    width={18}
-                                    height={18}
-                                    className="h-[18px] w-[18px]"
-                                  />
-                                  Crypto
-                                </button>
+                                {!paidMap[id] ? (
+                                  <>
+                                    <PayPalButton
+                                      amount={inv.grandTotal || 100} // Default $100 for testing
+                                      description={`Alpha Factory Invoice #${inv.index}`}
+                                      invoiceId={id}
+                                      onSuccess={(data) => {
+                                        console.log('Payment successful:', data);
+                                        markPaid(inv);
+                                      }}
+                                      onError={(error) => {
+                                        console.error('Payment error:', error);
+                                        setPaymentStatus('فشل في الدفع');
+                                        setTimeout(() => setPaymentStatus(null), 5000);
+                                      }}
+                                      onCancel={() => {
+                                        setPaymentStatus('تم إلغاء الدفع');
+                                        setTimeout(() => setPaymentStatus(null), 5000);
+                                      }}
+                                    />
+                                    <button
+                                      onClick={() => markPaid(inv)}
+                                      className="cursor-pointer flex items-center gap-2 text-white text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg bg-[#0B0B0B] hover:bg-[#0B0B0B]/80 transition-all duration-300"
+                                    >
+                                      <Image
+                                        src="/icons/crypto.svg"
+                                        alt="Crypto"
+                                        width={18}
+                                        height={18}
+                                        className="h-[18px] w-[18px]"
+                                      />
+                                      Crypto
+                                    </button>
+                                  </>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-green-400 text-sm font-semibold">
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      className="w-5 h-5"
+                                      fill="currentColor"
+                                    >
+                                      <path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z" />
+                                    </svg>
+                                    تم الدفع
+                                  </div>
+                                )}
                               </div>
                               <div
                                 className="text-sm sm:text-base font-bold"

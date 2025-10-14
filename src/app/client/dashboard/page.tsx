@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import SummaryCard from "@/components/ui/SummaryCard";
 import AddProjectModal from "@/components/ui/AddProjectModal";
 import RequestImprovementModal from "@/components/ui/RequestImprovementModal";
+import TestPayPalInvoice from "@/components/ui/TestPayPalInvoice";
 import { Project } from "../../../types";
 
 const formatDate = (date: Date | string) => {
@@ -481,6 +482,14 @@ export default function ClientDashboardPage() {
             />
           </svg>
         </div>
+      </div>
+
+      {/* PayPal Test Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-white mb-4 sm:mb-6 text-right">
+          اختبار نظام الدفع
+        </h2>
+        <TestPayPalInvoice />
       </div>
 
       <div>
