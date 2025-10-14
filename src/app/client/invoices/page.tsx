@@ -55,15 +55,32 @@ function daysUntil(date: Date) {
   return diff;
 }
 
-// Define when a project is considered completed for invoicing
-function isProjectCompleted(p: Project): boolean {
-  // Reuse the completion criteria used in tracking board auto-verification
-  const filmingDone = p.filmingStatus === "تم الانتـــهاء مــنه";
-  const hasFiles = Boolean(p.fileLinks && p.fileLinks.trim() !== "");
-  const editDone = p.editMode === "تم الانتهاء منه";
-  const reviewDone = p.reviewMode === "تمت المراجعة";
-  const designDone = p.designMode === "تم الانتهاء منه";
-  return filmingDone && hasFiles && editDone && reviewDone && designDone;
+// Define when a project should be included in invoicing
+function isProjectBillable(p: Project): boolean {
+  // Include projects that have any work done or are enhancement projects
+  const isEnhancement = p.type && (
+    p.type.includes("تحسين") || 
+    p.title.includes("تحسين:")
+  );
+  
+  // For enhancement projects, include if any work is started
+  if (isEnhancement) {
+    return p.editMode !== "لم يبدأ" || 
+           p.designMode !== "لم يبدأ" || 
+           p.reviewMode !== "في الانتظار";
+  }
+  
+  // For regular projects, include if any significant work is done
+  const hasAnyWork = 
+    p.filmingStatus === "تم الانتـــهاء مــنه" ||
+    p.editMode === "تم الانتهاء منه" || 
+    p.editMode === "قيد التنفيذ" ||
+    p.designMode === "تم الانتهاء منه" || 
+    p.designMode === "قيد التنفيذ" ||
+    p.reviewMode === "تمت المراجعة" ||
+    (p.fileLinks && p.fileLinks.trim() !== "");
+    
+  return hasAnyWork;
 }
 
 export default function ClientInvoicesPage() {
@@ -142,111 +159,92 @@ export default function ClientInvoicesPage() {
   const invoices = useMemo<Invoice[]>(() => {
     if (!projects.length) return [];
 
-    // Determine the start of the first invoice period based on the first project worked on
-    // Use earliest of createdAt or date field
-    const dates: Date[] = projects
-      .map((p) => {
-        if (p.createdAt) return new Date(p.createdAt);
-        // p.date is string, try parse as dd-mm-yyyy or yyyy-mm-dd
-        const s = p.date;
-        if (!s) return null as unknown as Date;
-        // Try ISO first
-        const iso = new Date(s);
-        if (!isNaN(iso.getTime())) return iso;
-        // Try dd-mm-yyyy
-        const parts = s.split(/[\/-]/);
-        if (parts.length === 3) {
-          const [d, m, y] = parts.map((x) => parseInt(x, 10));
-          const guess = new Date(y, (m || 1) - 1, d || 1);
-          if (!isNaN(guess.getTime())) return guess;
-        }
-        return new Date();
-      })
-      .filter(Boolean) as Date[];
+    // Create separate invoice for each billable project
+    const billableProjects = projects.filter(isProjectBillable);
+    
+    const result: Invoice[] = billableProjects.map((project, index) => {
+      // Calculate pricing based on project type and work completed
+      let unitPrice = 0;
+      let workDescription = "";
+      
+      // Basic pricing structure (you can adjust these)
+      const basePrices = {
+        "فيديو تسويقي": 150,
+        "فيديو تعليمي": 120,
+        "تصميم شعار": 80,
+        "تصميم بوستر": 60,
+        "مونتاج فيديو": 100,
+        "تصوير فوتوغرافي": 90,
+        "default": 100
+      };
+      
+      // Get base price for project type
+      unitPrice = basePrices[project.type as keyof typeof basePrices] || basePrices.default;
+      
+      // Check what work was completed or in progress
+      const workCompleted = [];
+      const workInProgress = [];
+      
+      // Check filming
+      if (project.filmingStatus === "تم الانتـــهاء مــنه") {
+        workCompleted.push("التصوير");
+      }
+      
+      // Check editing
+      if (project.editMode === "تم الانتهاء منه") {
+        workCompleted.push("المونتاج");
+      } else if (project.editMode === "قيد التنفيذ") {
+        workInProgress.push("المونتاج");
+      }
+      
+      // Check design
+      if (project.designMode === "تم الانتهاء منه") {
+        workCompleted.push("التصميم");
+      } else if (project.designMode === "قيد التنفيذ") {
+        workInProgress.push("التصميم");
+      }
+      
+      // Check review
+      if (project.reviewMode === "تمت المراجعة") {
+        workCompleted.push("المراجعة");
+      } else if (project.reviewMode === "قيد المراجعة") {
+        workInProgress.push("المراجعة");
+      }
+      
+      // Build description
+      const allWork = [...workCompleted, ...workInProgress.map(w => `${w} (قيد التنفيذ)`)];
+      workDescription = allWork.length > 0 
+        ? allWork.join(" + ") 
+        : "العمل قيد التنفيذ";
 
-    if (!dates.length) return [];
-    const first = new Date(Math.min(...dates.map((d) => d.getTime())));
+      // Create single item for this project
+      const item: InvoiceItem = {
+        id: `${project.id}`,
+        projectId: project.id,
+        projectName: project.title,
+        projectType: project.type,
+        unitPrice: unitPrice,
+        quantity: 1,
+        total: unitPrice,
+        workDate: new Date(project.updatedAt),
+        workDescription: workDescription
+      };
 
-    // Build 14-day windows from first date to now+1 period
-    const result: Invoice[] = [];
-    const sortedCompleted = projects
-      .filter(isProjectCompleted)
-      .sort(
-        (a, b) =>
-          new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
-      );
+      // Create invoice with due date 14 days from project update
+      const projectDate = new Date(project.updatedAt);
+      const dueDate = new Date(projectDate.getTime() + 14 * DAY_MS);
 
-    const now = new Date();
-    let periodStart = new Date(first);
-    let idx = 1;
-    while (periodStart <= now || result.length === 0) {
-      const periodEnd = new Date(periodStart.getTime() + 14 * DAY_MS);
-      const bucket = sortedCompleted.filter((p) => {
-        const completedAt = new Date(p.updatedAt);
-        return completedAt >= periodStart && completedAt < periodEnd;
-      });
+      return {
+        index: index + 1,
+        startDate: projectDate,
+        dueDate: dueDate,
+        items: [item],
+        grandTotal: unitPrice,
+      };
+    });
 
-      const items: InvoiceItem[] = bucket.map((p) => {
-        // Calculate pricing based on project type and work completed
-        let unitPrice = 0;
-        let workDescription = "";
-        
-        // Basic pricing structure (you can adjust these)
-        const basePrices = {
-          "فيديو تسويقي": 150,
-          "فيديو تعليمي": 120,
-          "تصميم شعار": 80,
-          "تصميم بوستر": 60,
-          "مونتاج فيديو": 100,
-          "تصوير فوتوغرافي": 90,
-          "default": 100
-        };
-        
-        // Get base price for project type
-        unitPrice = basePrices[p.type as keyof typeof basePrices] || basePrices.default;
-        
-        // Check what work was completed
-        const workCompleted = [];
-        if (p.filmingStatus === "تم الانتـــهاء مــنه") workCompleted.push("التصوير");
-        if (p.editMode === "تم الانتهاء منه") workCompleted.push("المونتاج");
-        if (p.designMode === "تم الانتهاء منه") workCompleted.push("التصميم");
-        if (p.reviewMode === "تمت المراجعة") workCompleted.push("المراجعة");
-        
-        workDescription = workCompleted.length > 0 
-          ? workCompleted.join(" + ") 
-          : "العمل قيد التنفيذ";
-        
-        return {
-          id: `${p.id}`,
-          projectId: p.id,
-          projectName: p.title,
-          projectType: p.type,
-          unitPrice: unitPrice,
-          quantity: 1,
-          total: unitPrice,
-          workDate: new Date(p.updatedAt),
-          workDescription: workDescription
-        };
-      });
-
-      // Calculate grand total for this invoice
-      const grandTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
-
-      result.push({
-        index: idx,
-        startDate: new Date(periodStart),
-        dueDate: new Date(periodEnd),
-        items,
-        grandTotal,
-      });
-
-      idx += 1;
-      periodStart = periodEnd;
-      // Safety stop to avoid infinite loops
-      if (idx > 200) break;
-    }
-
-    return result.reverse(); // latest first
+    // Sort by most recent first
+    return result.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
   }, [projects]);
 
   // ------- Helpers & Persistence -------
@@ -545,7 +543,7 @@ export default function ClientInvoicesPage() {
                               className="border border-[#333336] mx-3 sm:mx-6"
                               dir="rtl"
                             >
-                              <div className="grid grid-cols-5 text-sm sm:text-base bg-gray-50">
+                              <div className="grid grid-cols-4 text-sm sm:text-base bg-gray-50">
                                 <div className="border-l px-4 py-3 text-right">
                                   اسم المشروع
                                 </div>
@@ -555,53 +553,47 @@ export default function ClientInvoicesPage() {
                                 <div className="border-l px-4 py-3 text-right">
                                   العمل المنجز
                                 </div>
-                                <div className="border-l px-4 py-3 text-right">
-                                  السعر
-                                </div>
                                 <div className="px-4 py-3 text-right">
                                   المجموع
                                 </div>
                               </div>
-                              {(
-                                (inv.items.length
-                                  ? inv.items
-                                  : new Array<InvoiceItem | null>(5).fill(
-                                      null
-                                    )) as (InvoiceItem | null)[]
-                              ).map((item, i) => {
-                                const it = item as InvoiceItem | null;
-                                return (
-                                  <div
-                                    key={i}
-                                    className={`grid grid-cols-5 text-sm sm:text-base border-t ${
-                                      i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
-                                    }`}
-                                    dir="rtl"
-                                  >
-                                    <div className="border-l px-4 py-3 text-right">
-                                      {it?.projectName ?? "\u00A0"}
-                                    </div>
-                                    <div className="border-l px-4 py-3 text-right">
-                                      {it?.projectType ?? "\u00A0"}
-                                    </div>
-                                    <div className="border-l px-4 py-3 text-right text-xs">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${
-                                        it?.workDescription === "العمل قيد التنفيذ" 
-                                          ? "bg-yellow-100 text-yellow-800" 
-                                          : "bg-green-100 text-green-800"
-                                      }`}>
-                                        {it?.workDescription ?? "لا توجد معلومات"}
-                                      </span>
-                                    </div>
-                                    <div className="border-l px-4 py-3 text-right">
-                                      {formatCurrency(it?.unitPrice)}
-                                    </div>
-                                    <div className="px-4 py-3 text-right">
-                                      {formatCurrency(it?.total)}
+                              {inv.items.map((item, i) => (
+                                <div
+                                  key={i}
+                                  className={`grid grid-cols-4 text-sm sm:text-base border-t ${
+                                    i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
+                                  }`}
+                                  dir="rtl"
+                                >
+                                  <div className="border-l px-4 py-3 text-right">
+                                    {item.projectName}
+                                  </div>
+                                  <div className="border-l px-4 py-3 text-right">
+                                    {item.projectType}
+                                  </div>
+                                  <div className="border-l px-4 py-3 text-right">
+                                    <div className="flex flex-wrap gap-1">
+                                      {item.workDescription && item.workDescription.split(" + ").map((work, idx) => (
+                                        <span 
+                                          key={idx}
+                                          className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                                            work.includes("قيد التنفيذ") 
+                                              ? "bg-yellow-100 text-yellow-800" 
+                                              : work === "العمل قيد التنفيذ"
+                                              ? "bg-gray-100 text-gray-600"
+                                              : "bg-green-100 text-green-800"
+                                          }`}
+                                        >
+                                          {work}
+                                        </span>
+                                      ))}
                                     </div>
                                   </div>
-                                );
-                              })}
+                                  <div className="px-4 py-3 text-right font-semibold">
+                                    {formatCurrency(item.total)}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
 
                             <div className="flex items-center justify-between p-4 sm:p-5 mx-3 sm:mx-6">
