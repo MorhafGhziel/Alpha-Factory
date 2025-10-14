@@ -12,10 +12,11 @@ type InvoiceItem = {
   projectId: string;
   projectName: string;
   projectType: string;
-  unitPrice?: number; // to be provided by backend
-  quantity?: number; // optional if you decide to multiply
-  total?: number; // computed by backend or derived from unitPrice*quantity
-  workDate?: Date; // optional
+  unitPrice?: number;
+  quantity?: number;
+  total?: number;
+  workDate?: Date;
+  workDescription?: string; // Description of completed work
 };
 
 type Invoice = {
@@ -185,19 +186,58 @@ export default function ClientInvoicesPage() {
         return completedAt >= periodStart && completedAt < periodEnd;
       });
 
-      const items: InvoiceItem[] = bucket.map((p) => ({
-        id: `${p.id}`,
-        projectId: p.id,
-        projectName: p.title,
-        projectType: p.type,
-        // unitPrice, quantity, total and workDate intentionally left undefined for backend to fill
-      }));
+      const items: InvoiceItem[] = bucket.map((p) => {
+        // Calculate pricing based on project type and work completed
+        let unitPrice = 0;
+        let workDescription = "";
+        
+        // Basic pricing structure (you can adjust these)
+        const basePrices = {
+          "فيديو تسويقي": 150,
+          "فيديو تعليمي": 120,
+          "تصميم شعار": 80,
+          "تصميم بوستر": 60,
+          "مونتاج فيديو": 100,
+          "تصوير فوتوغرافي": 90,
+          "default": 100
+        };
+        
+        // Get base price for project type
+        unitPrice = basePrices[p.type as keyof typeof basePrices] || basePrices.default;
+        
+        // Check what work was completed
+        const workCompleted = [];
+        if (p.filmingStatus === "تم الانتـــهاء مــنه") workCompleted.push("التصوير");
+        if (p.editMode === "تم الانتهاء منه") workCompleted.push("المونتاج");
+        if (p.designMode === "تم الانتهاء منه") workCompleted.push("التصميم");
+        if (p.reviewMode === "تمت المراجعة") workCompleted.push("المراجعة");
+        
+        workDescription = workCompleted.length > 0 
+          ? workCompleted.join(" + ") 
+          : "العمل قيد التنفيذ";
+        
+        return {
+          id: `${p.id}`,
+          projectId: p.id,
+          projectName: p.title,
+          projectType: p.type,
+          unitPrice: unitPrice,
+          quantity: 1,
+          total: unitPrice,
+          workDate: new Date(p.updatedAt),
+          workDescription: workDescription
+        };
+      });
+
+      // Calculate grand total for this invoice
+      const grandTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
 
       result.push({
         index: idx,
         startDate: new Date(periodStart),
         dueDate: new Date(periodEnd),
         items,
+        grandTotal,
       });
 
       idx += 1;
@@ -505,7 +545,7 @@ export default function ClientInvoicesPage() {
                               className="border border-[#333336] mx-3 sm:mx-6"
                               dir="rtl"
                             >
-                              <div className="grid grid-cols-4 text-sm sm:text-base bg-gray-50">
+                              <div className="grid grid-cols-5 text-sm sm:text-base bg-gray-50">
                                 <div className="border-l px-4 py-3 text-right">
                                   اسم المشروع
                                 </div>
@@ -513,7 +553,10 @@ export default function ClientInvoicesPage() {
                                   نوع المشروع
                                 </div>
                                 <div className="border-l px-4 py-3 text-right">
-                                  السعر/الوحدة
+                                  العمل المنجز
+                                </div>
+                                <div className="border-l px-4 py-3 text-right">
+                                  السعر
                                 </div>
                                 <div className="px-4 py-3 text-right">
                                   المجموع
@@ -530,7 +573,7 @@ export default function ClientInvoicesPage() {
                                 return (
                                   <div
                                     key={i}
-                                    className={`grid grid-cols-4 text-sm sm:text-base border-t ${
+                                    className={`grid grid-cols-5 text-sm sm:text-base border-t ${
                                       i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
                                     }`}
                                     dir="rtl"
@@ -540,6 +583,15 @@ export default function ClientInvoicesPage() {
                                     </div>
                                     <div className="border-l px-4 py-3 text-right">
                                       {it?.projectType ?? "\u00A0"}
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right text-xs">
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        it?.workDescription === "العمل قيد التنفيذ" 
+                                          ? "bg-yellow-100 text-yellow-800" 
+                                          : "bg-green-100 text-green-800"
+                                      }`}>
+                                        {it?.workDescription ?? "لا توجد معلومات"}
+                                      </span>
                                     </div>
                                     <div className="border-l px-4 py-3 text-right">
                                       {formatCurrency(it?.unitPrice)}
@@ -557,7 +609,7 @@ export default function ClientInvoicesPage() {
                                 {!paidMap[id] ? (
                                   <>
                                     <PayPalButton
-                                      amount={inv.grandTotal || 100} // Default $100 for testing
+                                      amount={inv.grandTotal || 100} // Use calculated total or default
                                       description={`Alpha Factory Invoice #${inv.index}`}
                                       invoiceId={id}
                                       onSuccess={(data) => {
