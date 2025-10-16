@@ -1,19 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../lib/auth";
 
-// Helper function to extract Google Drive file ID from various URL formats
-function extractGoogleDriveFileId(url: string): string | null {
+// Helper function to extract Google Drive file ID and resource key from various URL formats
+function extractGoogleDriveFileId(
+  url: string
+): { fileId: string; resourceKey?: string } | null {
   // Format 1: https://drive.google.com/file/d/FILE_ID/view
   let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (match) return match[1];
+  if (match) {
+    const fileId = match[1];
+    // Check for resource key
+    const resourceKeyMatch = url.match(/[?&]resourcekey=([a-zA-Z0-9_-]+)/);
+    return {
+      fileId,
+      resourceKey: resourceKeyMatch ? resourceKeyMatch[1] : undefined,
+    };
+  }
 
   // Format 2: https://drive.google.com/open?id=FILE_ID
   match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (match) return match[1];
+  if (match) {
+    return { fileId: match[1] };
+  }
 
   // Format 3: Direct file ID
   if (/^[a-zA-Z0-9_-]{25,}$/.test(url)) {
-    return url;
+    return { fileId: url };
   }
 
   return null;
@@ -162,9 +174,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if it's a Google Drive URL
-    const fileId = extractGoogleDriveFileId(url);
+    const driveInfo = extractGoogleDriveFileId(url);
 
-    if (fileId) {
+    if (driveInfo) {
       // For Google Drive, we need to use their API
       // This requires a Google API key or OAuth token
 
@@ -185,23 +197,68 @@ export async function POST(req: NextRequest) {
         }
 
         const fields = "mimeType,name,videoMediaMetadata";
-        const apiUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?fields=${encodeURIComponent(
-          fields
-        )}&key=${apiKey}`;
+        let apiUrl = `https://www.googleapis.com/drive/v3/files/${
+          driveInfo.fileId
+        }?fields=${encodeURIComponent(fields)}&key=${apiKey}`;
 
-        const response = await fetch(apiUrl);
+        // Add resource key if present (for newer Google Drive files)
+        if (driveInfo.resourceKey) {
+          apiUrl += `&supportsAllDrives=true`;
+        }
+
+        let response = await fetch(apiUrl);
+
+        // If first attempt fails and we have a resource key, try alternative approaches
+        if (!response.ok && driveInfo.resourceKey) {
+          console.log(
+            "First attempt failed, trying alternative approach with resource key..."
+          );
+
+          // Try with different API parameters for files with resource keys
+          const alternativeUrl = `https://www.googleapis.com/drive/v3/files/${
+            driveInfo.fileId
+          }?fields=${encodeURIComponent(
+            fields
+          )}&key=${apiKey}&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+
+          response = await fetch(alternativeUrl);
+        }
 
         if (!response.ok) {
-          console.error("Google Drive API error:", await response.text());
-          return NextResponse.json(
-            {
-              error: "Could not fetch video metadata from Google Drive",
-              message:
-                "The file may be private or the link is invalid. Please enter the duration manually.",
-              requiresManualEntry: true,
-            },
-            { status: 400 }
-          );
+          const errorText = await response.text();
+          console.error("Google Drive API error:", response.status, errorText);
+
+          // Handle different types of errors with more helpful messages
+          if (response.status === 404) {
+            return NextResponse.json(
+              {
+                error: "Google Drive file not accessible",
+                message:
+                  "The file cannot be accessed by the API. This usually means:\n\n1. The file is private (not shared with 'Anyone with the link')\n2. The file has been deleted or moved\n3. The sharing link has expired\n\nPlease check the file's sharing settings and make sure it's set to 'Anyone with the link can view', or enter the duration manually.",
+                requiresManualEntry: true,
+              },
+              { status: 400 }
+            );
+          } else if (response.status === 403) {
+            return NextResponse.json(
+              {
+                error: "Google Drive access denied",
+                message:
+                  "Access to this file is restricted. This usually means:\n\n1. The file is private or has limited sharing\n2. Your organization has restrictions on API access\n3. The file requires additional permissions\n\nPlease share the file with 'Anyone with the link can view' and try again, or enter the duration manually.",
+                requiresManualEntry: true,
+              },
+              { status: 400 }
+            );
+          } else {
+            return NextResponse.json(
+              {
+                error: "Could not fetch video metadata from Google Drive",
+                message: `API returned error ${response.status}. The file may be private, have restricted access, or require special permissions. Please enter the duration manually.`,
+                requiresManualEntry: true,
+              },
+              { status: 400 }
+            );
+          }
         }
 
         const data = await response.json();
