@@ -163,23 +163,63 @@ export default function ClientInvoicesPage() {
     const billableProjects = projects.filter(isProjectBillable);
     
     const result: Invoice[] = billableProjects.map((project, index) => {
-      // Calculate pricing based on project type and work completed
+      // Calculate pricing based on project type and video duration
       let unitPrice = 0;
+      let quantity = 1;
       let workDescription = "";
+      let pricingUnit = "مشروع";
+      let durationInMinutes = 0; // Declare at the top level
       
-      // Basic pricing structure (you can adjust these)
-      const basePrices = {
-        "فيديو تسويقي": 150,
-        "فيديو تعليمي": 120,
-        "تصميم شعار": 80,
-        "تصميم بوستر": 60,
-        "مونتاج فيديو": 100,
-        "تصوير فوتوغرافي": 90,
-        "default": 100
+      // New duration-based pricing structure
+      const durationBasedPrices = {
+        "فيــــــــــــــديوهــــات قـــــصيرة": { rate: 39, unit: "دولار للدقيقة" },
+        "فيــــــــــــــديوهــــات طـــــويلة": { rate: 9, unit: "دولار للدقيقة" },
+        "إعلانات / مقاطع فيديو ترويجية": { rate: 49, unit: "دولار للدقيقة" },
+        "تصاميم الصور المصغرة": { rate: 19, unit: "دولار للتصميم" },
+        "تصاميم الصور المصغرة (ثمبنيل)": { rate: 19, unit: "دولار للتصميم" },
+        "default": { rate: 25, unit: "دولار للدقيقة" }
       };
       
-      // Get base price for project type
-      unitPrice = basePrices[project.type as keyof typeof basePrices] || basePrices.default;
+      // Get pricing info for project type
+      const pricingInfo = durationBasedPrices[project.type as keyof typeof durationBasedPrices] || durationBasedPrices.default;
+      
+      // Check if this is a thumbnail/design project (fixed price)
+      if (project.type === "تصاميم الصور المصغرة" || 
+          project.type === "تصاميم الصور المصغرة (ثمبنيل)" || 
+          project.type?.includes("تصميم") || 
+          project.type?.includes("ثمبنيل")) {
+        unitPrice = pricingInfo.rate;
+        quantity = 1;
+        pricingUnit = "تصميم";
+      } else {
+        // Duration-based pricing for video projects
+        
+        if (project.videoDuration) {
+          // Parse duration (format: "MM:SS" or "HH:MM:SS")
+          const parts = project.videoDuration.split(':');
+          if (parts.length === 2) {
+            // MM:SS format
+            const minutes = parseInt(parts[0]) || 0;
+            const seconds = parseInt(parts[1]) || 0;
+            durationInMinutes = minutes + seconds / 60;
+            
+            // Debug log to see what's happening
+            console.log(`Parsing duration: ${project.videoDuration} -> ${minutes}m ${seconds}s = ${durationInMinutes} minutes, rounded up to ${Math.ceil(durationInMinutes)} minutes`);
+          } else if (parts.length === 3) {
+            // HH:MM:SS format
+            const hours = parseInt(parts[0]) || 0;
+            const minutes = parseInt(parts[1]) || 0;
+            const seconds = parseInt(parts[2]) || 0;
+            durationInMinutes = hours * 60 + minutes + seconds / 60;
+          }
+        }
+        
+        // Use exact minutes for billing (floor to get only complete minutes)
+        // Don't set a default minimum - let it be 0 if no duration
+        quantity = Math.floor(durationInMinutes);
+        unitPrice = pricingInfo.rate;
+        pricingUnit = "دقيقة";
+      }
       
       // Check what work was completed or in progress
       const workCompleted = [];
@@ -217,18 +257,116 @@ export default function ClientInvoicesPage() {
         ? allWork.join(" + ") 
         : "العمل قيد التنفيذ";
 
-      // Create single item for this project
-      const item: InvoiceItem = {
-        id: `${project.id}`,
-        projectId: project.id,
-        projectName: project.title,
-        projectType: project.type,
-        unitPrice: unitPrice,
-        quantity: 1,
-        total: unitPrice,
-        workDate: new Date(project.updatedAt),
-        workDescription: workDescription
-      };
+      // Add duration info to description for video projects
+      if (project.videoDuration && pricingUnit === "دقيقة") {
+        const minuteText = quantity === 1 ? "دقيقة" : "دقائق";
+        workDescription += ` - مدة الفيديو: ${project.videoDuration} (${quantity} ${minuteText})`;
+      }
+
+      // Add pricing unit info
+      workDescription += ` - ${pricingInfo.unit}`;
+
+      // Calculate total based on quantity
+      const totalAmount = unitPrice * quantity;
+
+      // Create items for this project (can be multiple if video + thumbnail)
+      const items: InvoiceItem[] = [];
+      
+      // Check if this project has video work (only if it's a video project type)
+      const isVideoProject = !project.type?.includes("تصميم") && !project.type?.includes("ثمبنيل");
+      const hasVideoWork = isVideoProject && (
+                          project.videoDuration || 
+                          project.editMode === "تم الانتهاء منه" || 
+                          project.editMode === "قيد التنفيذ" ||
+                          project.filmingStatus === "تم الانتـــهاء مــنه"
+                        );
+      
+      const hasDesignWork = workCompleted.includes("التصميم") || 
+                           workInProgress.includes("التصميم") ||
+                           project.designMode === "تم الانتهاء منه" ||
+                           project.designMode === "قيد التنفيذ";
+
+      let invoiceTotal = 0;
+
+      // Add video editing item if there's video work
+      if (hasVideoWork) {
+        const videoWorkDescription = workCompleted.filter(w => w !== "التصميم").concat(
+          workInProgress.filter(w => w !== "التصميم").map(w => `${w} (قيد التنفيذ)`)
+        ).join(" + ") || "المونتاج";
+        
+        let videoDescription = videoWorkDescription;
+        let videoTotal = 0;
+        let videoQuantity = quantity;
+        let videoUnitPrice = unitPrice;
+        
+        // Check if video is completed and has duration
+        if (project.videoDuration && quantity > 0) {
+          const minuteText = quantity === 1 ? "دقيقة" : "دقائق";
+          videoDescription += ` - مدة الفيديو: ${project.videoDuration} (${quantity} ${minuteText})`;
+          videoDescription += ` - ${pricingInfo.unit}`;
+          videoTotal = unitPrice * quantity;
+        } else if (project.editMode === "تم الانتهاء منه" && !project.videoDuration) {
+          // Video is marked as completed but no duration - show pending
+          videoDescription += ` - في انتظار تحديد مدة الفيديو من المحرر`;
+          videoUnitPrice = 0;
+          videoQuantity = 0;
+          videoTotal = 0;
+        } else {
+          // Video work is in progress or not started
+          videoDescription += ` - العمل قيد التنفيذ - الفاتورة النهائية في انتظار اكتمال العمل`;
+          videoUnitPrice = 0;
+          videoQuantity = 0;
+          videoTotal = 0;
+        }
+
+        items.push({
+          id: `${project.id}_video`,
+          projectId: project.id,
+          projectName: project.title,
+          projectType: project.type,
+          unitPrice: videoUnitPrice,
+          quantity: videoQuantity,
+          total: videoTotal,
+          workDate: new Date(project.updatedAt),
+          workDescription: videoDescription
+        });
+        invoiceTotal += videoTotal;
+      }
+
+      // Add thumbnail design item if there's design work
+      if (hasDesignWork) {
+        const thumbnailPrice = 19;
+        const thumbnailDescription = "تصميم الصورة المصغرة  - دولار للتصميم";
+        
+        items.push({
+          id: `${project.id}_thumbnail`,
+          projectId: project.id,
+          projectName: `${project.title} - ثمبنيل`,
+          projectType: "تصاميم الصور المصغرة (ثمبنيل)",
+          unitPrice: thumbnailPrice,
+          quantity: 1,
+          total: thumbnailPrice,
+          workDate: new Date(project.updatedAt),
+          workDescription: thumbnailDescription
+        });
+        invoiceTotal += thumbnailPrice;
+      }
+
+      // If no specific work detected, create a general item
+      if (items.length === 0) {
+        items.push({
+          id: `${project.id}`,
+          projectId: project.id,
+          projectName: project.title,
+          projectType: project.type,
+          unitPrice: unitPrice,
+          quantity: quantity,
+          total: totalAmount,
+          workDate: new Date(project.updatedAt),
+          workDescription: workDescription
+        });
+        invoiceTotal = totalAmount;
+      }
 
       // Create invoice with due date 14 days from project update
       const projectDate = new Date(project.updatedAt);
@@ -238,8 +376,8 @@ export default function ClientInvoicesPage() {
         index: index + 1,
         startDate: projectDate,
         dueDate: dueDate,
-        items: [item],
-        grandTotal: unitPrice,
+        items: items,
+        grandTotal: invoiceTotal,
       };
     });
 
@@ -357,6 +495,36 @@ export default function ClientInvoicesPage() {
           <h1 className="text-5xl bg-gradient-to-l from-white to-black bg-clip-text text-transparent font-light">
             الفواتير{" "}
           </h1>
+        </div>
+
+        {/* Pricing Information */}
+        <div className="bg-[#0F0F0F] border border-[#333336] rounded-2xl p-6 mb-6" dir="rtl">
+          <h2 className="text-xl font-semibold text-[#EAD06C] mb-4">هيكل الأسعار</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                <span>مشاريع المحتوى الطويل (فيديوهات طويلة)</span>
+                <span className="text-[#EAD06C] font-medium">$9 للدقيقة</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                <span>مشاريع المحتوى القصير (فيديوهات قصيرة)</span>
+                <span className="text-[#EAD06C] font-medium">$39 للدقيقة</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                <span>مشاريع الإعلانات (مقاطع ترويجية)</span>
+                <span className="text-[#EAD06C] font-medium">$49 للدقيقة</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                <span>تصاميم الصور المصغرة (ثمبنيل)</span>
+                <span className="text-[#EAD06C] font-medium">$19 / تصميم</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-gray-400">
+            * يتم حساب الفواتير بناءً على مدة الفيديو المكتملة من قسم التحرير
+          </div>
         </div>
 
         {loading ? (
@@ -543,7 +711,7 @@ export default function ClientInvoicesPage() {
                               className="border border-[#333336] mx-3 sm:mx-6"
                               dir="rtl"
                             >
-                              <div className="grid grid-cols-4 text-sm sm:text-base bg-gray-50">
+                              <div className="grid grid-cols-6 text-sm sm:text-base bg-gray-50">
                                 <div className="border-l px-4 py-3 text-right">
                                   اسم المشروع
                                 </div>
@@ -553,6 +721,12 @@ export default function ClientInvoicesPage() {
                                 <div className="border-l px-4 py-3 text-right">
                                   العمل المنجز
                                 </div>
+                                <div className="border-l px-4 py-3 text-right">
+                                  السعر
+                                </div>
+                                <div className="border-l px-4 py-3 text-right">
+                                  الكمية
+                                </div>
                                 <div className="px-4 py-3 text-right">
                                   المجموع
                                 </div>
@@ -560,7 +734,7 @@ export default function ClientInvoicesPage() {
                               {inv.items.map((item, i) => (
                                 <div
                                   key={i}
-                                  className={`grid grid-cols-4 text-sm sm:text-base border-t ${
+                                  className={`grid grid-cols-6 text-sm sm:text-base border-t ${
                                     i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
                                   }`}
                                   dir="rtl"
@@ -573,7 +747,7 @@ export default function ClientInvoicesPage() {
                                   </div>
                                   <div className="border-l px-4 py-3 text-right">
                                     <div className="flex flex-wrap gap-1">
-                                      {item.workDescription && item.workDescription.split(" + ").map((work, idx) => (
+                                      {item.workDescription && item.workDescription.split(" - ")[0].split(" + ").map((work, idx) => (
                                         <span 
                                           key={idx}
                                           className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
@@ -587,10 +761,49 @@ export default function ClientInvoicesPage() {
                                           {work}
                                         </span>
                                       ))}
+                                      {/* Show duration info if available */}
+                                      {item.workDescription && item.workDescription.includes("مدة الفيديو") && (
+                                        <div className="text-xs text-gray-600 mt-1">
+                                          {item.workDescription.split(" - ").find(part => part.includes("مدة الفيديو"))}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
-                                  <div className="px-4 py-3 text-right font-semibold">
-                                    {formatCurrency(item.total)}
+                                  <div className="border-l px-4 py-3 text-right">
+                                    {item.unitPrice === 0 ? (
+                                      <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                    ) : (
+                                      <>
+                                        <div className="font-medium">${item.unitPrice}</div>
+                                        <div className="text-xs text-gray-600">
+                                          {item.workDescription && item.workDescription.includes("دولار للدقيقة") ? "للدقيقة" : 
+                                           item.workDescription && item.workDescription.includes("دولار للتصميم") ? "للتصميم" : ""}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                  <div className="border-l px-4 py-3 text-right">
+                                    {item.quantity === 0 ? (
+                                      <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                    ) : (
+                                      <>
+                                        <div className="font-medium">{item.quantity}</div>
+                                        <div className="text-xs text-gray-600">
+                                          {item.projectType === "تصاميم الصور المصغرة" || 
+                                           item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" || 
+                                           item.projectType?.includes("تصميم") || 
+                                           item.projectType?.includes("ثمبنيل") ? "تصميم" : 
+                                           item.quantity === 1 ? "دقيقة" : "دقائق"}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                  <div className="px-4 py-3 text-right font-medium">
+                                    {item.total === 0 ? (
+                                      <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                    ) : (
+                                      formatCurrency(item.total)
+                                    )}
                                   </div>
                                 </div>
                               ))}
