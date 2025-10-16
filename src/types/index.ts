@@ -55,6 +55,7 @@ export interface Project {
   reviewLinks?: string;
   designLinks?: string;
   documentation?: string;
+  videoDuration?: string;
 
   // Relations
   clientId: string;

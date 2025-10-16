@@ -84,6 +84,7 @@ interface UpdateProjectRequest {
   reviewLinks?: string;
   designLinks?: string;
   documentation?: string;
+  videoDuration?: string;
 }
 
 // GET - Get a specific project
@@ -508,6 +509,7 @@ function getFieldNameInArabic(fieldName: string): string {
     title: "عنوان المشروع",
     type: "نوع المشروع",
     date: "تاريخ المشروع",
+    videoDuration: "مدة الفيديو",
   };
   return fieldMap[fieldName] || fieldName;
 }

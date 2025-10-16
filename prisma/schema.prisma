@@ -106,6 +106,7 @@ model Project {
   reviewLinks      String?
   designLinks      String?
   documentation    String?
+  videoDuration    String?
   clientId         String
   groupId          String?
   editorId         String?
