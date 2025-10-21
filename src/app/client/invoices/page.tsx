@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Project } from "@/src/types";
 import PayPalButton from "@/components/ui/PayPalButton";
+import { authClient } from "@/src/lib/auth-client";
 
 type InvoiceItem = {
   id: string;
@@ -40,7 +41,7 @@ function formatCurrency(value?: number) {
   if (value === undefined || value === null || Number.isNaN(value))
     return "\u00A0";
   try {
-    return new Intl.NumberFormat("ar-EG", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(value);
@@ -94,23 +95,32 @@ export default function ClientInvoicesPage() {
   );
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [session, setSession] = useState<any>(null);
+  const [showPricingTooltip, setShowPricingTooltip] = useState(false);
   
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch projects
         const res = await fetch("/api/projects");
         if (!res.ok) throw new Error("Failed to load projects");
         const data = await res.json();
         setProjects(data.projects || []);
+        
+        // Fetch session for client email
+        const sessionData = await authClient.getSession();
+        console.log("Session data:", sessionData); // Debug log
+        setSession(sessionData);
       } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
       }
     };
-    fetchProjects();
+    fetchData();
   }, []);
 
   // Handle PayPal return
@@ -497,33 +507,46 @@ export default function ClientInvoicesPage() {
           </h1>
         </div>
 
-        {/* Pricing Information */}
-        <div className="bg-[#0F0F0F] border border-[#333336] rounded-2xl p-6 mb-6" dir="rtl">
-          <h2 className="text-xl font-semibold text-[#EAD06C] mb-4">هيكل الأسعار</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                <span>مشاريع المحتوى الطويل (فيديوهات طويلة)</span>
-                <span className="text-[#EAD06C] font-medium">$9 للدقيقة</span>
+        {/* Pricing Information Tooltip */}
+        <div className="flex justify-center mb-6">
+          <div className="relative">
+            <button
+              onMouseEnter={() => setShowPricingTooltip(true)}
+              onMouseLeave={() => setShowPricingTooltip(false)}
+              className="w-8 h-8 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-lg hover:bg-[#EAD06C]/80 transition-colors"
+            >
+              ?
+            </button>
+            {showPricingTooltip && (
+              <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-[#0F0F0F] border border-[#333336] rounded-2xl p-6 w-[600px] z-50 shadow-xl" dir="rtl">
+                <h3 className="text-lg font-semibold text-[#EAD06C] mb-4 text-center">هيكل الأسعار</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span>مشاريع المحتوى الطويل (فيديوهات طويلة)</span>
+                      <span className="text-[#EAD06C] font-medium">$9 للدقيقة</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span>مشاريع المحتوى القصير (فيديوهات قصيرة)</span>
+                      <span className="text-[#EAD06C] font-medium">$39 للدقيقة</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span>مشاريع الإعلانات (مقاطع ترويجية)</span>
+                      <span className="text-[#EAD06C] font-medium">$49 للدقيقة</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
+                      <span>تصاميم الصور المصغرة (ثمبنيل)</span>
+                      <span className="text-[#EAD06C] font-medium">$19 للتصميم</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 text-xs text-gray-400 text-center">
+                  * يتم حساب الفواتير بناءً على مدة الفيديو المكتملة من قسم التحرير
+                </div>
               </div>
-              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                <span>مشاريع المحتوى القصير (فيديوهات قصيرة)</span>
-                <span className="text-[#EAD06C] font-medium">$39 للدقيقة</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                <span>مشاريع الإعلانات (مقاطع ترويجية)</span>
-                <span className="text-[#EAD06C] font-medium">$49 للدقيقة</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                <span>تصاميم الصور المصغرة (ثمبنيل)</span>
-                <span className="text-[#EAD06C] font-medium">$19 / تصميم</span>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 text-xs text-gray-400">
-            * يتم حساب الفواتير بناءً على مدة الفيديو المكتملة من قسم التحرير
+            )}
           </div>
         </div>
 
@@ -692,7 +715,7 @@ export default function ClientInvoicesPage() {
                                     support@alphafactory.net |
                                     www.alphafactory.net
                                     <br />
-                                    Bill To: —
+                                    Bill To: {session?.data?.user?.email || session?.user?.email || session?.email || "Loading..."}
                                   </div>
                                 </div>
 
@@ -725,7 +748,7 @@ export default function ClientInvoicesPage() {
                                   السعر
                                 </div>
                                 <div className="border-l px-4 py-3 text-right">
-                                  الكمية
+                                  المدة
                                 </div>
                                 <div className="px-4 py-3 text-right">
                                   المجموع
