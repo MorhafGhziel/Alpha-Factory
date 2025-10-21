@@ -140,9 +140,9 @@ export default function PayPalButton({
               height={20}
               className="h-5 w-auto"
             />
-            <span className="text-black font-semibold">
+            {/* <span className="text-black font-semibold">
               ${amount.toFixed(2)}
-            </span>
+            </span> */}
           </>
         )}
       </button>

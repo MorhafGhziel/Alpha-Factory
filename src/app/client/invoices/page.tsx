@@ -166,6 +166,13 @@ export default function ClientInvoicesPage() {
     }
   }, [searchParams, paidMap, savePaid]);
 
+  // Function to check if invoice has any pending items
+  const hasWaitingItems = (invoice: Invoice) => {
+    return invoice.items.some(item => 
+      item.unitPrice === 0 || item.quantity === 0 || item.total === 0
+    );
+  };
+
   const invoices = useMemo<Invoice[]>(() => {
     if (!projects.length) return [];
 
@@ -837,9 +844,10 @@ export default function ClientInvoicesPage() {
                                 {!paidMap[id] ? (
                                   <>
                                     <PayPalButton
-                                      amount={inv.grandTotal || 100} // Use calculated total or default
+                                      amount={inv.grandTotal || 0}
                                       description={`Alpha Factory Invoice #${inv.index}`}
                                       invoiceId={id}
+                                      disabled={hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0}
                                       onSuccess={(data) => {
                                         console.log('Payment successful:', data);
                                         markPaid(inv);
@@ -855,8 +863,13 @@ export default function ClientInvoicesPage() {
                                       }}
                                     />
                                     <button
-                                      onClick={() => markPaid(inv)}
-                                      className="cursor-pointer flex items-center gap-2 text-white text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg bg-[#0B0B0B] hover:bg-[#0B0B0B]/80 transition-all duration-300"
+                                      onClick={() => !hasWaitingItems(inv) && inv.grandTotal && inv.grandTotal > 0 ? markPaid(inv) : null}
+                                      disabled={hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0}
+                                      className={`flex items-center gap-2 text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg transition-all duration-300 ${
+                                        hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0
+                                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                                          : 'bg-[#0B0B0B] text-white cursor-pointer hover:bg-[#0B0B0B]/80'
+                                      }`}
                                     >
                                       <Image
                                         src="/icons/crypto.svg"
