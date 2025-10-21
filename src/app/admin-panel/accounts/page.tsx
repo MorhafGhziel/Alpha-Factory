@@ -14,6 +14,9 @@ interface User {
   createdAt: string;
   emailVerified: boolean;
   groupId?: string | null;
+  suspended?: boolean;
+  suspendedAt?: string;
+  suspensionReason?: string;
 }
 
 interface Group {
@@ -68,6 +71,15 @@ export default function AccountsManagementPage() {
   
   // Expanded groups state
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  
+  // Suspension modal state
+  const [suspensionModal, setSuspensionModal] = useState<{
+    show: boolean;
+    userId: string;
+    userName: string;
+    action: 'suspend' | 'unsuspend';
+    currentStatus: boolean;
+  } | null>(null);
 
   const roles = ['admin', 'client', 'designer', 'reviewer', 'editor'];
 
@@ -283,6 +295,66 @@ export default function AccountsManagementPage() {
     });
   };
 
+  const handleSuspensionAction = (userId: string, userName: string, currentStatus: boolean) => {
+    setSuspensionModal({
+      show: true,
+      userId,
+      userName,
+      action: currentStatus ? 'unsuspend' : 'suspend',
+      currentStatus,
+    });
+  };
+
+  const confirmSuspensionAction = async () => {
+    if (!suspensionModal) return;
+
+    try {
+      const endpoint = '/api/admin/suspend-user';
+      const method = suspensionModal.action === 'suspend' ? 'POST' : 'DELETE';
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: suspensionModal.userId,
+          reason: suspensionModal.action === 'suspend' ? 'تم التعليق من قبل الإدارة' : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update suspension status');
+      }
+
+      const data = await response.json();
+      
+      // Update the user in the local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === suspensionModal.userId ? data.user : user
+        )
+      );
+      
+      // Also update in groups if viewing by groups
+      setGroups(prevGroups => 
+        prevGroups.map(group => ({
+          ...group,
+          users: group.users.map(user => 
+            user.id === suspensionModal.userId ? data.user : user
+          )
+        }))
+      );
+      
+      setSuspensionModal(null);
+      setError(null);
+      setSuccessMessage(data.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
   const confirmDeleteGroup = async () => {
     if (!deleteGroupConfirm) return;
 
@@ -384,6 +456,16 @@ export default function AccountsManagementPage() {
             className="text-gray-400 cursor-pointer hover:text-blue-400 transition-colors text-sm px-3 py-1 rounded-lg hover:bg-blue-900/20"
           >
             تغيير كلمة المرور
+          </button>
+          <button
+            onClick={() => handleSuspensionAction(user.id, user.name, user.suspended || false)}
+            className={`cursor-pointer transition-colors text-sm px-3 py-1 rounded-lg ${
+              user.suspended 
+                ? "text-gray-400 hover:text-green-400 hover:bg-green-900/20" 
+                : "text-gray-400 hover:text-orange-400 hover:bg-orange-900/20"
+            }`}
+          >
+            {user.suspended ? 'إلغاء التعليق' : 'تعليق الحساب'}
           </button>
           <button
             onClick={() => handleDeleteUser(user.id, user.name)}
@@ -534,6 +616,31 @@ export default function AccountsManagementPage() {
           <div className="text-gray-200 text-sm font-mono bg-[#1a1a1a] px-2 py-1 rounded">
             {user.username || 'غير محدد'}
           </div>
+        </div>
+
+        {/* Suspension Status Field */}
+        <div className="bg-[#0B0B0B] rounded-lg px-4 py-3">
+          <div className="text-gray-400 text-sm mb-2">حالة الحساب:</div>
+          <div className={`text-sm px-2 py-1 rounded flex items-center space-x-2 ${
+            user.suspended 
+              ? 'bg-red-900/20 text-red-400' 
+              : 'bg-green-900/20 text-green-400'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              user.suspended ? 'bg-red-400' : 'bg-green-400'
+            }`}></span>
+            <span>{user.suspended ? 'معلق' : 'نشط'}</span>
+          </div>
+          {user.suspended && user.suspendedAt && (
+            <div className="text-xs text-gray-500 mt-1">
+              تاريخ التعليق: {new Date(user.suspendedAt).toLocaleDateString('ar-SA')}
+            </div>
+          )}
+          {user.suspended && user.suspensionReason && (
+            <div className="text-xs text-gray-500 mt-1">
+              السبب: {user.suspensionReason}
+            </div>
+          )}
         </div>
 
         {/* Created Date */}
@@ -961,6 +1068,73 @@ export default function AccountsManagementPage() {
                 </button>
                 <button
                   onClick={cancelDeleteGroup}
+                  className="bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Suspension Confirmation Modal */}
+      <AnimatePresence>
+        {suspensionModal?.show && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setSuspensionModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0F0F0F] border border-[#333336] rounded-2xl p-8 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  suspensionModal.action === 'suspend' ? 'bg-orange-900/20' : 'bg-green-900/20'
+                }`}>
+                  {suspensionModal.action === 'suspend' ? (
+                    <svg className="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                
+                <h3 className="text-xl font-bold text-white mb-2">
+                  {suspensionModal.action === 'suspend' ? 'تعليق الحساب' : 'إلغاء تعليق الحساب'}
+                </h3>
+                
+                <p className="text-gray-300 mb-6">
+                  {suspensionModal.action === 'suspend' 
+                    ? `هل أنت متأكد من تعليق حساب "${suspensionModal.userName}"؟ سيتم منع المستخدم من الوصول إلى النظام.`
+                    : `هل أنت متأكد من إلغاء تعليق حساب "${suspensionModal.userName}"؟ سيتمكن المستخدم من الوصول إلى النظام مرة أخرى.`
+                  }
+                </p>
+              </div>
+
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={confirmSuspensionAction}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2 ${
+                    suspensionModal.action === 'suspend'
+                      ? 'bg-orange-600 text-white hover:bg-orange-700'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  <span>{suspensionModal.action === 'suspend' ? 'تعليق الحساب' : 'إلغاء التعليق'}</span>
+                </button>
+                <button
+                  onClick={() => setSuspensionModal(null)}
                   className="bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
                 >
                   إلغاء

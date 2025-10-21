@@ -449,52 +449,76 @@ export default function ClientInvoicesPage() {
 
   // Attempt to trigger email and also show message in app
   async function triggerEmail(kind: "3" | "7" | "10") {
-    const subjectMap: Record<string, string> = {
-      "3": "تذكير بالدفع - بعد 3 أيام من تاريخ الاستحقاق",
-      "7": "تعليق مؤقت للحساب - تأخير 7 أيام",
-      "10": "إيقاف نهائي للحساب - تأخير 10 أيام",
-    };
-
-    const body3 = `عزيزي العميل\n\nنود تذكيرك بضرورة تسديد الفاتورة في الوقت المحدد لضمان استمرار الخدمة دون أي انقطاع:\n\n• بعد 3 أيام من تاريخ الاستحقاق: سيتم إرسال تذكير إضافي بالدفع\n• بعد 7 أيام من التأخير: سيتم تعليق الحساب بشكل مؤقت\n• بعد 10 أيام من التأخير: سيتوقف الحساب بشكل كامل\n\nنرجوا منك تجاوز عملية الدفع في أسرع وقت ممكن. ولأي استفسار أو مساعدة في عملية السداد، يرجى التواصل مع فريق الدعم.\n\nمع التقدير،\nفريق Alpha Factory`;
-    const body7 = `عزيزي العميل،\n\nنود إعلامك بأنه تم تعليق حسابك مؤقتاً بسبب عدم تسديد الفاتورة المستحقة خلال المدة المحددة.\nيمكنك إعادة تفعيل الحساب فوراً عن طريق إتمام عملية الدفع\n\nنرجو منك الإسراع في السداد لتفادي انتقال الحساب إلى الإيقاف الكامل بعد مرور 10 أيام\n\nمع الشكر والتقدير،\nفريق Alpha Factory`;
-    const body10 = `عزيزي العميل\n\nنود إعلامك أنه قد تم إيقاف حسابك نهائياً بسبب عدم تسديد الفاتورة المستحقة خلال الفترة المحددة (10 أيام من تاريخ الاستحقاق)\n\nيرجى ملاحظة ما يلي:\n• لا يمكن إعادة تفعيل الحساب عبر الدفع المباشر.\n• لمتابعة الإجراءات وتسوية المبالغ المستحقة، يجب التواصل مع فريق الدعم حصراً.\n\nللتواصل مع الدعم، الرجاء مراسلتنا عبر البريد: support@alphafactory.net\n\nفي حال عدم التواصل خلال فترة وجيزة، تحتفظ الشركة بحقها في اتخاذ أي خطوات إضافية بخصوص المبلغ غير المسدد.\n\nمع التحية،\nإدارة Alpha Factory`;
-
-    const msg = kind === "3" ? body3 : kind === "7" ? body7 : body10;
-
-    // Try API notification
     try {
-      await fetch("/api/notifications", {
+      // Get user info for the email
+      const userEmail = session?.data?.user?.email || session?.user?.email || session?.email;
+      const userName = session?.data?.user?.name || session?.user?.name || session?.name || "العميل";
+
+      if (!userEmail) {
+        console.error("No user email found for sending reminder");
+        setEmailNotice("تعذر إرسال البريد - لم يتم العثور على عنوان البريد الإلكتروني");
+        setTimeout(() => setEmailNotice(null), 4000);
+        return;
+      }
+
+      console.log(`📧 Sending ${kind}-day reminder email to ${userEmail}`);
+
+      // Send email via our API
+      const response = await fetch("/api/test/send-email-direct", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: "project_update",
-          message: `${subjectMap[kind]}\n\n${msg}`,
+          reminderType: kind,
+          userEmail: userEmail,
+          userName: userName,
         }),
       });
-    } catch {}
 
-    // Fallback: open mail client so the email can be sent by user
-    try {
-      const mailto = `mailto:support@alphafactory.net?subject=${encodeURIComponent(
-        subjectMap[kind]
-      )}&body=${encodeURIComponent(msg)}`;
-      window.open(mailto, "_blank");
-    } catch {}
+      const result = await response.json();
 
-    setEmailNotice("تم إرسال رسالة التذكير عبر البريد");
+      if (response.ok && result.success) {
+        console.log(`✅ ${kind}-day reminder email sent successfully`);
+        setEmailNotice(`تم إرسال رسالة التذكير عبر البريد الإلكتروني إلى ${userEmail}`);
+      } else {
+        console.error("❌ Failed to send reminder email:", result.error);
+        setEmailNotice("تعذر إرسال رسالة التذكير - يرجى المحاولة مرة أخرى");
+      }
+    } catch (error) {
+      console.error("❌ Error sending reminder email:", error);
+      setEmailNotice("تعذر إرسال رسالة التذكير - خطأ في النظام");
+    }
+
     setTimeout(() => setEmailNotice(null), 4000);
   }
 
-  // Auto trigger per threshold (3/7/10) once per invoice (frontend-only)
+  // Auto trigger per threshold (3/7/10) once per invoice and handle suspension
   useEffect(() => {
-    invoices.forEach((inv) => {
+    invoices.forEach(async (inv) => {
       const id = getInvoiceId(inv);
       if (paidMap[id]) return;
       const remaining = daysUntil(inv.dueDate);
       const overdue = Math.max(0, -remaining);
+      
       if (overdue >= 10 && !wasReminderSent(id, 10)) {
         setReminderSent(id, 10);
         triggerEmail("10");
+        
+        // Auto-suspend user after 10 days overdue
+        try {
+          const userId = session?.data?.user?.id || session?.user?.id;
+          if (userId) {
+            await fetch("/api/admin/auto-suspend", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId,
+                invoiceDueDate: inv.dueDate,
+              }),
+            });
+          }
+        } catch (error) {
+          console.error("Error auto-suspending user:", error);
+        }
       } else if (overdue >= 7 && !wasReminderSent(id, 7)) {
         setReminderSent(id, 7);
         triggerEmail("7");
@@ -503,7 +527,7 @@ export default function ClientInvoicesPage() {
         triggerEmail("3");
       }
     });
-  }, [invoices, paidMap]);
+  }, [invoices, paidMap, session]);
 
   return (
     <div className="min-h-screen text-white md:py-20 py-10">

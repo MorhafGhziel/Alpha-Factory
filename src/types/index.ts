@@ -30,6 +30,9 @@ export interface User {
   role: string;
   groupId?: string;
   phone?: string;
+  suspended?: boolean;
+  suspendedAt?: Date;
+  suspensionReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
