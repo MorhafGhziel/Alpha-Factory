@@ -11,6 +11,8 @@ export default function ReviewerLayoutClient({
   children: React.ReactNode;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -18,6 +20,21 @@ export default function ReviewerLayoutClient({
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const openSupport = () => {
+    try {
+      const mailto = `mailto:support@alphafactory.net?subject=${encodeURIComponent(
+        "طلب دعم فني - Reviewer Panel - Alpha Factory"
+      )}&body=${encodeURIComponent(
+        "مرحباً فريق الدعم،\n\nأحتاج إلى مساعدة في لوحة المراجعة:\n\n[يرجى وصف المشكلة أو الاستفسار هنا]\n\nشكراً لكم"
+      )}`;
+      window.open(mailto, "_blank");
+    } catch {
+      setToastType("error");
+      setToastMsg("تعذر فتح تطبيق البريد، حاول مرة أخرى");
+      setTimeout(() => setToastMsg(null), 3000);
+    }
   };
 
   return (
@@ -57,6 +74,20 @@ export default function ReviewerLayoutClient({
             alt: "Community",
             text: "المجتمع",
           },
+          {
+            path: "",
+            icon: "",
+            alt: "",
+            text: "",
+            isBorder: true,
+          },
+          {
+            path: "",
+            icon: "/icons/Support.svg",
+            alt: "Support",
+            text: "الدعم",
+            onClick: openSupport,
+          },
           ]}
           animated={true}
         />
@@ -88,12 +119,13 @@ export default function ReviewerLayoutClient({
             alt: "Community",
             tooltip: "المجتمع",
           },
+          { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
           {
             path: "",
-            icon: "",
-            alt: "",
-            tooltip: "",
-            isBorder: true,
+            icon: "/icons/Support.svg",
+            alt: "Support",
+            tooltip: "الدعم",
+            onClick: openSupport,
           },
           ]}
         spacing="space-y-4"
@@ -103,6 +135,19 @@ export default function ReviewerLayoutClient({
       <div className="flex-1">
         <div className="text-center pt-16 lg:pt-0">{children}</div>
       </div>
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div
+            className={`px-4 py-2 rounded-lg shadow-lg text-white ${
+              toastType === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
+          >
+            {toastMsg}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

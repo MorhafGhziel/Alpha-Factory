@@ -15,6 +15,8 @@ export default function AdminLayoutClient({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [teams, setTeams] = useState<TeamGroup[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   const addTeam = (team: Omit<TeamGroup, "id" | "createdAt">) => {
     const newTeam = createNewTeam(team);
@@ -31,6 +33,21 @@ export default function AdminLayoutClient({
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const openSupport = () => {
+    try {
+      const mailto = `mailto:support@alphafactory.net?subject=${encodeURIComponent(
+        "طلب دعم فني - Admin Panel - Alpha Factory"
+      )}&body=${encodeURIComponent(
+        "مرحباً فريق الدعم،\n\nأحتاج إلى مساعدة في لوحة الإدارة:\n\n[يرجى وصف المشكلة أو الاستفسار هنا]\n\nشكراً لكم"
+      )}`;
+      window.open(mailto, "_blank");
+    } catch {
+      setToastType("error");
+      setToastMsg("تعذر فتح تطبيق البريد، حاول مرة أخرى");
+      setTimeout(() => setToastMsg(null), 3000);
+    }
   };
 
   useEffect(() => {
@@ -110,6 +127,13 @@ export default function AdminLayoutClient({
               text: "",
               isBorder: true,
             },
+            {
+              path: "",
+              icon: "/icons/Support.svg",
+              alt: "Support",
+              text: "الدعم",
+              onClick: openSupport,
+            },
           ]}
           animated={false}
         />
@@ -156,6 +180,14 @@ export default function AdminLayoutClient({
               alt: "Manage Account",
               tooltip: "ادارة الحسابات",
             },
+            { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
+            {
+              path: "",
+              icon: "/icons/Support.svg",
+              alt: "Support",
+              tooltip: "الدعم",
+              onClick: openSupport,
+            },
           ]}
           width="w-20"
           bgColor="bg-[#0f0f0f]"
@@ -168,6 +200,19 @@ export default function AdminLayoutClient({
         <div className="flex-1">
           <div className="text-center pt-16 lg:pt-0">{children}</div>
         </div>
+
+        {/* Toast Notification */}
+        {toastMsg && (
+          <div className="fixed bottom-4 right-4 z-50">
+            <div
+              className={`px-4 py-2 rounded-lg shadow-lg text-white ${
+                toastType === "success" ? "bg-green-600" : "bg-red-600"
+              }`}
+            >
+              {toastMsg}
+            </div>
+          </div>
+        )}
       </div>
     </TeamContext.Provider>
   );

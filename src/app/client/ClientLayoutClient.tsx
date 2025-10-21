@@ -41,15 +41,17 @@ export default function ClientLayoutClient({
   const openBookmark = () => setIsBookmarkOpen(true);
   const closeBookmark = () => setIsBookmarkOpen(false);
 
-  const copySupport = async () => {
+  const openSupport = () => {
     try {
-      await navigator.clipboard.writeText("support@alphafactory.net");
-      setToastType("success");
-      setToastMsg("تم نسخ البريد: support@alphafactory.net");
-      setTimeout(() => setToastMsg(null), 3000);
+      const mailto = `mailto:support@alphafactory.net?subject=${encodeURIComponent(
+        "طلب دعم فني - Alpha Factory"
+      )}&body=${encodeURIComponent(
+        "مرحباً فريق الدعم،\n\nأحتاج إلى مساعدة في:\n\n[يرجى وصف المشكلة أو الاستفسار هنا]\n\nشكراً لكم"
+      )}`;
+      window.open(mailto, "_blank");
     } catch {
       setToastType("error");
-      setToastMsg("تعذر النسخ، حاول مرة أخرى");
+      setToastMsg("تعذر فتح تطبيق البريد، حاول مرة أخرى");
       setTimeout(() => setToastMsg(null), 3000);
     }
   };
@@ -130,7 +132,7 @@ export default function ClientLayoutClient({
               icon: "/icons/Support.svg",
               alt: "Support",
               text: "الدعم",
-              onClick: copySupport,
+              onClick: openSupport,
             },
           ]}
           animated={true}
@@ -202,7 +204,7 @@ export default function ClientLayoutClient({
               icon: "/icons/Support.svg",
               alt: "Support",
               tooltip: "الدعم",
-              onClick: copySupport,
+              onClick: openSupport,
             },
             {
               path: "",
