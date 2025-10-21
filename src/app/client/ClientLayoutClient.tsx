@@ -464,31 +464,110 @@ export default function ClientLayoutClient({
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-gray-400 border-b border-[#333336]">
-                          <th className="py-2">نوع المشروع</th>
-                          <th className="py-2">مدة المشروع</th>
-                          <th className="py-2">مدة التسليم المتوقعة</th>
+                          <th className="py-2 text-right">نوع المشروع</th>
+                          <th className="py-2 text-right">مدة المشروع</th>
+                          <th className="py-2 text-right">مدة التسليم المتوقعة</th>
                         </tr>
                       </thead>
                       <tbody className="[&>tr:nth-child(even)]:bg-[#151515]">
                         <tr>
-                          <td className="py-2">المحتوى الطويل</td>
-                          <td className="py-2">8 - 15 دقائق</td>
-                          <td className="py-2">1 - 3 أيام</td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            مشاريع المحتوى الطويل [فيديوهات طويلة]
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            8 - 15 دقائق
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 3 أيام
+                          </td>
                         </tr>
                         <tr>
-                          <td className="py-2">المحتوى القصير</td>
-                          <td className="py-2">15 - 30 دقيقة</td>
-                          <td className="py-2">3 - 5 أيام</td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            15 - 30 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            3 - 5 أيام
+                          </td>
                         </tr>
                         <tr>
-                          <td className="py-2">الإعلانات</td>
-                          <td className="py-2">30 - 60 دقيقة</td>
-                          <td className="py-2">4 - 6 أيام</td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            30 - 60 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            4 - 6 أيام
+                          </td>
                         </tr>
                         <tr>
-                          <td className="py-2">تصميم الصور</td>
-                          <td className="py-2">تصميم واحد</td>
-                          <td className="py-2">4 - 24 ساعة</td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 5 ساعات
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            4 - 7 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            مشاريع المحتوى القصير [فيديوهات قصيرة]
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            10 ثوان - 1 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            0 - 1 يوم
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 3 دقائق
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 2 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            مشاريع الإعلانات [مقاطع ترويجية]
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            10 ثوان - 1 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            0 - 1 يوم
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 3 دقائق
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 2 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2">
+                            تصاميم الصور المصغرة [ثَمبُنيلات]
+                          </td>
+                          <td className="py-3 px-2">
+                            تصميم واحد
+                          </td>
+                          <td className="py-3 px-2">
+                            1 - 24 ساعة
+                          </td>
                         </tr>
                       </tbody>
                     </table>
