@@ -84,10 +84,41 @@ export async function DELETE(request: NextRequest) {
       },
     });
 
+    // When admin removes suspension, clear all overdue invoices by updating project dates
+    const completedProjects = await prisma.project.findMany({
+      where: {
+        clientId: userId,
+        filmingStatus: "تم الانتـــهاء مــنه",
+        editMode: "تم الانتهاء منه",
+        designMode: "تم الانتهاء منه",
+        reviewMode: "تمت المراجعة",
+      },
+    });
+
+    // Update all completed projects to have recent updatedAt (making invoices appear current)
+    const recentDate = new Date();
+    await prisma.project.updateMany({
+      where: {
+        clientId: userId,
+        filmingStatus: "تم الانتـــهاء مــنه",
+        editMode: "تم الانتهاء منه",
+        designMode: "تم الانتهاء منه",
+        reviewMode: "تمت المراجعة",
+      },
+      data: {
+        updatedAt: recentDate,
+      },
+    });
+
+    console.log(
+      `✅ Admin unsuspended user ${updatedUser.email} and cleared ${completedProjects.length} overdue invoices`
+    );
+
     return NextResponse.json({
       success: true,
-      message: "تم إلغاء تعليق الحساب بنجاح",
+      message: `تم إلغاء تعليق الحساب وإزالة ${completedProjects.length} فاتورة متأخرة`,
       user: updatedUser,
+      clearedInvoices: completedProjects.length,
     });
   } catch (error) {
     console.error("Error removing suspension:", error);

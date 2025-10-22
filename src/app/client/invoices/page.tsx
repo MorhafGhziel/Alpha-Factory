@@ -435,8 +435,30 @@ export default function ClientInvoicesPage() {
       4000
     );
 
-    // Refresh overdue status after payment to remove restrictions
-    setTimeout(() => {
+    // Remove suspension if user was suspended due to overdue invoices
+    setTimeout(async () => {
+      try {
+        const userId = session?.data?.user?.id || session?.user?.id;
+        if (userId) {
+          // Check if user is suspended
+          const response = await fetch("/api/auth/check-suspension");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.suspended) {
+              console.log("🔓 Payment completed - removing suspension...");
+              // Remove suspension since invoice is now paid
+              await fetch("/api/admin/suspend-user", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId }),
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error removing suspension after payment:", error);
+      }
+      
       console.log("🔄 Payment completed - refreshing overdue status...");
       window.location.reload();
     }, 2000);
@@ -514,11 +536,28 @@ export default function ClientInvoicesPage() {
         // TODO: Implement 14-day complete block
         console.log("🔒 14-day overdue: Account should be completely blocked");
       }
-      // 10 days: Email + restrict to invoice page only  
+      // 10 days: Email + automatic account suspension  
       else if (overdue >= 10 && !wasReminderSent(id, 10)) {
         setReminderSent(id, 10);
         triggerEmail("10");
-        console.log("⚠️ 10-day overdue: User restricted to invoice page only");
+        
+        // Auto-suspend user after 10 days overdue
+        try {
+          const userId = session?.data?.user?.id || session?.user?.id;
+          if (userId) {
+            await fetch("/api/admin/auto-suspend", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId,
+                invoiceDueDate: inv.dueDate,
+              }),
+            });
+            console.log("🔒 10-day overdue: User account automatically suspended");
+          }
+        } catch (error) {
+          console.error("Error auto-suspending user:", error);
+        }
       } 
       // 7 days: Email + restrict to invoice page only
       else if (overdue >= 7 && !wasReminderSent(id, 7)) {

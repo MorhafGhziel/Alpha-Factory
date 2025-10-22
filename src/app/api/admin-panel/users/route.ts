@@ -32,6 +32,9 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         emailVerified: true,
         groupId: true,
+        suspended: true,
+        suspendedAt: true,
+        suspensionReason: true,
       },
     });
 

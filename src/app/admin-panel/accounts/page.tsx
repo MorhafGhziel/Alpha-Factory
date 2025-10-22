@@ -428,7 +428,11 @@ export default function AccountsManagementPage() {
   const renderUserCard = (user: User, index: number) => (
     <motion.div
       key={user.id}
-      className="bg-[#1a1a1a] rounded-2xl p-6"
+      className={`rounded-2xl p-6 ${
+        user.suspended 
+          ? 'bg-red-900/10 border border-red-500/20' 
+          : 'bg-[#1a1a1a]'
+      }`}
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
@@ -442,9 +446,16 @@ export default function AccountsManagementPage() {
             </span>
           </div>
           <div>
-            <h3 className="text-[#E9CF6B] text-xl font-semibold">
-              {user.name}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-[#E9CF6B] text-xl font-semibold">
+                {user.name}
+              </h3>
+              {user.suspended && (
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                  معلق
+                </span>
+              )}
+            </div>
             <p className="text-gray-400 text-sm">
               {user.role ? getRoleInArabic(user.role) : 'لا يوجد دور'}
             </p>
@@ -631,16 +642,7 @@ export default function AccountsManagementPage() {
             }`}></span>
             <span>{user.suspended ? 'معلق' : 'نشط'}</span>
           </div>
-          {user.suspended && user.suspendedAt && (
-            <div className="text-xs text-gray-500 mt-1">
-              تاريخ التعليق: {new Date(user.suspendedAt).toLocaleDateString('ar-SA')}
-            </div>
-          )}
-          {user.suspended && user.suspensionReason && (
-            <div className="text-xs text-gray-500 mt-1">
-              السبب: {user.suspensionReason}
-            </div>
-          )}
+       
         </div>
 
         {/* Created Date */}
