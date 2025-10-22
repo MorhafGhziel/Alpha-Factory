@@ -98,6 +98,7 @@ export default function ClientInvoicesPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [session, setSession] = useState<any>(null);
   const [showPricingTooltip, setShowPricingTooltip] = useState(false);
+  const [cryptoToast, setCryptoToast] = useState<string | null>(null);
   
   const searchParams = useSearchParams();
 
@@ -596,7 +597,7 @@ export default function ClientInvoicesPage() {
           </div>
         ) : (
           <div className="space-y-5">
-            {(emailNotice || paymentStatus) && (
+            {(emailNotice || paymentStatus || cryptoToast) && (
               <div className="mx-auto max-w-6xl px-4">
                 {emailNotice && (
                   <div
@@ -619,6 +620,20 @@ export default function ClientInvoicesPage() {
                   >
                     {paymentStatus}
                   </div>
+                )}
+                {cryptoToast && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                    className="mb-3 px-4 py-3 rounded-lg bg-orange-900/30 border border-orange-500 text-orange-200 text-sm flex items-center gap-2"
+                    dir="rtl"
+                  >
+                    <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    {cryptoToast}
+                  </motion.div>
                 )}
               </div>
             )}
@@ -892,13 +907,11 @@ export default function ClientInvoicesPage() {
                                       }}
                                     />
                                     <button
-                                      onClick={() => !hasWaitingItems(inv) && inv.grandTotal && inv.grandTotal > 0 ? markPaid(inv) : null}
-                                      disabled={hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0}
-                                      className={`flex items-center gap-2 text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg transition-all duration-300 ${
-                                        hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0
-                                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
-                                          : 'bg-[#0B0B0B] text-white cursor-pointer hover:bg-[#0B0B0B]/80'
-                                      }`}
+                                      onClick={() => {
+                                        setCryptoToast('دفع العملات المشفرة قيد التطوير - سيتم تفعيله قريباً! ');
+                                        setTimeout(() => setCryptoToast(null), 4000);
+                                      }}
+                                      className="flex items-center gap-2 text-sm sm:text-base font-semibold px-4 sm:px-10 py-2 rounded-lg transition-all duration-300 bg-[#0B0B0B] text-white cursor-pointer hover:bg-[#0B0B0B]/80"
                                     >
                                       <Image
                                         src="/icons/crypto.svg"
