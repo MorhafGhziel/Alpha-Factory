@@ -153,16 +153,42 @@ export async function POST(req: NextRequest) {
 
     // Send Telegram notification to the group
     if (user.group?.telegramChatId) {
-      await sendNewProjectNotification(user.group.telegramChatId, {
-        title,
-        type,
-        filmingStatus,
-        date,
-        clientName: user.name,
-        notes,
-        fileLinks,
-        voiceNoteUrl,
-      });
+      console.log(
+        `📱 Attempting to send Telegram notification to chat ID: ${user.group.telegramChatId}`
+      );
+      try {
+        const notificationSent = await sendNewProjectNotification(
+          user.group.telegramChatId,
+          {
+            title,
+            type,
+            filmingStatus,
+            date,
+            clientName: user.name,
+            notes,
+            fileLinks,
+            voiceNoteUrl,
+          }
+        );
+
+        if (notificationSent) {
+          console.log(
+            `✅ Telegram notification sent successfully for project: ${title}`
+          );
+        } else {
+          console.error(
+            `❌ Failed to send Telegram notification for project: ${title}`
+          );
+        }
+      } catch (telegramError) {
+        console.error("❌ Error sending Telegram notification:", telegramError);
+      }
+    } else {
+      console.log(
+        `📱 No Telegram chat ID found for group. User group: ${
+          user.group?.name || "No group"
+        }, Group ID: ${user.groupId || "No groupId"}`
+      );
     }
 
     // Send email notification to client only if filming is completed

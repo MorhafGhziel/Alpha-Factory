@@ -335,7 +335,23 @@ export async function sendNewProjectNotification(
     voiceNoteUrl?: string;
   }
 ): Promise<boolean> {
-  if (!bot) return false;
+  console.log(
+    `🤖 Telegram bot status: ${bot ? "initialized" : "not initialized"}`
+  );
+  console.log(`📱 Attempting to send notification to chat ID: ${chatId}`);
+  console.log(`📋 Project data:`, {
+    title: projectData.title,
+    type: projectData.type,
+    clientName: projectData.clientName,
+    hasVoiceNote: !!projectData.voiceNoteUrl,
+  });
+
+  if (!bot) {
+    console.error(
+      "❌ Telegram bot is not initialized. Check TELEGRAM_BOT_TOKEN environment variable."
+    );
+    return false;
+  }
 
   try {
     const message = `${addMessageSeparator()}🎬 **مشروع جديد متاح للعمل!**
@@ -352,18 +368,35 @@ ${projectData.notes ? `📝 **ملاحظات:** ${removeLinks(projectData.notes)
       "ar-EG"
     )}${addMessageSeparator()}`;
 
-    await bot.sendMessage(chatId, message, {
+    console.log(`📤 Sending message to Telegram chat ${chatId}...`);
+    const messageResult = await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
     });
+    console.log(
+      `✅ Message sent successfully. Message ID: ${messageResult.message_id}`
+    );
 
     // Send voice note if provided
     if (projectData.voiceNoteUrl) {
-      await sendVoiceNote(chatId, projectData.voiceNoteUrl, projectData.title);
+      console.log(`🎵 Sending voice note: ${projectData.voiceNoteUrl}`);
+      const voiceResult = await sendVoiceNote(
+        chatId,
+        projectData.voiceNoteUrl,
+        projectData.title
+      );
+      console.log(
+        `🎵 Voice note result: ${voiceResult ? "success" : "failed"}`
+      );
     }
 
     return true;
   } catch (error) {
-    console.error("Error sending new project notification:", error);
+    console.error("❌ Error sending new project notification:", error);
+    console.error("❌ Error details:", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return false;
   }
 }
