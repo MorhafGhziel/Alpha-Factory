@@ -19,7 +19,14 @@ export async function GET(req: NextRequest) {
 
     // Get all groups with users
     const groups = await prisma.group.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        telegramChatId: true,
+        telegramGroupName: true,
+        telegramInviteLink: true,
         users: {
           select: {
             id: true,
@@ -30,6 +37,9 @@ export async function GET(req: NextRequest) {
             role: true,
             createdAt: true,
             emailVerified: true,
+            suspended: true,
+            suspendedAt: true,
+            suspensionReason: true,
           },
           orderBy: {
             createdAt: "desc",
