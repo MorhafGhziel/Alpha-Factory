@@ -76,20 +76,12 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (user.role === "client") {
-        if (!user.phone) {
-          return NextResponse.json(
-            { error: "Phone is required for client users" },
-            { status: 400 }
-          );
-        }
-      } else {
-        if (!user.email) {
-          return NextResponse.json(
-            { error: "Email is required for non-client users" },
-            { status: 400 }
-          );
-        }
+      // Email is required for all users now (including clients)
+      if (!user.email) {
+        return NextResponse.json(
+          { error: "Email is required for all users" },
+          { status: 400 }
+        );
       }
     }
 
@@ -127,15 +119,8 @@ export async function POST(req: NextRequest) {
           userData.role
         );
 
-        // Determine email for authentication
-        let emailForAuth = userData.email;
-        if (userData.role === "client" && userData.phone) {
-          // For clients, use phone-based email
-          emailForAuth = `${userData.phone.replace(
-            /\D/g,
-            ""
-          )}@temp.alphafactory.com`;
-        }
+        // Use the provided email for all users (including clients)
+        const emailForAuth = userData.email;
 
         if (!emailForAuth) {
           throw new Error(
@@ -176,7 +161,7 @@ export async function POST(req: NextRequest) {
         // Store credentials for response
         usersWithCredentials.push({
           name: userData.name,
-          email: userData.email || emailForAuth,
+          email: userData.email!, // We've already validated this exists
           phone: userData.phone,
           username: username,
           password: password,
