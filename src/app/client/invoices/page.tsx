@@ -427,13 +427,21 @@ export default function ClientInvoicesPage() {
     setPaidMap(next);
     savePaid(next);
     setShowPaidBannerFor(id);
+    
+    // Show success message
     setTimeout(
       () => setShowPaidBannerFor((cur) => (cur === id ? null : cur)),
       4000
     );
+
+    // Refresh overdue status after payment to remove restrictions
+    setTimeout(() => {
+      console.log("🔄 Payment completed - refreshing overdue status...");
+      window.location.reload();
+    }, 2000);
   }
 
-  function wasReminderSent(id: string, day: 3 | 7 | 10) {
+  function wasReminderSent(id: string, day: 3 | 7 | 10 | 14) {
     try {
       return localStorage.getItem(`af_inv_${id}_rem_${day}`) === "1";
     } catch {
@@ -441,7 +449,7 @@ export default function ClientInvoicesPage() {
     }
   }
 
-  function setReminderSent(id: string, day: 3 | 7 | 10) {
+  function setReminderSent(id: string, day: 3 | 7 | 10 | 14) {
     try {
       localStorage.setItem(`af_inv_${id}_rem_${day}`, "1");
     } catch {}
@@ -491,7 +499,7 @@ export default function ClientInvoicesPage() {
     setTimeout(() => setEmailNotice(null), 4000);
   }
 
-  // Auto trigger per threshold (3/7/10) once per invoice and handle suspension
+  // Auto trigger per threshold (3/7/10/14) once per invoice with progressive restrictions
   useEffect(() => {
     invoices.forEach(async (inv) => {
       const id = getInvoiceId(inv);
@@ -499,32 +507,29 @@ export default function ClientInvoicesPage() {
       const remaining = daysUntil(inv.dueDate);
       const overdue = Math.max(0, -remaining);
       
-      if (overdue >= 10 && !wasReminderSent(id, 10)) {
+      // 14 days: Complete account block (only owner can unblock)
+      if (overdue >= 14 && !wasReminderSent(id, 14)) {
+        setReminderSent(id, 14);
+        // TODO: Implement 14-day complete block
+        console.log("🔒 14-day overdue: Account should be completely blocked");
+      }
+      // 10 days: Email + restrict to invoice page only  
+      else if (overdue >= 10 && !wasReminderSent(id, 10)) {
         setReminderSent(id, 10);
         triggerEmail("10");
-        
-        // Auto-suspend user after 10 days overdue
-        try {
-          const userId = session?.data?.user?.id || session?.user?.id;
-          if (userId) {
-            await fetch("/api/admin/auto-suspend", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userId,
-                invoiceDueDate: inv.dueDate,
-              }),
-            });
-          }
-        } catch (error) {
-          console.error("Error auto-suspending user:", error);
-        }
-      } else if (overdue >= 7 && !wasReminderSent(id, 7)) {
+        console.log("⚠️ 10-day overdue: User restricted to invoice page only");
+      } 
+      // 7 days: Email + restrict to invoice page only
+      else if (overdue >= 7 && !wasReminderSent(id, 7)) {
         setReminderSent(id, 7);
         triggerEmail("7");
-      } else if (overdue >= 3 && !wasReminderSent(id, 3)) {
+        console.log("⚠️ 7-day overdue: User restricted to invoice page only");
+      } 
+      // 3 days: Email only, no restrictions
+      else if (overdue >= 3 && !wasReminderSent(id, 3)) {
         setReminderSent(id, 3);
         triggerEmail("3");
+        console.log("📧 3-day overdue: Email sent, no access restrictions");
       }
     });
   }, [invoices, paidMap, session]);

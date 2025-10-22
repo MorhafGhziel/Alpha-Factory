@@ -5,6 +5,7 @@ import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
 import ComingSoonModal from "@/components/ComingSoonModal";
+import OverdueRestriction from "@/components/OverdueRestriction";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 
 export default function ClientLayoutClient({
@@ -219,7 +220,9 @@ export default function ClientLayoutClient({
 
         {/* Main Content */}
         <div className="flex-1">
-          <div className="text-center pt-16 lg:pt-0">{children}</div>
+          <OverdueRestriction>
+            <div className="text-center pt-16 lg:pt-0">{children}</div>
+          </OverdueRestriction>
           {toastMsg && (
             <div
               className={`af-toast ${
