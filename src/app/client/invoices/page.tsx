@@ -174,6 +174,31 @@ export default function ClientInvoicesPage() {
     );
   };
 
+  // Function to check if invoice has thumbnail added
+  const hasThumbnailAdded = (invoice: Invoice) => {
+    // Check if any item in the invoice is a thumbnail design
+    const hasThumbnailItem = invoice.items.some(item => 
+      item.id.includes('_thumbnail') || 
+      item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" ||
+      item.projectType === "تصاميم الصور المصغرة" ||
+      item.projectType?.includes("تصميم") ||
+      item.projectType?.includes("ثمبنيل")
+    );
+
+    if (!hasThumbnailItem) {
+      return false; // No thumbnail item, so PayPal should be disabled
+    }
+
+    // Find the project associated with this invoice to check if design links exist
+    const projectIds = invoice.items.map(item => item.projectId);
+    const associatedProjects = projects.filter(project => projectIds.includes(project.id));
+    
+    // Check if any associated project has design links (indicating thumbnail is uploaded)
+    return associatedProjects.some(project => 
+      project.designLinks && project.designLinks.trim() !== ""
+    );
+  };
+
   const invoices = useMemo<Invoice[]>(() => {
     if (!projects.length) return [];
 
@@ -930,7 +955,7 @@ export default function ClientInvoicesPage() {
                                       amount={inv.grandTotal || 0}
                                       description={`Alpha Factory Invoice #${inv.index}`}
                                       invoiceId={id}
-                                      disabled={hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0}
+                                      disabled={hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0 || !hasThumbnailAdded(inv)}
                                       onSuccess={(data) => {
                                         console.log('Payment successful:', data);
                                         markPaid(inv);
