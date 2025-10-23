@@ -801,59 +801,114 @@ export default function ClientTrackingBoardPage() {
               <thead>
                 <tr className="border-b border-[#3F3F3F] bg-[#1A1A1A]">
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="الاسم الرسمي للمشروع وتاريخ بدء المشروع، حيث يمكنك تحديد المشروع عند المراجعة او المتابعة">
-                      المشروع ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      المشروع
+                      <TableTooltip text="الاسم الرسمي للمشروع وتاريخ بدء المشروع، حيث يمكنك تحديد المشروع عند المراجعة او المتابعة">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="في هذا الحقل يتم تحديد نوع المشروع او المحتوى">
-                      النوع ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      النوع
+                      <TableTooltip text="في هذا الحقل يتم تحديد نوع المشروع او المحتوى">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="المستندات او الملفات التي يحتاجها الفريق والمتعلقة بالمشروع">
-                      ملفات التصوير ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      ملفات التصوير
+                      <TableTooltip text="المستندات او الملفات التي يحتاجها الفريق والمتعلقة بالمشروع">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="ملاحظات مهمة او تعليقات للفريق">
-                      الملاحظات ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      الملاحظات
+                      <TableTooltip text="ملاحظات مهمة او تعليقات للفريق">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="يرجى توضيح اذا كان التصوير لم يبدا - جاري - منتهي. حتى تكون حالة التصوير واضحة لدى الفريق">
-                      حالة التصوير ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      حالة التصوير
+                      <TableTooltip text="يرجى توضيح اذا كان التصوير لم يبدا - جاري - منتهي. حتى تكون حالة التصوير واضحة لدى الفريق">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="متابعة حالة التحرير/المونتاج للمحتوى">
-                      التحرير ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      التحرير
+                      <TableTooltip text="متابعة حالة التحرير/المونتاج للمحتوى">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="متابعة حالة التصميم">
-                      التصميم ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      التصميم
+                      <TableTooltip text="متابعة حالة التصميم">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="حالة مراجعة العمل النهائي">
-                      المراجعة ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      المراجعة
+                      <TableTooltip text="حالة مراجعة العمل النهائي">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="الروابط النهائية للأعمال المنجزة">
-                      الروابط ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      الروابط
+                      <TableTooltip text="الروابط النهائية للأعمال المنجزة">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="تقييم جودة المشروع/المحتوى بعد الانتهاء">
-                      التقييم ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      التقييم
+                      <TableTooltip text="تقييم جودة المشروع/المحتوى بعد الانتهاء">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                   <th className="py-4 px-4 text-center text-[#EAD06C] font-semibold border-l border-[#3F3F3F] whitespace-nowrap">
-                    <TableTooltip text="يتم توثيق المشروع بالعلامة الزرقاء بعد الانتهاء منه دلالة على انتهاء العمل عليه">
-                      التوثيق ?
-                    </TableTooltip>
+                    <div className="flex items-center justify-center gap-2">
+                      التوثيق
+                      <TableTooltip text="يتم توثيق المشروع بالعلامة الزرقاء بعد الانتهاء منه دلالة على انتهاء العمل عليه">
+                        <button className="w-4 h-4 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-xs hover:bg-[#EAD06C]/80 transition-colors">
+                          ?
+                        </button>
+                      </TableTooltip>
+                    </div>
                   </th>
                 </tr>
               </thead>
