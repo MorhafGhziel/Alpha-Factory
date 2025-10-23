@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     // Step 3: Check accounts table for authentication data
     const credentialAccount = user.accounts.find(
-      (acc) => acc.providerId === "credential"
+      (acc: { providerId: string }) => acc.providerId === "credential"
     );
 
     testResults.step4_accountCheck = {

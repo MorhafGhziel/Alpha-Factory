@@ -210,7 +210,10 @@ async function sendProjectStatus(chatId: number) {
 
 👥 **أعضاء الفريق:** ${group.users.length}
 ${group.users
-  .map((user) => `• ${user.name} - ${getRoleInArabic(user.role || "")}`)
+  .map(
+    (user: { name: string; role: string | null }) =>
+      `• ${user.name} - ${getRoleInArabic(user.role || "")}`
+  )
   .join("\n")}
 
 📅 **تاريخ الإنشاء:** ${(() => {
@@ -297,7 +300,16 @@ async function sendTeamInfo(chatId: number) {
 
 ${group.users
   .map(
-    (user, index) => `
+    (
+      user: {
+        name: string;
+        role: string | null;
+        email: string;
+        emailVerified: boolean;
+        createdAt: Date;
+      },
+      index: number
+    ) => `
 **${index + 1}. ${user.name}**
 🎯 الدور: ${getRoleInArabic(user.role || "")}
 📧 البريد: ${user.email}
@@ -315,8 +327,14 @@ ${group.users
 
 📊 **إحصائيات:**
 • إجمالي الأعضاء: ${group.users.length}
-• المحققين: ${group.users.filter((u) => u.emailVerified).length}
-• غير المحققين: ${group.users.filter((u) => !u.emailVerified).length}`;
+• المحققين: ${
+      group.users.filter((u: { emailVerified: boolean }) => u.emailVerified)
+        .length
+    }
+• غير المحققين: ${
+      group.users.filter((u: { emailVerified: boolean }) => !u.emailVerified)
+        .length
+    }`;
 
     await bot.sendMessage(chatId, teamMessage, {
       parse_mode: "Markdown",

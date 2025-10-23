@@ -43,7 +43,7 @@ export async function PUT(
 
     // Find credential account
     const credentialAccount = user.accounts.find(
-      (account) => account.providerId === "credential"
+      (account: { providerId: string }) => account.providerId === "credential"
     );
 
     if (!credentialAccount) {

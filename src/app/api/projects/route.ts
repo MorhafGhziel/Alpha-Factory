@@ -129,9 +129,15 @@ export async function POST(req: NextRequest) {
 
     // Auto-assign team members if group exists
     if (user.group) {
-      const editors = user.group.users.filter((u) => u.role === "editor");
-      const designers = user.group.users.filter((u) => u.role === "designer");
-      const reviewers = user.group.users.filter((u) => u.role === "reviewer");
+      const editors = user.group.users.filter(
+        (u: { role: string | null }) => u.role === "editor"
+      );
+      const designers = user.group.users.filter(
+        (u: { role: string | null }) => u.role === "designer"
+      );
+      const reviewers = user.group.users.filter(
+        (u: { role: string | null }) => u.role === "reviewer"
+      );
 
       // Auto-assign first available team members (you can implement more sophisticated logic)
       const updates: {

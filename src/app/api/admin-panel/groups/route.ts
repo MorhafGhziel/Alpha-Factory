@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import prisma from "../../../../lib/prisma";
+import { Prisma } from "../../../../generated/prisma";
 
 // GET - Get all groups with users (owner only)
 export async function GET(req: NextRequest) {
@@ -111,7 +112,7 @@ export async function DELETE(req: NextRequest) {
 
     try {
       // Use transaction to ensure data consistency
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // First, delete all user accounts (from better-auth accounts table)
         for (const user of group.users) {
           await tx.account.deleteMany({

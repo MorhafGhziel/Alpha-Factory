@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     // Find credential account
     const credentialAccount = user.accounts.find(
-      (acc) => acc.providerId === "credential"
+      (acc: { providerId: string }) => acc.providerId === "credential"
     );
 
     if (!credentialAccount) {
@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
       after: {
         userEmail: updatedUser?.email,
         hasPassword: !!updatedUser?.accounts.find(
-          (acc) => acc.providerId === "credential"
+          (acc: { providerId: string }) => acc.providerId === "credential"
         )?.password,
         accountsCount: updatedUser?.accounts.length,
       },
@@ -247,7 +247,7 @@ export async function GET(req: NextRequest) {
 
     for (const user of users) {
       const credentialAccount = user.accounts.find(
-        (acc) => acc.providerId === "credential"
+        (acc: { providerId: string }) => acc.providerId === "credential"
       );
 
       const issues = [];

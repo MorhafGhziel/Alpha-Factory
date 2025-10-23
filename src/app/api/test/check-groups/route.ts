@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
       success: true,
       groups,
       totalGroups: groups.length,
-      groupsWithTelegram: groups.filter((g) => g.telegramChatId).length,
+      groupsWithTelegram: groups.filter(
+        (g: { telegramChatId: string | null }) => g.telegramChatId
+      ).length,
       message: "Groups checked successfully",
     });
   } catch (error) {

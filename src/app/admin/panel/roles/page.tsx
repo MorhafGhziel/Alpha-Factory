@@ -84,7 +84,7 @@ export default async function RoleManagement() {
             Role Distribution
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roleStats.map((stat) => {
+            {roleStats.map((stat: { role: string | null; _count: { role: number } }) => {
               const roleInfo = roles.find(r => r.name === stat.role);
               return (
                 <div key={stat.role} className="border rounded-lg p-4">
@@ -115,14 +115,14 @@ export default async function RoleManagement() {
             Role Definitions & Permissions
           </h3>
           <div className="space-y-6">
-            {roles.map((role) => (
+            {roles.map((role: { name: string; description: string; permissions: string[]; color: string }) => (
               <div key={role.name} className="border-l-4 border-blue-400 pl-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-lg font-medium text-gray-900 capitalize">
                     {role.name}
                   </h4>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${role.color}`}>
-                    {roleStats.find(s => s.role === role.name)?._count.role || 0} users
+                    {roleStats.find((s: { role: string | null; _count: { role: number } }) => s.role === role.name)?._count.role || 0} users
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -131,7 +131,7 @@ export default async function RoleManagement() {
                 <div>
                   <h5 className="text-sm font-medium text-gray-700 mb-2">Permissions:</h5>
                   <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-                    {role.permissions.map((permission, index) => (
+                    {role.permissions.map((permission: string, index: number) => (
                       <li key={index}>{permission}</li>
                     ))}
                   </ul>
@@ -167,7 +167,7 @@ export default async function RoleManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {recentUsers.map((user) => {
+                {recentUsers.map((user: { id: string; name: string; email: string; role: string | null; createdAt: Date }) => {
                   const roleInfo = roles.find(r => r.name === user.role);
                   return (
                     <tr key={user.id}>

@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
     // Mask password for security
     const maskedUser = {
       ...user,
-      accounts: user.accounts.map((acc) => ({
+      accounts: user.accounts.map((acc: { password?: string | null }) => ({
         ...acc,
         password: acc.password ? "***MASKED***" : null,
       })),

@@ -77,15 +77,24 @@ export async function GET(req: NextRequest) {
     });
 
     // Check account details
-    const accountAnalysis = user.accounts.map((account) => ({
-      id: account.id,
-      accountId: account.accountId,
-      providerId: account.providerId,
-      hasPassword: !!account.password,
-      passwordLength: account.password?.length || 0,
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt,
-    }));
+    const accountAnalysis = user.accounts.map(
+      (account: {
+        id: string;
+        accountId: string;
+        providerId: string;
+        password?: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+      }) => ({
+        id: account.id,
+        accountId: account.accountId,
+        providerId: account.providerId,
+        hasPassword: !!account.password,
+        passwordLength: account.password?.length || 0,
+        createdAt: account.createdAt,
+        updatedAt: account.updatedAt,
+      })
+    );
 
     // Try to find what email would be used for authentication
     let authEmail = user.email;
@@ -115,20 +124,31 @@ export async function GET(req: NextRequest) {
           updatedAt: user.updatedAt,
         },
         accounts: accountAnalysis,
-        sessions: user.sessions.map((session) => ({
-          id: session.id,
-          expiresAt: session.expiresAt,
-          createdAt: session.createdAt,
-        })),
+        sessions: user.sessions.map(
+          (session: { id: string; expiresAt: Date; createdAt: Date }) => ({
+            id: session.id,
+            expiresAt: session.expiresAt,
+            createdAt: session.createdAt,
+          })
+        ),
         duplicateUsers: duplicateUsers.length,
-        duplicateDetails: duplicateUsers.map((dup) => ({
-          id: dup.id,
-          name: dup.name,
-          email: dup.email,
-          username: dup.username,
-          role: dup.role,
-          accountsCount: dup.accounts.length,
-        })),
+        duplicateDetails: duplicateUsers.map(
+          (dup: {
+            id: string;
+            name: string;
+            email: string;
+            username: string | null;
+            role: string | null;
+            accounts: { id: string; accountId: string; providerId: string }[];
+          }) => ({
+            id: dup.id,
+            name: dup.name,
+            email: dup.email,
+            username: dup.username,
+            role: dup.role,
+            accountsCount: dup.accounts.length,
+          })
+        ),
         authenticationAnalysis: {
           expectedAuthEmail: authEmail,
           authEmailMatchesUserEmail: authEmail === user.email,

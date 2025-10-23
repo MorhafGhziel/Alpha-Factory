@@ -61,11 +61,13 @@ export async function PUT(
     // Create Telegram group configuration
     const telegramResult = await createTelegramGroup(
       existingGroup.name,
-      existingGroup.users.map((u) => ({
-        name: u.name,
-        email: u.email,
-        role: u.role || "member", // Fallback for null roles
-      })),
+      existingGroup.users.map(
+        (u: { name: string; email: string; role: string | null }) => ({
+          name: u.name,
+          email: u.email,
+          role: u.role || "member", // Fallback for null roles
+        })
+      ),
       telegramChatId
     );
 

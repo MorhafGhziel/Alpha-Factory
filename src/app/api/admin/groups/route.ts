@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 import { auth } from "../../../../lib/auth";
+import { Prisma } from "../../../../generated/prisma";
 import { generateCredentials } from "../../../../utils/credentials";
 import { sendCredentialsEmails } from "../../../../lib/email";
 import {
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error: `البريد الإلكتروني مستخدم مسبقاً: ${existingEmails
-              .map((u) => u.email)
+              .map((u: { email: string }) => u.email)
               .join(", ")}`,
           },
           { status: 409 }
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest) {
 
     // Now create group and associate users in a fast transaction
     const result = await prisma.$transaction(
-      async (tx) => {
+      async (tx: Prisma.TransactionClient) => {
         // Create the group with Telegram information
         const group = await tx.group.create({
           data: {
@@ -402,7 +403,7 @@ export async function DELETE(req: NextRequest) {
 
     try {
       // Use transaction to ensure data consistency
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // First, delete all user accounts (from better-auth accounts table)
         for (const user of group.users) {
           await tx.account.deleteMany({
