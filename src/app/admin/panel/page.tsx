@@ -131,7 +131,7 @@ export default async function AdminPanelDashboard() {
             </h3>
             <div className="mt-5">
               <div className="space-y-3">
-                {roleStats.map((stat) => (
+                {roleStats.map((stat: { role: string | null; _count: { role: number } }) => (
                   <div key={stat.role} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="text-sm font-medium text-gray-900 capitalize">
@@ -157,7 +157,7 @@ export default async function AdminPanelDashboard() {
             <div className="mt-5">
               <div className="flow-root">
                 <ul className="-mb-8">
-                  {recentUsers.map((user, userIdx) => (
+                  {recentUsers.map((user: { id: string; name: string; email: string; role: string | null; createdAt: Date }, userIdx: number) => (
                     <li key={user.id}>
                       <div className="relative pb-8">
                         {userIdx !== recentUsers.length - 1 ? (
