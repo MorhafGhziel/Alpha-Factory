@@ -23,6 +23,7 @@ const Login = ({}: LoginProps = {}) => {
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLoginClick = () => {
@@ -91,6 +92,7 @@ const Login = ({}: LoginProps = {}) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     // Helper function to check if input is email format
     const isEmail = (input: string): boolean => {
@@ -205,6 +207,8 @@ const Login = ({}: LoginProps = {}) => {
     } catch (err) {
       console.error("Login error:", err);
       setError("حدث خطأ في تسجيل الدخول");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -466,12 +470,22 @@ const Login = ({}: LoginProps = {}) => {
               {error && (
                 <div className="text-red-400 text-sm text-center">{error}</div>
               )}
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-[#434343] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-4 rounded-3xl hover:scale-105 transition font-bold cursor-pointer"
-              >
-                الاستمرار
-              </button>
+              <div className="flex justify-center w-full">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-[#434343] to-[#A9A9A9] text-[#272727] text-[14px] py-1 px-8 rounded-3xl hover:scale-105 transition font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[120px]"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-[#272727] border-t-transparent rounded-full animate-spin"></span>
+                      <span>جاري التحقق...</span>
+                    </>
+                  ) : (
+                    "الاستمرار"
+                  )}
+                </button>
+              </div>
             </form>
           </motion.div>
 
