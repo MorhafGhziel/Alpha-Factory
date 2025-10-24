@@ -228,37 +228,71 @@ export default function ClientInvoicesPage() {
     );
   };
 
-  // Function to check if invoice has thumbnail added
-  const hasThumbnailAdded = (invoice: Invoice) => {
+  // Function to check if invoice is ready for payment based on project type and work completion
+  const isInvoiceReadyForPayment = (invoice: Invoice) => {
     const items = invoice.invoice_item || invoice.items || [];
     
-    // Check if any item in the invoice is a thumbnail design
-    const hasThumbnailItem = items.some((item: InvoiceItem) => 
-      item.id?.includes('_thumbnail') || 
-      item.workType?.includes("تصميم") ||
-      item.workType?.includes("ثمبنيل") ||
-      item.description?.includes("تصميم") ||
-      item.description?.includes("ثمبنيل") ||
-      (item.projectType && (
-        item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" ||
-        item.projectType === "تصاميم الصور المصغرة" ||
-        item.projectType?.includes("تصميم") ||
-        item.projectType?.includes("ثمبنيل")
-      ))
-    );
-
-    if (!hasThumbnailItem) {
-      return false; // No thumbnail item, so PayPal should be disabled
-    }
-
-    // Find the project associated with this invoice to check if design links exist
+    // Find the projects associated with this invoice
     const projectIds = items.map((item: InvoiceItem) => item.projectId).filter(Boolean);
     const associatedProjects = projects.filter(project => projectIds.includes(project.id));
     
-    // Check if any associated project has design links (indicating thumbnail is uploaded)
-    return associatedProjects.some(project => 
-      project.designLinks && project.designLinks.trim() !== ""
-    );
+    if (associatedProjects.length === 0) {
+      return false; // No associated projects found
+    }
+
+    // Check each associated project
+    return associatedProjects.every(project => {
+      // Check if this is an enhancement project
+      const isDesignEnhancement = project.type && project.type.includes("تحسين التصميم");
+      const isEditingEnhancement = project.type && project.type.includes("تحسين الإنتاج");
+      
+      if (isDesignEnhancement) {
+        // For design enhancement projects, enable PayPal when design is ready
+        return project.designMode === "تم الانتهاء منه";
+      } else if (isEditingEnhancement) {
+        // For editing enhancement projects, enable PayPal when edit is complete
+        return project.editMode === "تم الانتهاء منه";
+      } else {
+        // For regular projects, check based on project type and work type
+        const hasDesignWork = items.some((item: InvoiceItem) => 
+          item.projectId === project.id && (
+            item.id?.includes('_thumbnail') || 
+            item.workType?.includes("تصميم") ||
+            item.workType?.includes("ثمبنيل") ||
+            item.description?.includes("تصميم") ||
+            item.description?.includes("ثمبنيل") ||
+            (item.projectType && (
+              item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" ||
+              item.projectType === "تصاميم الصور المصغرة" ||
+              item.projectType?.includes("تصميم") ||
+              item.projectType?.includes("ثمبنيل")
+            ))
+          )
+        );
+
+        const hasVideoWork = items.some((item: InvoiceItem) => 
+          item.projectId === project.id && item.id?.includes('_video')
+        );
+
+        // For design projects, check if design is ready
+        if (hasDesignWork && !hasVideoWork) {
+          return project.designMode === "تم الانتهاء منه";
+        }
+        
+        // For video projects, check if edit is complete
+        if (hasVideoWork && !hasDesignWork) {
+          return project.editMode === "تم الانتهاء منه";
+        }
+        
+        // For projects with both design and video work
+        if (hasDesignWork && hasVideoWork) {
+          return project.designMode === "تم الانتهاء منه" && project.editMode === "تم الانتهاء منه";
+        }
+        
+        // For other project types, use the original logic
+        return project.designLinks && project.designLinks.trim() !== "";
+      }
+    });
   };
 
   const invoices = useMemo<Invoice[]>(() => {
@@ -289,11 +323,14 @@ export default function ClientInvoicesPage() {
       const pricingInfo = durationBasedPrices[project.type as keyof typeof durationBasedPrices] || durationBasedPrices.default;
       
       // Check if this is a thumbnail/design project (fixed price)
-      if (project.type === "تصاميم الصور المصغرة" || 
-          project.type === "تصاميم الصور المصغرة (ثمبنيل)" || 
-          project.type?.includes("تصميم") || 
-          project.type?.includes("ثمبنيل")) {
-        unitPrice = pricingInfo.rate;
+      const isDesignProject = project.type === "تصاميم الصور المصغرة" || 
+                              project.type === "تصاميم الصور المصغرة (ثمبنيل)" || 
+                              project.type?.includes("تصميم") || 
+                              project.type?.includes("ثمبنيل");
+      
+      if (isDesignProject) {
+        // For design projects (including design enhancement), use thumbnail pricing
+        unitPrice = 19; // Fixed price for design work
         quantity = 1;
         pricingUnit = "تصميم";
       } else {
@@ -1024,7 +1061,7 @@ export default function ClientInvoicesPage() {
                                       amount={inv.totalAmount || inv.grandTotal || 0}
                                       description={`Alpha Factory Invoice #${inv.invoiceNumber || inv.index}`}
                                       invoiceId={`invoice_${id}`}
-                                      disabled={hasWaitingItems(inv) || !(inv.totalAmount || inv.grandTotal) || (inv.totalAmount || inv.grandTotal) === 0 || !hasThumbnailAdded(inv)}
+                                      disabled={hasWaitingItems(inv) || !(inv.totalAmount || inv.grandTotal) || (inv.totalAmount || inv.grandTotal) === 0 || !isInvoiceReadyForPayment(inv)}
                                       onSuccess={(data) => {
                                         console.log('Payment successful:', data);
                                         markPaid(inv);
