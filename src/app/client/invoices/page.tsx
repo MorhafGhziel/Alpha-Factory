@@ -911,14 +911,14 @@ export default function ClientInvoicesPage() {
                             </div>
                           )}
                           <div className="bg-white text-black rounded-2xl overflow-hidden shadow-sm">
-                            <div className="p-5 sm:p-6 text-sm sm:text-base">
-                              <div className="flex items-start justify-between gap-6">
+                            <div className="p-4 sm:p-6 text-sm sm:text-base">
+                              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
                                 {/* Left: Company details */}
-                                <div className="text-left">
+                                <div className="text-left w-full sm:w-auto">
                                   <div className="font-semibold text-base sm:text-lg">
                                     Alpha Factory
                                   </div>
-                                  <div className="text-gray-700 text-xs sm:text-sm leading-6">
+                                  <div className="text-gray-700 text-xs sm:text-sm leading-5 sm:leading-6">
                                     789 Madison Ave, New York, NY 10065, USA
                                     <br />
                                     support@alphafactory.net |
@@ -929,10 +929,10 @@ export default function ClientInvoicesPage() {
                                 </div>
 
                                 {/* Right: Invoice title and dates (RTL) */}
-                                <div className="text-right" dir="rtl">
-                                  <div className="font-bold">الفاتورة</div>
-                                  <div>التاريخ: {formatDate(new Date())}</div>
-                                  <div>
+                                <div className="text-right w-full sm:w-auto" dir="rtl">
+                                  <div className="font-bold text-base sm:text-lg">الفاتورة</div>
+                                  <div className="text-sm">التاريخ: {formatDate(new Date())}</div>
+                                  <div className="text-sm">
                                     تاريخ الاستحقاق: {formatDate(new Date(inv.dueDate))}
                                   </div>
                                 </div>
@@ -943,7 +943,8 @@ export default function ClientInvoicesPage() {
                               className="border border-[#333336] mx-3 sm:mx-6"
                               dir="rtl"
                             >
-                              <div className="grid grid-cols-6 text-sm sm:text-base bg-gray-50">
+                              {/* Desktop Table Header */}
+                              <div className="hidden md:grid grid-cols-6 text-sm sm:text-base bg-gray-50">
                                 <div className="border-l px-4 py-3 text-right">
                                   اسم المشروع
                                 </div>
@@ -964,85 +965,168 @@ export default function ClientInvoicesPage() {
                                 </div>
                               </div>
                               {(inv.invoice_item || inv.items || []).map((item: InvoiceItem, i: number) => (
-                                <div
-                                  key={i}
-                                  className={`grid grid-cols-6 text-sm sm:text-base border-t ${
-                                    i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
-                                  }`}
-                                  dir="rtl"
-                                >
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {item.projectName}
-                                  </div>
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {item.projectType}
-                                  </div>
-                                  <div className="border-l px-4 py-3 text-right">
-                                    <div className="flex flex-wrap gap-1">
-                                      {item.workDescription && item.workDescription.split(" - ")[0].split(" + ").map((work: string, idx: number) => (
-                                        <span 
-                                          key={idx}
-                                          className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-                                            work.includes("قيد التنفيذ") 
-                                              ? "bg-yellow-100 text-yellow-800" 
-                                              : work === "العمل قيد التنفيذ"
-                                              ? "bg-gray-100 text-gray-600"
-                                              : "bg-green-100 text-green-800"
-                                          }`}
-                                        >
-                                          {work}
-                                        </span>
-                                      ))}
-                                      {/* Show duration info if available */}
-                                      {item.workDescription && item.workDescription.includes("مدة الفيديو") && (
-                                        <div className="text-xs text-gray-600 mt-1">
-                                          {item.workDescription.split(" - ").find((part: string) => part.includes("مدة الفيديو"))}
-                                        </div>
+                                <div key={i}>
+                                  {/* Desktop Table Row */}
+                                  <div
+                                    className={`hidden md:grid grid-cols-6 text-sm sm:text-base border-t ${
+                                      i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
+                                    }`}
+                                    dir="rtl"
+                                  >
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {item.projectName}
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {item.projectType}
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right">
+                                      <div className="flex flex-wrap gap-1">
+                                        {item.workDescription && item.workDescription.split(" - ")[0].split(" + ").map((work: string, idx: number) => (
+                                          <span 
+                                            key={idx}
+                                            className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                                              work.includes("قيد التنفيذ") 
+                                                ? "bg-yellow-100 text-yellow-800" 
+                                                : work === "العمل قيد التنفيذ"
+                                                ? "bg-gray-100 text-gray-600"
+                                                : "bg-green-100 text-green-800"
+                                            }`}
+                                          >
+                                            {work}
+                                          </span>
+                                        ))}
+                                        {/* Show duration info if available */}
+                                        {item.workDescription && item.workDescription.includes("مدة الفيديو") && (
+                                          <div className="text-xs text-gray-600 mt-1">
+                                            {item.workDescription.split(" - ").find((part: string) => part.includes("مدة الفيديو"))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {item.unitPrice === 0 ? (
+                                        <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                      ) : (
+                                        <>
+                                          <div className="font-medium">${item.unitPrice}</div>
+                                          <div className="text-xs text-gray-600">
+                                            {item.workDescription && item.workDescription.includes("دولار للدقيقة") ? "للدقيقة" : 
+                                             item.workDescription && item.workDescription.includes("دولار للتصميم") ? "للتصميم" : ""}
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className="border-l px-4 py-3 text-right">
+                                      {item.quantity === 0 ? (
+                                        <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                      ) : (
+                                        <>
+                                          <div className="font-medium">{item.quantity}</div>
+                                          <div className="text-xs text-gray-600">
+                                            {item.projectType === "تصاميم الصور المصغرة" || 
+                                             item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" || 
+                                             item.projectType?.includes("تصميم") || 
+                                             item.projectType?.includes("ثمبنيل") ? "تصميم" : 
+                                             item.quantity === 1 ? "دقيقة" : "دقائق"}
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                    <div className="px-4 py-3 text-right font-medium">
+                                      {item.total === 0 ? (
+                                        <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                      ) : (
+                                        formatCurrency(item.total)
                                       )}
                                     </div>
                                   </div>
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {item.unitPrice === 0 ? (
-                                      <div className="text-yellow-600 text-sm">في الانتظار</div>
-                                    ) : (
-                                      <>
-                                        <div className="font-medium">${item.unitPrice}</div>
-                                        <div className="text-xs text-gray-600">
-                                          {item.workDescription && item.workDescription.includes("دولار للدقيقة") ? "للدقيقة" : 
-                                           item.workDescription && item.workDescription.includes("دولار للتصميم") ? "للتصميم" : ""}
+
+                                  {/* Mobile Card Layout */}
+                                  <div
+                                    className={`md:hidden border-t p-4 ${
+                                      i % 2 === 1 ? "bg-gray-50/70" : "bg-white"
+                                    }`}
+                                    dir="rtl"
+                                  >
+                                    <div className="space-y-3">
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <div className="font-medium text-sm">{item.projectName}</div>
+                                          <div className="text-xs text-gray-600 mt-1">{item.projectType}</div>
                                         </div>
-                                      </>
-                                    )}
-                                  </div>
-                                  <div className="border-l px-4 py-3 text-right">
-                                    {item.quantity === 0 ? (
-                                      <div className="text-yellow-600 text-sm">في الانتظار</div>
-                                    ) : (
-                                      <>
-                                        <div className="font-medium">{item.quantity}</div>
-                                        <div className="text-xs text-gray-600">
-                                          {item.projectType === "تصاميم الصور المصغرة" || 
-                                           item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" || 
-                                           item.projectType?.includes("تصميم") || 
-                                           item.projectType?.includes("ثمبنيل") ? "تصميم" : 
-                                           item.quantity === 1 ? "دقيقة" : "دقائق"}
+                                        <div className="text-left">
+                                          {item.total === 0 ? (
+                                            <div className="text-yellow-600 text-sm">في الانتظار</div>
+                                          ) : (
+                                            <div className="font-bold text-lg">{formatCurrency(item.total)}</div>
+                                          )}
                                         </div>
-                                      </>
-                                    )}
-                                  </div>
-                                  <div className="px-4 py-3 text-right font-medium">
-                                    {item.total === 0 ? (
-                                      <div className="text-yellow-600 text-sm">في الانتظار</div>
-                                    ) : (
-                                      formatCurrency(item.total)
-                                    )}
+                                      </div>
+                                      
+                                      <div className="flex flex-wrap gap-1">
+                                        {item.workDescription && item.workDescription.split(" - ")[0].split(" + ").map((work: string, idx: number) => (
+                                          <span 
+                                            key={idx}
+                                            className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                                              work.includes("قيد التنفيذ") 
+                                                ? "bg-yellow-100 text-yellow-800" 
+                                                : work === "العمل قيد التنفيذ"
+                                                ? "bg-gray-100 text-gray-600"
+                                                : "bg-green-100 text-green-800"
+                                            }`}
+                                          >
+                                            {work}
+                                          </span>
+                                        ))}
+                                      </div>
+
+                                      {item.workDescription && item.workDescription.includes("مدة الفيديو") && (
+                                        <div className="text-xs text-gray-600">
+                                          {item.workDescription.split(" - ").find((part: string) => part.includes("مدة الفيديو"))}
+                                        </div>
+                                      )}
+
+                                      <div className="flex justify-between text-sm">
+                                        <div>
+                                          <span className="text-gray-600">السعر: </span>
+                                          {item.unitPrice === 0 ? (
+                                            <span className="text-yellow-600">في الانتظار</span>
+                                          ) : (
+                                            <>
+                                              <span className="font-medium">${item.unitPrice}</span>
+                                              <span className="text-xs text-gray-600 mr-1">
+                                                {item.workDescription && item.workDescription.includes("دولار للدقيقة") ? "للدقيقة" : 
+                                                 item.workDescription && item.workDescription.includes("دولار للتصميم") ? "للتصميم" : ""}
+                                              </span>
+                                            </>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <span className="text-gray-600">المدة: </span>
+                                          {item.quantity === 0 ? (
+                                            <span className="text-yellow-600">في الانتظار</span>
+                                          ) : (
+                                            <>
+                                              <span className="font-medium">{item.quantity}</span>
+                                              <span className="text-xs text-gray-600 mr-1">
+                                                {item.projectType === "تصاميم الصور المصغرة" || 
+                                                 item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" || 
+                                                 item.projectType?.includes("تصميم") || 
+                                                 item.projectType?.includes("ثمبنيل") ? "تصميم" : 
+                                                 item.quantity === 1 ? "دقيقة" : "دقائق"}
+                                              </span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               ))}
                             </div>
 
-                            <div className="flex items-center justify-between p-4 sm:p-5 mx-3 sm:mx-6">
-                              <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 mx-3 sm:mx-6">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                                 {!isPaidInvoice ? (
                                   <>
                                     <PayPalButton
@@ -1103,12 +1187,14 @@ export default function ClientInvoicesPage() {
                                 )}
                               </div>
                               <div
-                                className="text-sm sm:text-base font-bold"
+                                className="text-base sm:text-lg font-bold text-right w-full sm:w-auto"
                                 dir="rtl"
                               >
                                 <span style={{ unicodeBidi: "plaintext" }}>
                                   المجموع الكلي{" "}
-                                  {inv.grandTotal !== undefined
+                                  {inv.totalAmount !== undefined
+                                    ? `: ${formatCurrency(inv.totalAmount)}`
+                                    : inv.grandTotal !== undefined
                                     ? `: ${formatCurrency(inv.grandTotal)}`
                                     : ":"}
                                 </span>

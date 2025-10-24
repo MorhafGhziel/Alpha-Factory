@@ -65,7 +65,7 @@ export default function ClientLayoutClient({
     <ProjectProvider>
       <div className="min-h-screen flex">
         <Header
-          title="Client Panel"
+          showLogo={true}
           isMobileMenuOpen={isMobileMenuOpen}
           onToggleMenu={toggleMobileMenu}
         />
