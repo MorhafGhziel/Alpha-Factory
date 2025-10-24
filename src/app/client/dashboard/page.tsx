@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import SummaryCard from "@/components/ui/SummaryCard";
 import AddProjectModal from "@/components/ui/AddProjectModal";
 import RequestImprovementModal from "@/components/ui/RequestImprovementModal";
@@ -15,7 +16,12 @@ const formatDate = (date: Date | string) => {
 };
 
 export default function ClientDashboardPage() {
+  const router = useRouter();
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+
+  const handleProjectClick = (projectId: string) => {
+    router.push(`/client/tracking-board`);
+  };
 
   // Color helper functions
   const getStatusColor = (status: string) => {
@@ -520,7 +526,8 @@ export default function ClientDashboardPage() {
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className="group relative bg-gradient-to-br from-[#0F0F0F] to-[#1a1a1a] p-6 rounded-2xl w-full border border-[#2a2a2a] hover:border-[#EAD06C]/30 hover:shadow-2xl hover:shadow-[#EAD06C]/10 transition-all duration-300 transform hover:-translate-y-1"
+                onClick={() => handleProjectClick(project.id)}
+                className="group relative bg-gradient-to-br from-[#0F0F0F] to-[#1a1a1a] p-6 rounded-2xl w-full border border-[#2a2a2a] hover:border-[#EAD06C]/30 hover:shadow-2xl hover:shadow-[#EAD06C]/10 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
               >
                 {/* Header with title and type */}
                 <div className="mb-6">
