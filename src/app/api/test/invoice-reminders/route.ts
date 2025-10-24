@@ -309,7 +309,6 @@ export async function GET() {
     },
     testFlow: {
       day3: "Sends reminder email about upcoming payment deadline",
-      day7: "Sends suspension warning email",
       day7: "Sends final notice email + automatically suspends the user account",
     },
   });
