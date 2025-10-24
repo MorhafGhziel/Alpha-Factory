@@ -15,6 +15,7 @@ interface TextEditModalProps {
   rows?: number;
   maxLength?: number;
   showVoiceRecorder?: boolean;
+  readOnly?: boolean;
 }
 
 export default function TextEditModal({
@@ -28,6 +29,7 @@ export default function TextEditModal({
   rows = 4,
   maxLength = 1000,
   showVoiceRecorder = false,
+  readOnly = false,
 }: TextEditModalProps) {
   const [content, setContent] = useState(initialContent);
 
@@ -106,19 +108,21 @@ export default function TextEditModal({
                     <textarea
                       rows={rows}
                       value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      className="w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-2xl focus:outline-none text-right resize-none text-sm sm:text-base border border-[#3F3F3F] focus:border-[#EAD06C]"
+                      onChange={(e) => !readOnly && setContent(e.target.value)}
+                      className={`w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-2xl focus:outline-none text-right resize-none text-sm sm:text-base border border-[#3F3F3F] ${!readOnly ? 'focus:border-[#EAD06C]' : ''} ${readOnly ? 'cursor-default' : ''}`}
                       placeholder={placeholder}
                       maxLength={maxLength}
+                      readOnly={readOnly}
                     />
                   ) : (
                     <input
                       type="text"
                       value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      className="w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-full focus:outline-none text-right text-sm sm:text-base border border-[#3F3F3F] focus:border-[#EAD06C]"
+                      onChange={(e) => !readOnly && setContent(e.target.value)}
+                      className={`w-full bg-[#0B0B0B] text-white px-3 sm:px-4 py-2 rounded-full focus:outline-none text-right text-sm sm:text-base border border-[#3F3F3F] ${!readOnly ? 'focus:border-[#EAD06C]' : ''} ${readOnly ? 'cursor-default' : ''}`}
                       placeholder={placeholder}
                       maxLength={maxLength}
+                      readOnly={readOnly}
                     />
                   )}
                   {maxLength && (
@@ -127,8 +131,8 @@ export default function TextEditModal({
                     </div>
                   )}
 
-                  {/* Voice Recording Section - Only show when enabled */}
-                  {showVoiceRecorder && (
+                  {/* Voice Recording Section - Only show when enabled and not read-only */}
+                  {showVoiceRecorder && !readOnly && (
                     <VoiceRecorder
                       onVoiceRecorded={handleVoiceRecorded}
                       className="mt-3"
@@ -142,14 +146,16 @@ export default function TextEditModal({
                       onClick={handleClose}
                       className="text-base sm:text-lg lg:text-[20px] bg-[#2A2A2A] text-white px-4 sm:px-6 lg:px-8 py-1 rounded-full hover:bg-[#3F3F3F] transition-colors border border-[#3F3F3F]"
                     >
-                      إلغاء
+                      {readOnly ? 'إغلاق' : 'إلغاء'}
                     </button>
-                    <button
-                      onClick={handleSave}
-                      className="text-base sm:text-lg lg:text-[20px] bg-gradient-to-r cursor-pointer from-[#EAD06C] to-[#C48829] text-black px-4 sm:px-6 lg:px-8 py-1 rounded-full hover:from-yellow-600 hover:to-yellow-700 transition-colors"
-                    >
-                      حفظ
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={handleSave}
+                        className="text-base sm:text-lg lg:text-[20px] bg-gradient-to-r cursor-pointer from-[#EAD06C] to-[#C48829] text-black px-4 sm:px-6 lg:px-8 py-1 rounded-full hover:from-yellow-600 hover:to-yellow-700 transition-colors"
+                      >
+                        حفظ
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

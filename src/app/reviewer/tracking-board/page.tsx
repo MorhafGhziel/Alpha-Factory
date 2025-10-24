@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Project } from "../../../types";
+import TextEditModal from "../../../../components/ui/TextEditModal";
 
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
@@ -14,6 +15,16 @@ const formatDate = (date: Date | string) => {
 export default function ReviewerTrackingBoardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [notesModal, setNotesModal] = useState<{
+    isOpen: boolean;
+    projectId: string;
+    currentContent: string;
+  }>({
+    isOpen: false,
+    projectId: "",
+    currentContent: "",
+  });
 
   // Fetch projects from API
   const fetchProjects = async () => {
@@ -56,6 +67,23 @@ export default function ReviewerTrackingBoardPage() {
       console.error("Error updating project:", error);
       alert("حدث خطأ أثناء تحديث المشروع");
     }
+  };
+
+  // Handle notes modal
+  const openNotesModal = (projectId: string, currentContent: string) => {
+    setNotesModal({
+      isOpen: true,
+      projectId,
+      currentContent: currentContent || "",
+    });
+  };
+
+  const closeNotesModal = () => {
+    setNotesModal({
+      isOpen: false,
+      projectId: "",
+      currentContent: "",
+    });
   };
 
   useEffect(() => {
@@ -147,8 +175,38 @@ export default function ReviewerTrackingBoardPage() {
                       <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap">
                         {project.type}
                       </td>
-                      <td className="py-4 px-4 text-center text-white border-l border-[#3F3F3F] whitespace-nowrap max-w-[150px] overflow-hidden text-ellipsis">
-                        {project.notes || "لا توجد ملاحظات"}
+                      <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
+                        <div className="flex flex-col gap-2 items-center">
+                          {project.notes ? (
+                            <div className="flex flex-col gap-1 items-center">
+                              <button
+                                onClick={() =>
+                                  openNotesModal(
+                                    project.id,
+                                    project.notes || ""
+                                  )
+                                }
+                                className="text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded max-w-[150px] text-center truncate hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                              >
+                                {project.notes.length > 30
+                                  ? `${project.notes.substring(0, 30)}...`
+                                  : project.notes}
+                              </button>
+                              <span    onClick={() =>
+                                  openNotesModal(
+                                    project.id,
+                                    project.notes || ""
+                                  )
+                                } className="text-blue-400 text-xs font-medium cursor-pointer">
+                                عرض كامل
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs">
+                              لا توجد ملاحظات
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-center border-l border-[#3F3F3F] whitespace-nowrap">
                         <span
@@ -222,6 +280,20 @@ export default function ReviewerTrackingBoardPage() {
           </div>
         </div>
       </div>
+
+      {/* Notes Modal */}
+      <TextEditModal
+        isOpen={notesModal.isOpen}
+        onClose={closeNotesModal}
+        onSave={() => {}} // Read-only for employees
+        title="ملاحظات العميل"
+        initialContent={notesModal.currentContent}
+        placeholder="ملاحظات العميل..."
+        isTextarea={true}
+        rows={6}
+        maxLength={1500}
+        readOnly={true}
+      />
     </div>
   );
 }
