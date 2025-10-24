@@ -3,6 +3,10 @@ import { auth } from "../../../../lib/auth";
 import prisma from "../../../../lib/prisma";
 import { generateCredentials } from "../../../../utils/credentials";
 import { sendCredentialsEmails } from "../../../../lib/email";
+import {
+  getDefaultTelegramInviteLink,
+  isTelegramConfigured,
+} from "../../../../lib/telegram";
 
 interface CreateUserRequest {
   name: string;
@@ -130,10 +134,30 @@ export async function POST(req: NextRequest) {
       // Send email notifications
       try {
         console.log("Sending credential emails to users...");
+
+        // Get Telegram invite link for employees (all standalone accounts are employees)
+        let telegramInviteLink: string | undefined = undefined;
+        if (isTelegramConfigured()) {
+          console.log("Getting default Telegram invite link for employees...");
+          try {
+            telegramInviteLink =
+              (await getDefaultTelegramInviteLink()) || undefined;
+            if (telegramInviteLink) {
+              console.log("Telegram invite link obtained for employees");
+            } else {
+              console.log("No Telegram invite link available");
+            }
+          } catch (telegramError) {
+            console.error("Error getting Telegram invite link:", telegramError);
+            // Continue without Telegram link
+          }
+        }
+
         const emailResults = await sendCredentialsEmails(
           usersWithCredentials.map((user) => ({
             ...user,
             groupName: "Standalone Account", // Since these are standalone accounts
+            telegramInviteLink, // Include Telegram link for all employees
           }))
         );
         console.log(

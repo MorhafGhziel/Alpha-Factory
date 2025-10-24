@@ -585,6 +585,39 @@ export function isTelegramConfigured(): boolean {
 }
 
 /**
+ * Get default Telegram invite link for employees
+ */
+export async function getDefaultTelegramInviteLink(): Promise<string | null> {
+  if (!bot) {
+    console.log("Telegram bot not configured, skipping invite link generation");
+    return null;
+  }
+
+  try {
+    const adminChatId = process.env.ADMIN_TELEGRAM_CHAT_ID;
+
+    if (!adminChatId) {
+      console.log("ADMIN_TELEGRAM_CHAT_ID not set, cannot create invite link");
+      return null;
+    }
+
+    // Create a general invite link for employees
+    const chat = await bot.createChatInviteLink(adminChatId, {
+      name: "Alpha Factory - Employee Access",
+      member_limit: 100, // Allow up to 100 employees
+      creates_join_request: false,
+      expire_date: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year expiry
+    });
+
+    console.log("Generated default Telegram invite link for employees");
+    return chat.invite_link;
+  } catch (error) {
+    console.error("Error creating default Telegram invite link:", error);
+    return null;
+  }
+}
+
+/**
  * Get bot instance (for advanced usage)
  */
 /**

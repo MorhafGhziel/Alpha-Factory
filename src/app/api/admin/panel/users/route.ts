@@ -3,6 +3,10 @@ import prisma from "../../../../../lib/prisma";
 import { auth } from "../../../../../lib/auth";
 import { sendCredentialsEmail } from "../../../../../lib/email";
 import { generateCredentials } from "../../../../../utils/credentials";
+import {
+  getDefaultTelegramInviteLink,
+  isTelegramConfigured,
+} from "../../../../../lib/telegram";
 
 // GET all users (owner only)
 export async function GET(req: NextRequest) {
@@ -108,13 +112,33 @@ export async function POST(req: NextRequest) {
     // Send email notification with credentials
     try {
       console.log("Sending credential email to new user...");
+
+      // Get Telegram invite link for employees (not for clients)
+      let telegramInviteLink: string | undefined = undefined;
+      if (role !== "client" && isTelegramConfigured()) {
+        console.log("Getting default Telegram invite link for employee...");
+        try {
+          telegramInviteLink =
+            (await getDefaultTelegramInviteLink()) || undefined;
+          if (telegramInviteLink) {
+            console.log("Telegram invite link obtained for employee");
+          } else {
+            console.log("No Telegram invite link available");
+          }
+        } catch (telegramError) {
+          console.error("Error getting Telegram invite link:", telegramError);
+          // Continue without Telegram link
+        }
+      }
+
       await sendCredentialsEmail({
         name,
         email,
         username: username, // Use the generated username
         password,
         role,
-        groupName: "No Group", // Single user creation without group
+        groupName: "Individual Account", // Single user creation without group
+        telegramInviteLink, // Include Telegram link for employees
       });
       console.log("Credential email sent successfully");
     } catch (emailError) {
