@@ -106,7 +106,9 @@ async function setupGroupBot(
       .map((user) => `• ${user.name} - ${getRoleInArabic(user.role)}`)
       .join("\n");
 
-    const welcomeMessage = `${addMessageSeparator()}🎉 مرحباً بكم في مجموعة Alpha Factory!
+    const welcomeMessage = `${addMessageSeparator()}🎉 مرحباً بكم في مجموعة ${removeLinks(
+      groupName
+    )}!
 
 📋 **اسم المشروع:** ${removeLinks(groupName)}
 
@@ -118,7 +120,7 @@ ${teamMembers || "• سيتم إضافة أعضاء الفريق قريباً"}
 • تحديثات حالة المشروع
 • تنبيهات مهمة
 
-🚀 بالتوفيق في مشروعكم!${addMessageSeparator()}`;
+🚀 بالتوفيق في مشاريعكم القادمة!${addMessageSeparator()}`;
 
     await bot.sendMessage(chatId, welcomeMessage, {
       parse_mode: "Markdown",
