@@ -645,6 +645,21 @@ export default function ClientInvoicesPage() {
     });
   }, [invoices, paidMap, session]);
 
+  // Close expanded invoice if it becomes paid
+  useEffect(() => {
+    if (expanded) {
+      const expandedInvoice = [...databaseInvoices, ...invoices].find(inv => 
+        (inv.id || getInvoiceId(inv)) === expanded
+      );
+      if (expandedInvoice) {
+        const isPaid = expandedInvoice.status === "PAID" || paidMap[expanded];
+        if (isPaid) {
+          setExpanded(null);
+        }
+      }
+    }
+  }, [expanded, databaseInvoices, invoices, paidMap]);
+
   return (
     <div className="min-h-screen text-white md:py-20 py-10">
       <div className="max-w-6xl mx-auto">
@@ -764,7 +779,7 @@ export default function ClientInvoicesPage() {
                   ? `${remaining} يوم متبقي لدفع الاستحقاق`
                   : `متأخرة ${Math.abs(remaining)} يوم`;
               
-              const isOpen = expanded === id;
+              const isOpen = expanded === id && !isPaidInvoice;
               const statusColor = isPaidInvoice 
                 ? "text-green-400"
                 : remaining > 0 
@@ -781,26 +796,37 @@ export default function ClientInvoicesPage() {
                     }`}
                   >
                     <button
-                      onClick={() => setExpanded(isOpen ? null : id)}
-                      className="w-full flex items-center justify-between"
+                      onClick={() => !isPaidInvoice && setExpanded(isOpen ? null : id)}
+                      className={`w-full flex items-center justify-between ${isPaidInvoice ? 'cursor-default' : 'cursor-pointer'}`}
+                      disabled={isPaidInvoice}
                     >
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1b1b1b] border border-[#2a2a2a] flex items-center justify-center text-gray-300 cursor-pointer">
-                        <svg
-                          className={`w-4 h-4 transition-transform ${
-                            isOpen ? "rotate-90" : "rotate-0"
-                          }`}
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M9 5l7 7-7 7"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1b1b1b] border border-[#2a2a2a] flex items-center justify-center ${isPaidInvoice ? 'text-gray-500 cursor-default' : 'text-gray-300 cursor-pointer'}`}>
+                        {!isPaidInvoice ? (
+                          <svg
+                            className={`w-4 h-4 transition-transform ${
+                              isOpen ? "rotate-90" : "rotate-0"
+                            }`}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M9 5l7 7-7 7"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                          >
+                            <path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.5z" />
+                          </svg>
+                        )}
                       </div>
 
                       <div className="flex-1 flex justify-center">
@@ -928,7 +954,7 @@ export default function ClientInvoicesPage() {
                                   المجموع
                                 </div>
                               </div>
-                              {(inv.invoice_item || inv.items || []).map((item, i) => (
+                              {(inv.invoice_item || inv.items || []).map((item: any, i: number) => (
                                 <div
                                   key={i}
                                   className={`grid grid-cols-6 text-sm sm:text-base border-t ${
@@ -944,7 +970,7 @@ export default function ClientInvoicesPage() {
                                   </div>
                                   <div className="border-l px-4 py-3 text-right">
                                     <div className="flex flex-wrap gap-1">
-                                      {item.workDescription && item.workDescription.split(" - ")[0].split(" + ").map((work, idx) => (
+                                      {item.workDescription && item.workDescription.split(" - ")[0].split(" + ").map((work: string, idx: number) => (
                                         <span 
                                           key={idx}
                                           className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
@@ -961,7 +987,7 @@ export default function ClientInvoicesPage() {
                                       {/* Show duration info if available */}
                                       {item.workDescription && item.workDescription.includes("مدة الفيديو") && (
                                         <div className="text-xs text-gray-600 mt-1">
-                                          {item.workDescription.split(" - ").find(part => part.includes("مدة الفيديو"))}
+                                          {item.workDescription.split(" - ").find((part: string) => part.includes("مدة الفيديو"))}
                                         </div>
                                       )}
                                     </div>
