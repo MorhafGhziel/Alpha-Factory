@@ -1,5 +1,6 @@
 import { requireClient } from "@/src/lib/auth-middleware";
 import ClientLayoutClient from "./ClientLayoutClient";
+import { InvoiceNotificationProvider } from "@/src/contexts/InvoiceNotificationContext";
 
 export default async function ClientLayout({
   children,
@@ -9,5 +10,9 @@ export default async function ClientLayout({
   // Ensure only clients can access this layout
   await requireClient();
 
-  return <ClientLayoutClient>{children}</ClientLayoutClient>;
+  return (
+    <InvoiceNotificationProvider>
+      <ClientLayoutClient>{children}</ClientLayoutClient>
+    </InvoiceNotificationProvider>
+  );
 }

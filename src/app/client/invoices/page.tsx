@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { Project } from "@/src/types";
 import PayPalButton from "@/components/ui/PayPalButton";
 import { authClient } from "@/src/lib/auth-client";
+import { useInvoiceNotifications } from "@/src/contexts/InvoiceNotificationContext";
 
 type InvoiceItem = {
   id: string;
@@ -109,6 +110,14 @@ export default function ClientInvoicesPage() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   
   const searchParams = useSearchParams();
+  
+  // Invoice notification hook - mark as seen when page is visited
+  const { markInvoiceNotificationAsSeen } = useInvoiceNotifications();
+
+  // Mark notification as seen when page is visited
+  useEffect(() => {
+    markInvoiceNotificationAsSeen();
+  }, [markInvoiceNotificationAsSeen]);
 
   useEffect(() => {
     const fetchData = async () => {

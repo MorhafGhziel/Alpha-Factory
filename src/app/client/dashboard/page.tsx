@@ -6,6 +6,7 @@ import SummaryCard from "@/components/ui/SummaryCard";
 import AddProjectModal from "@/components/ui/AddProjectModal";
 import RequestImprovementModal from "@/components/ui/RequestImprovementModal";
 import { Project } from "../../../types";
+import { useInvoiceNotifications } from "@/src/contexts/InvoiceNotificationContext";
 
 const formatDate = (date: Date | string) => {
   const d = new Date(date);
@@ -18,6 +19,9 @@ const formatDate = (date: Date | string) => {
 export default function ClientDashboardPage() {
   const router = useRouter();
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+  
+  // Invoice notification hook
+  const { showNotificationForNewActivity } = useInvoiceNotifications();
 
   const handleProjectClick = (projectId: string) => {
     router.push(`/client/tracking-board`);
@@ -214,6 +218,8 @@ export default function ClientDashboardPage() {
         // Refresh the projects list
         await fetchProjects();
         closeAddProjectModal();
+        // Show invoice notification after project creation
+        showNotificationForNewActivity();
       } else {
         console.error("Response status:", response.status);
         console.error("Response statusText:", response.statusText);
@@ -291,6 +297,8 @@ export default function ClientDashboardPage() {
         // Refresh the projects list
         await fetchProjects();
         closeRequestImprovementModal();
+        // Show invoice notification after enhancement request
+        showNotificationForNewActivity();
         alert("تم إنشاء طلب التحسين بنجاح!");
       } else {
         const errorData = await response.json();

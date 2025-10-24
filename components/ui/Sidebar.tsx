@@ -12,6 +12,7 @@ export interface SidebarItem {
   isBorder?: boolean;
   isSpacer?: boolean;
   onClick?: () => void;
+  hasNotification?: boolean;
 }
 
 interface SidebarProps {
@@ -106,6 +107,10 @@ export default function Sidebar({
             />
           )}
         </button>
+        {/* Notification Badge */}
+        {item.hasNotification && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#0f0f0f]"></div>
+        )}
         <Tooltip text={item.tooltip} position={tooltipPosition} />
       </div>
     );

@@ -7,6 +7,7 @@ import Header from "@/components/ui/Header";
 import ComingSoonModal from "@/components/ComingSoonModal";
 import OverdueRestriction from "@/components/OverdueRestriction";
 import { ProjectProvider } from "@/contexts/ProjectContext";
+import { useInvoiceNotifications } from "@/src/contexts/InvoiceNotificationContext";
 
 export default function ClientLayoutClient({
   children,
@@ -19,6 +20,9 @@ export default function ClientLayoutClient({
   const [isBookmarkOpen, setIsBookmarkOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  
+  // Invoice notification hook
+  const { hasNewInvoice, markInvoiceNotificationAsSeen, showNotificationForNewActivity } = useInvoiceNotifications();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -171,6 +175,7 @@ export default function ClientLayoutClient({
               icon: "/icons/Card.svg",
               alt: "Invoices",
               tooltip: "الفواتير",
+              hasNotification: hasNewInvoice,
             },
             {
               path: "/client/community",
