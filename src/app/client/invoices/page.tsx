@@ -98,8 +98,8 @@ export default function ClientInvoicesPage() {
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [session, setSession] = useState<any>(null);
-  const [showPricingTooltip, setShowPricingTooltip] = useState(false);
   const [cryptoToast, setCryptoToast] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const searchParams = useSearchParams();
 
@@ -669,47 +669,15 @@ export default function ClientInvoicesPage() {
           </h1>
         </div>
 
-        {/* Pricing Information Tooltip */}
+        {/* Terms Button */}
         <div className="flex justify-center mb-6">
-          <div className="relative">
-            <button
-              onMouseEnter={() => setShowPricingTooltip(true)}
-              onMouseLeave={() => setShowPricingTooltip(false)}
-              className="w-8 h-8 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-lg hover:bg-[#EAD06C]/80 transition-colors"
-            >
-              ?
-            </button>
-            {showPricingTooltip && (
-              <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-[#0F0F0F] border border-[#333336] rounded-2xl p-6 w-[600px] z-50 shadow-xl" dir="rtl">
-                <h3 className="text-lg font-semibold text-[#EAD06C] mb-4 text-center">هيكل الأسعار</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                      <span>مشاريع المحتوى الطويل (فيديوهات طويلة)</span>
-                      <span className="text-[#EAD06C] font-medium">$9 للدقيقة</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                      <span>مشاريع المحتوى القصير (فيديوهات قصيرة)</span>
-                      <span className="text-[#EAD06C] font-medium">$39 للدقيقة</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                      <span>مشاريع الإعلانات (مقاطع ترويجية)</span>
-                      <span className="text-[#EAD06C] font-medium">$49 للدقيقة</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-[#1a1a1a] rounded-lg">
-                      <span>تصاميم الصور المصغرة (ثمبنيل)</span>
-                      <span className="text-[#EAD06C] font-medium">$19 للتصميم</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-xs text-gray-400 text-center">
-                  * يتم حساب الفواتير بناءً على مدة الفيديو المكتملة من قسم التحرير
-                </div>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => setShowTermsModal(true)}
+            className="w-8 h-8 rounded-full bg-[#EAD06C] text-black flex items-center justify-center font-bold text-lg hover:bg-[#EAD06C]/80 transition-colors"
+            title="الشروط وهيكل الأسعار"
+          >
+            ?
+          </button>
         </div>
 
         {loading ? (
@@ -1107,7 +1075,213 @@ export default function ClientInvoicesPage() {
             })}
           </div>
         )}
+
+        {/* Terms Modal */}
+        {showTermsModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setShowTermsModal(false)}
+          >
+            <div
+              className="max-w-3xl w-full bg-[#0F0F0F] border border-[#333336] rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="max-h-[75vh] overflow-y-auto af-scroll p-6 text-right text-gray-200"
+                dir="rtl"
+              >
+                <div className="text-lg font-semibold mb-4">
+                  جدول التسعير ومواعيد التسليم
+                </div>
+                <div className="space-y-8">
+                  <div>
+                    <div className="font-medium mb-3">💰 جدول التسعير</div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-gray-400 border-b border-[#333336]">
+                          <th className="py-2">نوع المشروع</th>
+                          <th className="py-2">السعر</th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&>tr:nth-child(even)]:bg-[#151515]">
+                        <tr>
+                          <td className="py-2">
+                            مشاريع المحتوى الطويل (فيديوهات طويلة)
+                          </td>
+                          <td className="py-2">9$ / الدقيقة</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">
+                            مشاريع المحتوى القصير (فيديوهات قصيرة)
+                          </td>
+                          <td className="py-2">39$ / الدقيقة</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">
+                            مشاريع الإعلانات (مقاطع ترويجية)
+                          </td>
+                          <td className="py-2">49$ / الدقيقة</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">
+                            تصاميم الصور المصغرة (ثَمبُنيل)
+                          </td>
+                          <td className="py-2">19$ / التصميم</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <div className="font-medium mb-3">
+                      ⏰ جدول مواعيد تسليم المشاريع
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-gray-400 border-b border-[#333336]">
+                          <th className="py-2 text-right">نوع المشروع</th>
+                          <th className="py-2 text-right">مدة المشروع</th>
+                          <th className="py-2 text-right">مدة التسليم المتوقعة</th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&>tr:nth-child(even)]:bg-[#151515]">
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            مشاريع المحتوى الطويل [فيديوهات طويلة]
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            8 - 15 دقائق
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 3 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            15 - 30 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            3 - 5 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            30 - 60 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            4 - 6 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 5 ساعات
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            4 - 7 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            مشاريع المحتوى القصير [فيديوهات قصيرة]
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            10 ثوان - 1 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            0 - 1 يوم
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 3 دقائق
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 2 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            مشاريع الإعلانات [مقاطع ترويجية]
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            10 ثوان - 1 دقيقة
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            0 - 1 يوم
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 3 دقائق
+                          </td>
+                          <td className="py-3 px-2 border-b border-[#333336]">
+                            1 - 2 أيام
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-2">
+                            تصاميم الصور المصغرة [ثَمبُنيلات]
+                          </td>
+                          <td className="py-3 px-2">
+                            تصميم واحد
+                          </td>
+                          <td className="py-3 px-2">
+                            1 - 24 ساعة
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 border-t border-[#333336] flex justify-end">
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#333336] hover:bg-[#242424]"
+                >
+                  إغلاق
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+      
+      {/* Scoped scrollbar styling for modals */}
+      <style jsx>{`
+        .af-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #333336 #0f0f0f;
+        }
+        .af-scroll::-webkit-scrollbar {
+          width: 8px;
+        }
+        .af-scroll::-webkit-scrollbar-track {
+          background: #0f0f0f;
+          border-radius: 9999px;
+        }
+        .af-scroll::-webkit-scrollbar-thumb {
+          background: #333336;
+          border-radius: 9999px;
+        }
+        .af-scroll::-webkit-scrollbar-thumb:hover {
+          background: #4a4a4a;
+        }
+      `}</style>
     </div>
   );
 }
