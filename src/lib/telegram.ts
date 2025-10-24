@@ -424,12 +424,11 @@ export async function sendProjectStatusUpdate(
     const roleEmoji = getRoleEmoji(updateData.userRole);
     const fieldEmoji = getFieldEmoji(updateData.fieldName);
 
-    const message = `${addMessageSeparator()}📊 **تحديث حالة المشروع**
+    const message = `${addMessageSeparator()}📊 **تحديث حالة المشروع (${
+      updateData.updatedBy
+    } - ${getRoleInArabic(updateData.userRole)})**
 
 🎬 **المشروع:** ${removeLinks(updateData.projectTitle)}
-${roleEmoji} **المحدث بواسطة:** ${updateData.updatedBy} (${getRoleInArabic(
-      updateData.userRole
-    )})
 
 ${fieldEmoji} **المجال المحدث:** ${updateData.fieldNameArabic}
 ❌ **القيمة السابقة:** ${removeLinks(updateData.oldValue)}
@@ -526,10 +525,10 @@ export function getRoleInArabic(role: string): string {
  */
 function getRoleEmoji(role: string): string {
   const emojiMap: { [key: string]: string } = {
-    client: "👤",
-    editor: "✂️",
-    designer: "🎨",
-    reviewer: "👁️",
+    client: "🥷🏻",
+    editor: "👨🏻‍💻",
+    designer: "👨🏻‍🎨",
+    reviewer: "🕵🏻‍♂️",
     admin: "👨‍💼",
     supervisor: "👨‍💼",
     owner: "👑",
