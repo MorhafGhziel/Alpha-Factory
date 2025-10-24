@@ -649,6 +649,33 @@ export default function ClientTrackingBoardPage() {
 
                   <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
                     <div className="text-[#EAD06C] text-xs mb-2 font-medium">
+                      الملاحظات
+                    </div>
+                    {project.notes ? (
+                      <button
+                        onClick={() =>
+                          openNotesModal(project.id, project.notes || "")
+                        }
+                        className="w-full text-left text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                      >
+                        {project.notes.length > 50
+                          ? `${project.notes.substring(0, 50)}...`
+                          : project.notes}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          openNotesModal(project.id, project.notes || "")
+                        }
+                        className="w-full text-left text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                      >
+                        إضافة ملاحظات
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
+                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
                       التقييم
                     </div>
                     <div className="relative">
@@ -755,33 +782,6 @@ export default function ClientTrackingBoardPage() {
                         </>
                       )}
                     </div>
-                  </div>
-
-                  <div className="bg-[#0B0B0B] rounded-lg p-3 border border-[#2A2A2A]">
-                    <div className="text-[#EAD06C] text-xs mb-2 font-medium">
-                      الملاحظات
-                    </div>
-                    {project.notes ? (
-                      <button
-                        onClick={() =>
-                          openNotesModal(project.id, project.notes || "")
-                        }
-                        className="w-full text-left text-[#CCCCCC] text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
-                      >
-                        {project.notes.length > 50
-                          ? `${project.notes.substring(0, 50)}...`
-                          : project.notes}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          openNotesModal(project.id, project.notes || "")
-                        }
-                        className="w-full text-left text-gray-400 text-xs bg-[#1A1A1A] px-2 py-1 rounded hover:bg-[#2A2A2A] transition-colors cursor-pointer"
-                      >
-                        إضافة ملاحظات
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
