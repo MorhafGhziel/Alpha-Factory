@@ -86,9 +86,8 @@ function isProjectBillable(p: Project): boolean {
 
 export default function ClientInvoicesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [databaseInvoices, setDatabaseInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(0);
   const [paidMap, setPaidMap] = useState<Record<string, boolean>>({});
   // Reminder modal state removed; auto-sending only
   const [showPaidBannerFor, setShowPaidBannerFor] = useState<string | null>(
@@ -111,25 +110,6 @@ export default function ClientInvoicesPage() {
         if (!res.ok) throw new Error("Failed to load projects");
         const data = await res.json();
         setProjects(data.projects || []);
-        
-        // Fetch database invoices
-        try {
-          const invoicesRes = await fetch("/api/invoices", {
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          if (invoicesRes.ok) {
-            const invoicesData = await invoicesRes.json();
-            setDatabaseInvoices(invoicesData.invoices || []);
-            console.log("📊 Loaded database invoices:", invoicesData.invoices?.length || 0);
-          } else {
-            console.warn("Failed to load database invoices:", invoicesRes.status, invoicesRes.statusText);
-          }
-        } catch (invoiceError) {
-          console.warn("Could not load database invoices:", invoiceError);
-        }
         
         // Fetch session for client email
         const sessionData = await authClient.getSession();
@@ -165,23 +145,6 @@ export default function ClientInvoicesPage() {
             savePaid(next);
             setShowPaidBannerFor(invoiceId);
             setTimeout(() => setShowPaidBannerFor(null), 4000);
-            
-            // Refresh database invoices to get updated payment status
-            try {
-              const invoicesRes = await fetch("/api/invoices", {
-                credentials: 'include',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-              });
-              if (invoicesRes.ok) {
-                const invoicesData = await invoicesRes.json();
-                setDatabaseInvoices(invoicesData.invoices || []);
-                console.log("🔄 Refreshed invoices after payment");
-              }
-            } catch (refreshError) {
-              console.warn("Could not refresh invoices:", refreshError);
-            }
           }
           setPaymentStatus('تم الدفع بنجاح! شكراً لك');
         } else {
@@ -205,30 +168,21 @@ export default function ClientInvoicesPage() {
   }, [searchParams, paidMap, savePaid]);
 
   // Function to check if invoice has any pending items
-  const hasWaitingItems = (invoice: any) => {
-    const items = invoice.invoice_item || invoice.items || [];
-    return items.some((item: any) => 
+  const hasWaitingItems = (invoice: Invoice) => {
+    return invoice.items.some(item => 
       item.unitPrice === 0 || item.quantity === 0 || item.total === 0
     );
   };
 
   // Function to check if invoice has thumbnail added
-  const hasThumbnailAdded = (invoice: any) => {
-    const items = invoice.invoice_item || invoice.items || [];
-    
+  const hasThumbnailAdded = (invoice: Invoice) => {
     // Check if any item in the invoice is a thumbnail design
-    const hasThumbnailItem = items.some((item: any) => 
-      item.id?.includes('_thumbnail') || 
-      item.workType?.includes("تصميم") ||
-      item.workType?.includes("ثمبنيل") ||
-      item.description?.includes("تصميم") ||
-      item.description?.includes("ثمبنيل") ||
-      (item.projectType && (
-        item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" ||
-        item.projectType === "تصاميم الصور المصغرة" ||
-        item.projectType?.includes("تصميم") ||
-        item.projectType?.includes("ثمبنيل")
-      ))
+    const hasThumbnailItem = invoice.items.some(item => 
+      item.id.includes('_thumbnail') || 
+      item.projectType === "تصاميم الصور المصغرة (ثمبنيل)" ||
+      item.projectType === "تصاميم الصور المصغرة" ||
+      item.projectType?.includes("تصميم") ||
+      item.projectType?.includes("ثمبنيل")
     );
 
     if (!hasThumbnailItem) {
@@ -236,7 +190,7 @@ export default function ClientInvoicesPage() {
     }
 
     // Find the project associated with this invoice to check if design links exist
-    const projectIds = items.map((item: any) => item.projectId).filter(Boolean);
+    const projectIds = invoice.items.map(item => item.projectId);
     const associatedProjects = projects.filter(project => projectIds.includes(project.id));
     
     // Check if any associated project has design links (indicating thumbnail is uploaded)
@@ -747,32 +701,19 @@ export default function ClientInvoicesPage() {
                 )}
               </div>
             )}
-            {[...databaseInvoices, ...invoices.filter(legacyInv => {
-              // Only show legacy invoices that don't have a corresponding paid database invoice
-              const legacyId = getInvoiceId(legacyInv);
-              return !databaseInvoices.some(dbInv => dbInv.id === legacyId);
-            })].map((inv, index) => {
-              // Handle both database and legacy invoices
-              const id = inv.id || getInvoiceId(inv);
-              const isPaidInvoice = inv.status === "PAID" || paidMap[id];
-              
-              // Calculate remaining days and title based on payment status
-              const remaining = daysUntil(new Date(inv.dueDate));
-              const title = isPaidInvoice 
-                ? "تم الدفع"
-                : remaining > 0
+            {invoices.map((inv) => {
+              const remaining = daysUntil(inv.dueDate);
+              const title =
+                remaining > 0
                   ? `${remaining} يوم متبقي لدفع الاستحقاق`
                   : `متأخرة ${Math.abs(remaining)} يوم`;
-              
-              const isOpen = expanded === id;
-              const statusColor = isPaidInvoice 
-                ? "text-green-400"
-                : remaining > 0 
-                  ? "text-[#EAD06C]" 
-                  : "text-red-400";
+              const isOpen = expanded === inv.index;
+              const statusColor =
+                remaining > 0 ? "text-[#EAD06C]" : "text-red-400";
+              const id = getInvoiceId(inv);
               return (
                 <div
-                  key={inv.id || inv.index || index}
+                  key={inv.index}
                   className="rounded-2xl border border-[#333336] bg-[#0F0F0F] overflow-hidden"
                 >
                   <div
@@ -781,7 +722,7 @@ export default function ClientInvoicesPage() {
                     }`}
                   >
                     <button
-                      onClick={() => setExpanded(isOpen ? null : id)}
+                      onClick={() => setExpanded(isOpen ? null : inv.index)}
                       className="w-full flex items-center justify-between"
                     >
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1b1b1b] border border-[#2a2a2a] flex items-center justify-center text-gray-300 cursor-pointer">
@@ -898,7 +839,7 @@ export default function ClientInvoicesPage() {
                                   <div className="font-bold">الفاتورة</div>
                                   <div>التاريخ: {formatDate(new Date())}</div>
                                   <div>
-                                    تاريخ الاستحقاق: {formatDate(new Date(inv.dueDate))}
+                                    تاريخ الاستحقاق: {formatDate(inv.dueDate)}
                                   </div>
                                 </div>
                               </div>
@@ -928,7 +869,7 @@ export default function ClientInvoicesPage() {
                                   المجموع
                                 </div>
                               </div>
-                              {(inv.invoice_item || inv.items || []).map((item, i) => (
+                              {inv.items.map((item, i) => (
                                 <div
                                   key={i}
                                   className={`grid grid-cols-6 text-sm sm:text-base border-t ${
@@ -1008,13 +949,13 @@ export default function ClientInvoicesPage() {
 
                             <div className="flex items-center justify-between p-4 sm:p-5 mx-3 sm:mx-6">
                               <div className="flex items-center gap-3 sm:gap-4">
-                                {!isPaidInvoice ? (
+                                {!paidMap[id] ? (
                                   <>
                                     <PayPalButton
-                                      amount={inv.totalAmount || inv.grandTotal || 0}
-                                      description={`Alpha Factory Invoice #${inv.invoiceNumber || inv.index}`}
-                                      invoiceId={`invoice_${id}`}
-                                      disabled={hasWaitingItems(inv) || !(inv.totalAmount || inv.grandTotal) || (inv.totalAmount || inv.grandTotal) === 0 || !hasThumbnailAdded(inv)}
+                                      amount={inv.grandTotal || 0}
+                                      description={`Alpha Factory Invoice #${inv.index}`}
+                                      invoiceId={id}
+                                      disabled={hasWaitingItems(inv) || !inv.grandTotal || inv.grandTotal === 0 || !hasThumbnailAdded(inv)}
                                       onSuccess={(data) => {
                                         console.log('Payment successful:', data);
                                         markPaid(inv);

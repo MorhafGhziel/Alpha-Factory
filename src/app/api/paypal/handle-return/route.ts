@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
+import prisma from "../../../../lib/prisma";
 
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
@@ -106,6 +107,70 @@ export async function GET(req: NextRequest) {
         captureData.purchase_units[0].payments.captures[0].id;
       const amount = captureData.purchase_units[0].payments.captures[0].amount;
       const referenceId = captureData.purchase_units[0].reference_id;
+
+      // Store payment in your existing invoice table
+      if (referenceId && referenceId.startsWith("invoice_")) {
+        try {
+          const invoiceId = referenceId.replace("invoice_", "");
+
+          // Try to find existing invoice first
+          let invoice = await prisma.invoice.findFirst({
+            where: { id: invoiceId },
+          });
+
+          // If invoice doesn't exist, create it
+          if (!invoice) {
+            const now = new Date();
+            invoice = await prisma.invoice.create({
+              data: {
+                id: invoiceId,
+                invoiceNumber: `INV-${invoiceId}`,
+                clientId: session.user.id,
+                billingPeriodStart: now,
+                billingPeriodEnd: now,
+                dueDate: now,
+                totalAmount: parseFloat(amount.value),
+                status: "PAID",
+                paidAt: now,
+                paymentMethod: "PAYPAL",
+                paymentReference: transactionId,
+              },
+            });
+
+            // Create a basic invoice item for the payment
+            await prisma.invoiceItem.create({
+              data: {
+                invoiceId: invoice.id,
+                description: `Payment for invoice ${invoiceId}`,
+                quantity: 1,
+                unitPrice: parseFloat(amount.value),
+                total: parseFloat(amount.value),
+                workType: "Payment",
+              },
+            });
+
+            console.log(
+              `📄 Created new invoice ${invoiceId} with invoice item`
+            );
+          } else {
+            // Update existing invoice with payment info
+            await prisma.invoice.update({
+              where: { id: invoiceId },
+              data: {
+                status: "PAID",
+                paidAt: new Date(),
+                paymentMethod: "PAYPAL",
+                paymentReference: transactionId,
+              },
+            });
+          }
+
+          console.log(`✅ Payment recorded for invoice ${invoiceId}`);
+        } catch (dbError) {
+          console.error("Error storing payment in database:", dbError);
+          // Continue with response even if DB storage fails
+        }
+      }
 
       return NextResponse.json({
         success: true,

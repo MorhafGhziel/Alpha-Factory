@@ -29,6 +29,7 @@ model User {
   editorProjects   Project[] @relation("EditorProjects")
   reviewerProjects Project[] @relation("ReviewerProjects")
   sessions         Session[]
+  invoices         Invoice[]
   group            Group?    @relation(fields: [groupId], references: [id])
 
   @@map("user")
@@ -125,3 +126,39 @@ model Project {
 
   @@map("project")
 }
+
+model Invoice {
+  id                  String        @id @default(cuid())
+  invoiceNumber       String?
+  clientId            String
+  billingPeriodStart  DateTime?
+  billingPeriodEnd    DateTime?
+  dueDate             DateTime
+  totalAmount         Float
+  status              String        @default("PENDING")
+  paidAt              DateTime?
+  paymentMethod       String?
+  paymentReference    String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  client              User          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoice_item        InvoiceItem[]
+
+  @@map("invoice")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  projectId   String?
+  description String?
+  quantity    Float    @default(1)
+  unitPrice   Float    @default(0)
+  total       Float    @default(0)
+  workType    String?
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_item")
+}
+
