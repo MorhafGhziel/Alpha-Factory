@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["3", "7", "10"].includes(reminderType)) {
+    if (!["3", "7"].includes(reminderType)) {
       return NextResponse.json(
-        { error: "Invalid reminderType. Must be '3', '7', or '10'" },
+        { error: "Invalid reminderType. Must be '3' or '7'" },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const emailSent = await sendInvoiceReminderEmail({
       to: userEmail,
       userName: userName,
-      reminderType: reminderType as "3" | "7" | "10",
+      reminderType: reminderType as "3" | "7",
     });
 
     if (emailSent) {

@@ -8,7 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export interface InvoiceReminderEmail {
   to: string;
   userName: string;
-  reminderType: "3" | "7" | "10";
+  reminderType: "3" | "7";
 }
 
 /**
@@ -30,20 +30,18 @@ export async function sendInvoiceReminderEmail(
 
     const titles = {
       "3": "تذكير بالفاتورة المستحقة - Alpha Factory",
-      "7": "تذكير عاجل - فاتورة متأخرة - Alpha Factory",
-      "10": "إشعار نهائي - تعليق الحساب - Alpha Factory",
+      "7": "إشعار نهائي - تعليق الحساب - Alpha Factory",
     };
 
     const messages = {
       "3": "نود تذكيرك بضرورة تسديد الفاتورة في الوقت المحدد لضمان استمرار الخدمة دون أي انقطاع.",
-      "7": "فاتورتك متأخرة منذ 7 أيام. يرجى التسديد فوراً لتجنب تعليق الحساب.",
-      "10": "تم تعليق حسابك بسبب عدم تسديد الفاتورة خلال 10 أيام من تاريخ الاستحقاق.",
+      "7": "تم تعليق حسابك بسبب عدم تسديد الفاتورة خلال 7 أيام من تاريخ الاستحقاق.",
     };
 
     // Create simple HTML content
-    const titleColor = reminder.reminderType === "10" ? "#ff4444" : "#E9CF6B";
+    const titleColor = reminder.reminderType === "7" ? "#ff4444" : "#E9CF6B";
     const borderStyle =
-      reminder.reminderType === "10" ? "border-left: 4px solid #ff4444;" : "";
+      reminder.reminderType === "7" ? "border-left: 4px solid #ff4444;" : "";
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -155,17 +153,12 @@ export async function sendInvoiceReminderEmail(
                       <div class="timeline-item ${
                         reminder.reminderType === "7" ? "current" : ""
                       }">
-                          • بعد 7 أيام من التأخير: تذكير عاجل وتحذير من التعليق
-                      </div>
-                      <div class="timeline-item ${
-                        reminder.reminderType === "10" ? "current" : ""
-                      }">
-                          • بعد 10 أيام من التأخير: تعليق الحساب تلقائياً
+                          • بعد 7 أيام من التأخير: تعليق الحساب تلقائياً
                       </div>
                   </div>
 
                   ${
-                    reminder.reminderType !== "10"
+                    reminder.reminderType !== "7"
                       ? '<div class="message-text">نرجو منك تسديد الفاتورة في أسرع وقت ممكن لتجنب أي انقطاع في الخدمة.</div>'
                       : '<div class="message-text" style="color: #ff4444;">لإعادة تفعيل حسابك، يرجى التواصل مع فريق الدعم وتسديد المبلغ المستحق.</div>'
                   }
@@ -197,15 +190,12 @@ ${messages[reminder.reminderType]}
 • بعد 3 أيام من تاريخ الاستحقاق: تذكير أول بالدفع ${
       reminder.reminderType === "3" ? "← أنت هنا" : ""
     }
-• بعد 7 أيام من التأخير: تذكير عاجل وتحذير من التعليق ${
+• بعد 7 أيام من التأخير: تعليق الحساب تلقائياً ${
       reminder.reminderType === "7" ? "← أنت هنا" : ""
-    }
-• بعد 10 أيام من التأخير: تعليق الحساب تلقائياً ${
-      reminder.reminderType === "10" ? "← أنت هنا" : ""
     }
 
 ${
-  reminder.reminderType !== "10"
+  reminder.reminderType !== "7"
     ? "نرجو منك تسديد الفاتورة في أسرع وقت ممكن لتجنب أي انقطاع في الخدمة."
     : "لإعادة تفعيل حسابك، يرجى التواصل مع فريق الدعم وتسديد المبلغ المستحق."
 }

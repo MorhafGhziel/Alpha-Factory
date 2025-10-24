@@ -411,9 +411,9 @@ export default function ClientInvoicesPage() {
         invoiceTotal = totalAmount;
       }
 
-      // Create invoice with due date 14 days from project update
+      // Create invoice with due date 7 days from project update
       const projectDate = new Date(project.updatedAt);
-      const dueDate = new Date(projectDate.getTime() + 14 * DAY_MS);
+      const dueDate = new Date(projectDate.getTime() + 7 * DAY_MS);
 
       return {
         index: index + 1,
@@ -489,7 +489,7 @@ export default function ClientInvoicesPage() {
     }, 2000);
   }
 
-  function wasReminderSent(id: string, day: 3 | 7 | 10 | 14) {
+  function wasReminderSent(id: string, day: 3 | 7) {
     try {
       return localStorage.getItem(`af_inv_${id}_rem_${day}`) === "1";
     } catch {
@@ -497,14 +497,14 @@ export default function ClientInvoicesPage() {
     }
   }
 
-  function setReminderSent(id: string, day: 3 | 7 | 10 | 14) {
+  function setReminderSent(id: string, day: 3 | 7) {
     try {
       localStorage.setItem(`af_inv_${id}_rem_${day}`, "1");
     } catch {}
   }
 
   // Attempt to trigger email and also show message in app
-  async function triggerEmail(kind: "3" | "7" | "10") {
+  async function triggerEmail(kind: "3" | "7") {
     try {
       // Get user info for the email
       const userEmail = session?.data?.user?.email || session?.user?.email || session?.email;
@@ -547,7 +547,7 @@ export default function ClientInvoicesPage() {
     setTimeout(() => setEmailNotice(null), 4000);
   }
 
-  // Auto trigger per threshold (3/7/10/14) once per invoice with progressive restrictions
+  // Auto trigger per threshold (3/7) once per invoice with progressive restrictions
   useEffect(() => {
     invoices.forEach(async (inv) => {
       const id = getInvoiceId(inv);
@@ -555,18 +555,12 @@ export default function ClientInvoicesPage() {
       const remaining = daysUntil(inv.dueDate);
       const overdue = Math.max(0, -remaining);
       
-      // 14 days: Complete account block (only owner can unblock)
-      if (overdue >= 14 && !wasReminderSent(id, 14)) {
-        setReminderSent(id, 14);
-        // TODO: Implement 14-day complete block
-        console.log("🔒 14-day overdue: Account should be completely blocked");
-      }
-      // 10 days: Email + automatic account suspension  
-      else if (overdue >= 10 && !wasReminderSent(id, 10)) {
-        setReminderSent(id, 10);
-        triggerEmail("10");
+      // 7 days: Complete account block (only owner can unblock)
+      if (overdue >= 7 && !wasReminderSent(id, 7)) {
+        setReminderSent(id, 7);
+        triggerEmail("7");
         
-        // Auto-suspend user after 10 days overdue
+        // Auto-suspend user after 7 days overdue
         try {
           const userId = session?.data?.user?.id || session?.user?.id;
           if (userId) {
@@ -578,17 +572,11 @@ export default function ClientInvoicesPage() {
                 invoiceDueDate: inv.dueDate,
               }),
             });
-            console.log("🔒 10-day overdue: User account automatically suspended");
+            console.log("🔒 7-day overdue: User account automatically suspended");
           }
         } catch (error) {
           console.error("Error auto-suspending user:", error);
         }
-      } 
-      // 7 days: Email + restrict to invoice page only
-      else if (overdue >= 7 && !wasReminderSent(id, 7)) {
-        setReminderSent(id, 7);
-        triggerEmail("7");
-        console.log("⚠️ 7-day overdue: User restricted to invoice page only");
       } 
       // 3 days: Email only, no restrictions
       else if (overdue >= 3 && !wasReminderSent(id, 3)) {

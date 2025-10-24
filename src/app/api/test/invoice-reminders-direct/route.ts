@@ -9,9 +9,9 @@ export async function POST(req: NextRequest) {
   try {
     const { userEmail, testDay } = await req.json();
 
-    if (!userEmail || ![3, 7, 10].includes(testDay)) {
+    if (!userEmail || ![3, 7].includes(testDay)) {
       return NextResponse.json(
-        { error: "userEmail is required and testDay must be 3, 7, or 10" },
+        { error: "userEmail is required and testDay must be 3 or 7" },
         { status: 400 }
       );
     }
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
         status: "simulated",
         emailSent: true,
       });
-    } else if (testDay === 10) {
+    } else if (testDay === 7) {
       testResults.actions.push({
         type: "final_notice",
         description: "Send final notice email",
@@ -232,6 +232,6 @@ export async function GET() {
     message: "Direct Invoice Reminder Test Endpoint",
     description: "Direct testing without authentication - for development only",
     usage: "POST with { userEmail, testDay }",
-    testDays: [3, 7, 10],
+    testDays: [3, 7],
   });
 }

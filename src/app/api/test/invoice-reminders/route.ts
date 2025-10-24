@@ -4,13 +4,13 @@ import prisma from "../../../../lib/prisma";
 
 /**
  * Test endpoint for the invoice reminder system
- * This endpoint simulates what happens at 3, 7, and 10 days overdue
+ * This endpoint simulates what happens at 3 and 7 days overdue
  *
  * Usage:
  * POST /api/test/invoice-reminders
  * Body: {
  *   "userEmail": "aghyadghziel@gmail.com",
- *   "testDay": 3 | 7 | 10
+ *   "testDay": 3 | 7
  * }
  */
 export async function POST(req: NextRequest) {
@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
 
     const { userEmail, testDay } = await req.json();
 
-    if (!userEmail || ![3, 7, 10].includes(testDay)) {
+    if (!userEmail || ![3, 7].includes(testDay)) {
       return NextResponse.json(
-        { error: "userEmail is required and testDay must be 3, 7, or 10" },
+        { error: "userEmail is required and testDay must be 3 or 7" },
         { status: 400 }
       );
     }
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
         message: "تم تعليق حسابك مؤقتاً بسبب عدم تسديد الفاتورة",
         status: "would_send",
       });
-    } else if (testDay === 10) {
+    } else if (testDay === 7) {
       testResults.actions.push({
         type: "final_notice",
         subject: "إشعار نهائي: إيقاف الحساب - Alpha Factory",
@@ -279,7 +279,7 @@ function generateEmailBody(day: number, clientName: string): string {
 export async function GET() {
   return NextResponse.json({
     message: "Invoice Reminder System Test Endpoint",
-    description: "Test the 3-day, 7-day, and 10-day invoice reminder system",
+    description: "Test the 3-day and 7-day invoice reminder system",
     instructions: {
       method: "POST",
       endpoint: "/api/test/invoice-reminders",
@@ -287,7 +287,7 @@ export async function GET() {
       requiredFields: {
         userEmail:
           "string - Email of the user to test (e.g., aghyadghziel@gmail.com)",
-        testDay: "number - Day to test (3, 7, or 10)",
+        testDay: "number - Day to test (3 or 7)",
       },
       examples: [
         {
@@ -302,16 +302,15 @@ export async function GET() {
         },
         {
           userEmail: "aghyadghziel@gmail.com",
-          testDay: 10,
-          description: "Test 10-day reminder (final notice + auto-suspension)",
+          testDay: 7,
+          description: "Test 7-day reminder (final notice + auto-suspension)",
         },
       ],
     },
     testFlow: {
       day3: "Sends reminder email about upcoming payment deadline",
       day7: "Sends suspension warning email",
-      day10:
-        "Sends final notice email + automatically suspends the user account",
+      day7: "Sends final notice email + automatically suspends the user account",
     },
   });
 }

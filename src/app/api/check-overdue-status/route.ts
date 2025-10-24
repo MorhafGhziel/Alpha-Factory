@@ -39,9 +39,9 @@ export async function GET(request: NextRequest) {
     let maxOverdueDays = 0;
 
     for (const project of projects) {
-      // Invoice due date is 14 days after project completion
+      // Invoice due date is 7 days after project completion
       const dueDate = new Date(project.updatedAt);
-      dueDate.setDate(dueDate.getDate() + 14);
+      dueDate.setDate(dueDate.getDate() + 7);
 
       const daysDiff = Math.floor(
         (now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
     let accessLevel = "full"; // full, invoice_only, blocked
     let restrictionMessage = "";
 
-    if (maxOverdueDays >= 14) {
+    if (maxOverdueDays >= 7) {
       accessLevel = "blocked";
       restrictionMessage =
-        "تم حظر حسابك بسبب عدم سداد الفواتير لأكثر من 14 يوم. يرجى التواصل مع الإدارة.";
+        "تم حظر حسابك بسبب عدم سداد الفواتير لأكثر من 7 أيام. يرجى التواصل مع الإدارة.";
     } else if (maxOverdueDays >= 7) {
       accessLevel = "invoice_only";
       restrictionMessage = `فاتورتك متأخرة منذ ${maxOverdueDays} أيام. يمكنك الوصول لصفحة الفواتير فقط حتى يتم السداد.`;

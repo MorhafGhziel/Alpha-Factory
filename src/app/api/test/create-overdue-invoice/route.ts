@@ -40,11 +40,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate the updatedAt date to create an invoice that's X days overdue
-    // Invoice due date = updatedAt + 14 days
+    // Invoice due date = updatedAt + 7 days
     // To be X days overdue: due date should be X days ago
-    // So: updatedAt = (today - X days) - 14 days = today - (X + 14) days
+    // So: updatedAt = (today - X days) - 7 days = today - (X + 7) days
     const today = new Date();
-    const daysBack = daysOverdue + 14; // 14 days for invoice period + overdue days
+    const daysBack = daysOverdue + 7; // 7 days for invoice period + overdue days
     const projectUpdatedAt = new Date(
       today.getTime() - daysBack * 24 * 60 * 60 * 1000
     );
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     // Calculate the invoice details
     const invoiceDueDate = new Date(
-      projectUpdatedAt.getTime() + 14 * 24 * 60 * 60 * 1000
+      projectUpdatedAt.getTime() + 7 * 24 * 60 * 60 * 1000
     );
     const daysUntilDue = Math.ceil(
       (invoiceDueDate.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)
@@ -149,8 +149,7 @@ export async function POST(req: NextRequest) {
 }
 
 function getEmailType(daysOverdue: number): string {
-  if (daysOverdue >= 10) return "final notice + suspension";
-  if (daysOverdue >= 7) return "suspension warning";
+  if (daysOverdue >= 7) return "final notice + suspension";
   if (daysOverdue >= 3) return "first reminder";
   return "none";
 }
@@ -181,7 +180,7 @@ export async function GET() {
       },
       {
         userEmail: "aghyadghziel@gmail.com",
-        daysOverdue: 10,
+        daysOverdue: 7,
         projectTitle: "مشروع اختبار - إيقاف 10 أيام",
       },
     ],

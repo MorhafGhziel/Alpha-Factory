@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     const dueDate = new Date(invoiceDueDate);
     const daysOverdue = Math.max(0, -daysUntil(dueDate));
 
-    // Auto-suspend if 10 days overdue
-    if (daysOverdue >= 10) {
+    // Auto-suspend if 7 days overdue
+    if (daysOverdue >= 7) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
       });
