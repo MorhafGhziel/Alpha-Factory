@@ -615,6 +615,7 @@ export async function sendProjectCompletionNotification(
   } catch (error) {
     console.error("Error sending project completion notification:", error);
     return false;
+    ``;
   }
 }
 
