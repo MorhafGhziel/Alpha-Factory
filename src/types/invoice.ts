@@ -59,7 +59,7 @@ export type DatabasePayment = {
   paypalPayerId?: string;
   cryptoAddress?: string;
   cryptoNetwork?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   paidAt?: Date;
   createdAt: Date;
   updatedAt: Date;

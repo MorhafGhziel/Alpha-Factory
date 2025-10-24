@@ -82,18 +82,36 @@ export async function POST(req: NextRequest) {
     // Add invoice items if provided
     if (items && Array.isArray(items)) {
       await Promise.all(
-        items.map((item: any) =>
-          prisma.invoiceItem.create({
-            data: {
-              invoiceId: invoice.id,
-              projectId: item.projectId || null,
-              description: item.description || "",
-              quantity: parseFloat(item.quantity || 1),
-              unitPrice: parseFloat(item.unitPrice || 0),
-              total: parseFloat(item.total || 0),
-              workType: item.workType || null,
-            },
-          })
+        items.map(
+          (item: {
+            projectId?: string;
+            description: string;
+            amount?: number;
+            quantity?: number | string;
+            unitPrice?: number | string;
+            total?: number | string;
+            workType?: string;
+          }) =>
+            prisma.invoiceItem.create({
+              data: {
+                invoiceId: invoice.id,
+                projectId: item.projectId || null,
+                description: item.description || "",
+                quantity:
+                  typeof item.quantity === "number"
+                    ? item.quantity
+                    : parseFloat(String(item.quantity || 1)),
+                unitPrice:
+                  typeof item.unitPrice === "number"
+                    ? item.unitPrice
+                    : parseFloat(String(item.unitPrice || 0)),
+                total:
+                  typeof item.total === "number"
+                    ? item.total
+                    : parseFloat(String(item.total || 0)),
+                workType: item.workType || null,
+              },
+            })
         )
       );
     }

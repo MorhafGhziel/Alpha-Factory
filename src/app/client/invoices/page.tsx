@@ -12,7 +12,9 @@ type InvoiceItem = {
   id: string;
   projectId: string;
   projectName: string;
-  projectType: string;
+  projectType?: string;
+  workType?: string;
+  description?: string;
   unitPrice?: number;
   quantity?: number;
   total?: number;
@@ -21,11 +23,16 @@ type InvoiceItem = {
 };
 
 type Invoice = {
+  id?: string; // For database invoices
   index: number;
+  invoiceNumber?: string; // For database invoices
   startDate: Date;
   dueDate: Date;
   items: InvoiceItem[];
+  invoice_item?: InvoiceItem[]; // For backward compatibility
   grandTotal?: number; // optional aggregate from backend
+  totalAmount?: number; // For database invoices
+  status?: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED"; // For database invoices
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -86,7 +93,7 @@ function isProjectBillable(p: Project): boolean {
 
 export default function ClientInvoicesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [databaseInvoices, setDatabaseInvoices] = useState<any[]>([]);
+  const [databaseInvoices, setDatabaseInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [paidMap, setPaidMap] = useState<Record<string, boolean>>({});
@@ -205,19 +212,19 @@ export default function ClientInvoicesPage() {
   }, [searchParams, paidMap, savePaid]);
 
   // Function to check if invoice has any pending items
-  const hasWaitingItems = (invoice: any) => {
+  const hasWaitingItems = (invoice: Invoice) => {
     const items = invoice.invoice_item || invoice.items || [];
-    return items.some((item: any) => 
+    return items.some((item: InvoiceItem) => 
       item.unitPrice === 0 || item.quantity === 0 || item.total === 0
     );
   };
 
   // Function to check if invoice has thumbnail added
-  const hasThumbnailAdded = (invoice: any) => {
+  const hasThumbnailAdded = (invoice: Invoice) => {
     const items = invoice.invoice_item || invoice.items || [];
     
     // Check if any item in the invoice is a thumbnail design
-    const hasThumbnailItem = items.some((item: any) => 
+    const hasThumbnailItem = items.some((item: InvoiceItem) => 
       item.id?.includes('_thumbnail') || 
       item.workType?.includes("تصميم") ||
       item.workType?.includes("ثمبنيل") ||
@@ -236,7 +243,7 @@ export default function ClientInvoicesPage() {
     }
 
     // Find the project associated with this invoice to check if design links exist
-    const projectIds = items.map((item: any) => item.projectId).filter(Boolean);
+    const projectIds = items.map((item: InvoiceItem) => item.projectId).filter(Boolean);
     const associatedProjects = projects.filter(project => projectIds.includes(project.id));
     
     // Check if any associated project has design links (indicating thumbnail is uploaded)
@@ -922,7 +929,7 @@ export default function ClientInvoicesPage() {
                                   المجموع
                                 </div>
                               </div>
-                              {(inv.invoice_item || inv.items || []).map((item: any, i: number) => (
+                              {(inv.invoice_item || inv.items || []).map((item: InvoiceItem, i: number) => (
                                 <div
                                   key={i}
                                   className={`grid grid-cols-6 text-sm sm:text-base border-t ${
