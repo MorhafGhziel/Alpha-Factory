@@ -587,6 +587,37 @@ export function isTelegramConfigured(): boolean {
 /**
  * Get bot instance (for advanced usage)
  */
+/**
+ * Send project completion notification
+ */
+export async function sendProjectCompletionNotification(
+  chatId: string,
+  projectData: {
+    title: string;
+    completionDate: string;
+  }
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    const message = `${addMessageSeparator()}✅ **تم الانتهاء من المشروع!**
+
+📋 **اسم المشروع:** ${removeLinks(projectData.title)}
+📅 ${new Date().toLocaleString("ar-EG")}
+
+✨ نشكركم على ثقتكم بنا ونتطلع للعمل معكم مرة أخرى${addMessageSeparator()}`;
+
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error sending project completion notification:", error);
+    return false;
+  }
+}
+
 export function getBotInstance(): TelegramBot | null {
   return bot;
 }
