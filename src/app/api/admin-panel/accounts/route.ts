@@ -5,6 +5,7 @@ import { generateCredentials } from "../../../../utils/credentials";
 import {
   isTelegramConfigured,
   createTelegramGroup,
+  sendNewMemberNotification,
 } from "../../../../lib/telegram";
 import { sendCredentialsEmails } from "../../../../lib/email";
 
@@ -170,31 +171,75 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Create Telegram group if configured
-      let telegramResult = null;
+      // Handle Telegram integration
+      let telegramInviteLink = null;
       if (isTelegramConfigured() && targetGroup) {
-        console.log("Creating Telegram group...");
-        try {
-          telegramResult = await createTelegramGroup(
-            targetGroup.name,
-            usersWithCredentials,
-            telegramChatId
-          );
+        // Check if this is a new group (groupName provided) or existing group (groupId provided)
+        if (groupName) {
+          // Creating new group - create new Telegram group
+          console.log("Creating Telegram group for new group...");
+          try {
+            const telegramResult = await createTelegramGroup(
+              targetGroup.name,
+              usersWithCredentials,
+              telegramChatId
+            );
 
-          if (telegramResult.success && telegramResult.inviteLink) {
-            // Update group with Telegram info
-            await prisma.group.update({
-              where: { id: targetGroup.id },
-              data: {
-                telegramInviteLink: telegramResult.inviteLink,
-                telegramGroupName: targetGroup.name,
-                telegramChatId: telegramResult.chatId?.toString(),
+            if (telegramResult.success && telegramResult.inviteLink) {
+              // Update group with Telegram info
+              await prisma.group.update({
+                where: { id: targetGroup.id },
+                data: {
+                  telegramInviteLink: telegramResult.inviteLink,
+                  telegramGroupName: targetGroup.name,
+                  telegramChatId: telegramResult.chatId?.toString(),
+                },
+              });
+              telegramInviteLink = telegramResult.inviteLink;
+            }
+          } catch (telegramError) {
+            console.error("Telegram group creation failed:", telegramError);
+            // Continue without failing the entire operation
+          }
+        } else if (groupId) {
+          // Adding to existing group - use existing Telegram configuration
+          console.log("Adding users to existing group with Telegram...");
+          try {
+            // Get the full group info including Telegram configuration
+            const groupWithTelegram = await prisma.group.findUnique({
+              where: { id: groupId },
+              select: {
+                telegramInviteLink: true,
+                telegramChatId: true,
+                name: true,
               },
             });
+
+            if (groupWithTelegram?.telegramInviteLink) {
+              telegramInviteLink = groupWithTelegram.telegramInviteLink;
+              console.log("Using existing Telegram invite link for group");
+
+              // Send notification to existing Telegram group about new members
+              if (groupWithTelegram.telegramChatId) {
+                await sendNewMemberNotification(
+                  groupWithTelegram.telegramChatId,
+                  usersWithCredentials.map((user) => ({
+                    name: user.name,
+                    role: user.role,
+                  })),
+                  groupWithTelegram.name
+                );
+              }
+            } else {
+              console.log("Existing group doesn't have Telegram configuration");
+            }
+          } catch (telegramError) {
+            console.error(
+              "Error handling existing group Telegram:",
+              telegramError
+            );
+            // Continue without failing the entire operation
           }
-        } catch (telegramError) {
-          console.error("Telegram group creation failed:", telegramError);
-          // Continue without failing the entire operation
         }
       }
 
@@ -204,7 +249,10 @@ export async function POST(req: NextRequest) {
         const emailResults = await sendCredentialsEmails(
           usersWithCredentials.map((user) => ({
             ...user,
-            telegramInviteLink: telegramResult?.inviteLink,
+            telegramInviteLink:
+              user.role !== "client"
+                ? telegramInviteLink || undefined
+                : undefined,
           }))
         );
         console.log(
@@ -218,10 +266,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: `Successfully created ${users.length} user(s)${
-          groupName ? ` and group "${groupName}"` : ""
+          groupName
+            ? ` and group "${groupName}"`
+            : groupId
+            ? ` and added to existing group`
+            : ""
         }`,
         credentials: usersWithCredentials,
-        telegram: telegramResult,
+        telegramInviteLink: telegramInviteLink,
         groupId: targetGroup?.id,
       });
     } catch (error) {

@@ -618,6 +618,54 @@ export async function getDefaultTelegramInviteLink(): Promise<string | null> {
 }
 
 /**
+ * Send notification about new members joining an existing group
+ */
+export async function sendNewMemberNotification(
+  chatId: string,
+  newMembers: Array<{
+    name: string;
+    role: string;
+  }>,
+  groupName: string
+): Promise<boolean> {
+  if (!bot) return false;
+
+  try {
+    const membersList = newMembers
+      .filter((member) => member.role !== "client") // Don't announce clients
+      .map((member) => `• ${member.name} - ${getRoleInArabic(member.role)}`)
+      .join("\n");
+
+    if (membersList) {
+      const message = `${addMessageSeparator()}👋 **عضو جديد انضم للمجموعة!**
+
+🏷️ **المجموعة:** ${removeLinks(groupName)}
+
+👤 **العضو الجديد:**
+${membersList}
+
+🎉 مرحباً بك في الفريق! نتطلع للعمل معك.
+⏰ **وقت الانضمام:** ${new Date().toLocaleString(
+        "ar-EG"
+      )}${addMessageSeparator()}`;
+
+      await bot.sendMessage(chatId, message, {
+        parse_mode: "Markdown",
+      });
+
+      console.log(`✅ New member notification sent to group ${groupName}`);
+      return true;
+    } else {
+      console.log("No employees to announce (only clients added)");
+      return true;
+    }
+  } catch (error) {
+    console.error("Error sending new member notification:", error);
+    return false;
+  }
+}
+
+/**
  * Get bot instance (for advanced usage)
  */
 /**

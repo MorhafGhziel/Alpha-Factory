@@ -57,10 +57,11 @@ export default function AdminLayoutClient({
         const response = await fetch('/api/auth/session');
         if (response.ok) {
           const data = await response.json();
-          setUserRole(data.user?.role || null);
+          const role = data.user?.role || null;
+          setUserRole(role);
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        // Handle error silently
       }
     };
     
@@ -139,14 +140,17 @@ export default function AdminLayoutClient({
         />
 
         <Sidebar
-          items={[
-            {
-              path: "/admin/profile",
-              icon: "/icons/Profile.svg",
-              alt: "Profile",
-              tooltip: "الملف الشخصي",
-            },
-            ...(userRole === "owner" ? [
+          items={(() => {
+            const baseItems = [
+              {
+                path: "/admin/profile",
+                icon: "/icons/Profile.svg",
+                alt: "Profile",
+                tooltip: "الملف الشخصي",
+              }
+            ];
+            
+            const ownerItems = userRole === "owner" ? [
               {
                 path: "",
                 icon: "",
@@ -160,35 +164,39 @@ export default function AdminLayoutClient({
                 alt: "Admin Panel",
                 tooltip: "لوحة التحكم الرئيسية",
               }
-            ] : []),
-            {
-              path: "",
-              icon: "",
-              alt: "",
-              tooltip: "",
-              isBorder: true,
-            },
-            {
-              path: "/admin/addaccount",
-              icon: "/icons/Add.svg",
-              alt: "Add Account",
-              tooltip: "اضافة حساب",
-            },
-            {
-              path: "/admin/manageaccount",
-              icon: "/icons/Manage.svg",
-              alt: "Manage Account",
-              tooltip: "ادارة الحسابات",
-            },
-            { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
-            {
-              path: "",
-              icon: "/icons/Support.svg",
-              alt: "Support",
-              tooltip: "الدعم",
-              onClick: openSupport,
-            },
-          ]}
+            ] : [];
+            
+            
+            return [...baseItems, ...ownerItems,
+              {
+                path: "",
+                icon: "",
+                alt: "",
+                tooltip: "",
+                isBorder: true,
+              },
+              {
+                path: "/admin/addaccount",
+                icon: "/icons/Add.svg",
+                alt: "Add Account",
+                tooltip: "اضافة حساب",
+              },
+              {
+                path: "/admin/manageaccount",
+                icon: "/icons/Manage.svg",
+                alt: "Manage Account",
+                tooltip: "ادارة الحسابات",
+              },
+              { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
+              {
+                path: "",
+                icon: "/icons/Support.svg",
+                alt: "Support",
+                tooltip: "الدعم",
+                onClick: openSupport,
+              }
+            ];
+          })()}
           width="w-20"
           bgColor="bg-[#0f0f0f]"
           iconSize={20}
