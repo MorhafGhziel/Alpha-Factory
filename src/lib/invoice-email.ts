@@ -12,7 +12,7 @@ export interface InvoiceReminderEmail {
 }
 
 /**
- * Send invoice reminder email with retry mechanism
+ * Send invoice reminder email with retry mechanis
  */
 export async function sendInvoiceReminderEmail(
   reminder: InvoiceReminderEmail
