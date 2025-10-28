@@ -297,8 +297,7 @@ export default function ClientDashboardPage() {
         // Refresh the projects list
         await fetchProjects();
         closeRequestImprovementModal();
-        // Show invoice notification after enhancement request
-        showNotificationForNewActivity();
+        // Enhancement projects don't generate invoices, so no notification needed
         alert("تم إنشاء طلب التحسين بنجاح!");
       } else {
         const errorData = await response.json();
