@@ -66,17 +66,15 @@ function daysUntil(date: Date) {
 
 // Define when a project should be included in invoicing
 function isProjectBillable(p: Project): boolean {
-  // Include projects that have any work done or are enhancement projects
+  // Exclude enhancement projects from invoicing entirely
   const isEnhancement = p.type && (
     p.type.includes("تحسين") || 
     p.title.includes("تحسين:")
   );
   
-  // For enhancement projects, include if any work is started
+  // Enhancement projects should never be billed
   if (isEnhancement) {
-    return p.editMode !== "لم يبدأ" || 
-           p.designMode !== "لم يبدأ" || 
-           p.reviewMode !== "في الانتظار";
+    return false;
   }
   
   // For regular projects, include if any significant work is done
