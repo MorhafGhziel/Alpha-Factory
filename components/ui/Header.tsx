@@ -23,11 +23,14 @@ export default function Header({
             <Image
               src="/icons/logo.png"
               alt="Alpha Factory"
-              width={50}
-              height={50}
+              width={45}
+              height={45}
      
             />
-            <span className="text-white text-lg font-semibold ml-2">Alpha Factory</span>
+            <div className="flex items-center">
+              <span className="text-white text-lg font-semibold ml-2">Alpha Factory</span>
+              <span className="ml-2 text-xs px-1.5 py-0.5 bg-[#222224] text-gray-400 rounded">beta</span>
+            </div>
           </div>
         ) : (
           <h1 className="text-white text-lg font-semibold">{title}</h1>
