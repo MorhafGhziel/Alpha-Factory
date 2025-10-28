@@ -21,11 +21,11 @@ export default function Header({
         {showLogo ? (
           <div className="flex items-center">
             <Image
-              src="/icons/Logo.svg"
+              src="/icons/logo.png"
               alt="Alpha Factory"
-              width={32}
-              height={32}
-              className="w-8 h-8"
+              width={50}
+              height={50}
+     
             />
             <span className="text-white text-lg font-semibold ml-2">Alpha Factory</span>
           </div>
