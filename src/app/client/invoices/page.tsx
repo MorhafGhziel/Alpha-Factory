@@ -300,7 +300,7 @@ export default function ClientInvoicesPage() {
     const billableProjects = projects.filter(isProjectBillable);
     
     const result: Invoice[] = billableProjects.map((project, index) => {
-      // Calculate pricing based on project type and video duration
+      // Calculate pricing based on project type and video duratio
       let unitPrice = 0;
       let quantity = 1;
       let workDescription = "";
