@@ -724,13 +724,7 @@ export default function ClientTrackingBoardPage() {
                       ) : (
                         <>
                           <button
-                            onClick={async () => {
-                              // Toggle verification status manually
-                              const currentStatus = project.verificationMode;
-                              const newStatus =
-                                currentStatus === "متميز" ? "لا شيء" : "متميز";
-                              await updateRating(project.id, newStatus);
-                            }}
+                      
                             className="relative group cursor-pointer active:scale-95 transition-transform duration-150"
                           >
                             <div className="relative w-8 h-8">
