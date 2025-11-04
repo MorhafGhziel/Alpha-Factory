@@ -218,7 +218,7 @@ export default function ClientInvoicesPage() {
         "إعلانات / مقاطع فيديو ترويجية": { rate: 49, unit: "دولار للدقيقة" },
         "تصاميم الصور المصغرة": { rate: 19, unit: "دولار للتصميم" },
         "تصاميم الصور المصغرة (ثمبنيل)": { rate: 19, unit: "دولار للتصميم" },
-        "default": { rate: 25, unit: "دولار للدقيقة" }
+        "default": { rate: 9, unit: "دولار للدقيقة" }
       };
       
       // Get pricing info for project type
