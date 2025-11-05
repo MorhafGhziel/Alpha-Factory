@@ -731,8 +731,7 @@ export default function ClientTrackingBoardPage() {
                               {/* Verified Badge */}
                               <div
                                 className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${
-                                  project.verificationMode &&
-                                  project.verificationMode !== "لا شيء"
+                                  isProjectVerified(project)
                                     ? "opacity-100 scale-100 rotate-0"
                                     : "opacity-0 scale-75 rotate-180"
                                 }`}
