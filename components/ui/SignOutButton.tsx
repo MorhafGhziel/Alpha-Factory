@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { authClient } from "@/src/lib/auth-client";
 
 interface SignOutButtonProps {
   className?: string;
@@ -18,7 +18,6 @@ export default function SignOutButton({
 }: SignOutButtonProps) {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const router = useRouter();
 
   const handleSignOutClick = () => {
     setShowConfirmation(true);
@@ -31,22 +30,14 @@ export default function SignOutButton({
     setShowConfirmation(false);
     
     try {
-      const response = await fetch('/api/auth/signout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        // Redirect to home page after successful sign out
-        router.push('/');
-        router.refresh();
-      } else {
-        console.error('Failed to sign out');
+      const { error } = await authClient.signOut();
+      if (!error) {
+        window.location.href = "/";
+        return;
       }
+      console.error("Failed to sign out:", error);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     } finally {
       setIsSigningOut(false);
     }

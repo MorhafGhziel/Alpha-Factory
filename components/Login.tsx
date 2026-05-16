@@ -30,14 +30,13 @@ const Login = ({}: LoginProps = {}) => {
   const handleLoginClick = async () => {
     setIsCheckingSession(true);
     try {
-      const sessionResult = await authClient.getSession();
-      if (sessionResult?.data?.user?.role) {
-        const dashboardPath = getRoleDashboardPath(sessionResult.data.user.role);
-        if (typeof window !== "undefined") {
-          window.location.href = dashboardPath;
-        } else {
-          router.push(dashboardPath);
-        }
+      const response = await fetch("/api/auth/session", {
+        credentials: "same-origin",
+      });
+      const data = await response.json();
+      if (data?.user?.role) {
+        const dashboardPath = getRoleDashboardPath(data.user.role);
+        window.location.href = dashboardPath;
         return;
       }
       setShowForm(true);
