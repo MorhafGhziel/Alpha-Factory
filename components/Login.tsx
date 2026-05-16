@@ -24,10 +24,28 @@ const Login = ({}: LoginProps = {}) => {
   const [userEmail, setUserEmail] = useState("");
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(false);
   const router = useRouter();
 
-  const handleLoginClick = () => {
-    setShowForm(true);
+  const handleLoginClick = async () => {
+    setIsCheckingSession(true);
+    try {
+      const sessionResult = await authClient.getSession();
+      if (sessionResult?.data?.user?.role) {
+        const dashboardPath = getRoleDashboardPath(sessionResult.data.user.role);
+        if (typeof window !== "undefined") {
+          window.location.href = dashboardPath;
+        } else {
+          router.push(dashboardPath);
+        }
+        return;
+      }
+      setShowForm(true);
+    } catch {
+      setShowForm(true);
+    } finally {
+      setIsCheckingSession(false);
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -363,11 +381,12 @@ const Login = ({}: LoginProps = {}) => {
             <div className="flex justify-center">
               <motion.button
                 onClick={handleLoginClick}
-                className="relative bg-gradient-to-r from-[#E9CF6B] to-[#C48929] text-[20px] font-bold text-[#1e1e1e] px-6 py-1 rounded-3xl cursor-pointer overflow-hidden"
+                disabled={isCheckingSession}
+                className="relative bg-gradient-to-r from-[#E9CF6B] to-[#C48929] text-[20px] font-bold text-[#1e1e1e] px-6 py-1 rounded-3xl cursor-pointer overflow-hidden disabled:opacity-70 disabled:cursor-wait"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{
-                  scale: 1.05,
+                  scale: isCheckingSession ? 1 : 1.05,
                 }}
                 transition={{
                   duration: 1,
@@ -405,7 +424,13 @@ const Login = ({}: LoginProps = {}) => {
                   }}
                 />
 
-                <span className="relative z-10">تسجيل الدخول</span>
+                <span className="relative z-10 flex items-center justify-center min-w-[120px] min-h-[28px]">
+                  {isCheckingSession ? (
+                    <span className="w-5 h-5 border-2 border-[#1e1e1e] border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    "تسجيل الدخول"
+                  )}
+                </span>
               </motion.button>
             </div>
           </motion.div>
