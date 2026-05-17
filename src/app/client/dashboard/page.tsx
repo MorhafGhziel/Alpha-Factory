@@ -156,6 +156,9 @@ export default function ClientDashboardPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const isFilmingCompleted = (status: string) =>
+    status === "تم الانتـــهاء مــنه" || status === "تم الانتهاء منه";
+
   // Function to check if a project is verified
   const isProjectVerified = (project: Project) => {
     return project.documentation && project.documentation.trim() !== "";
@@ -174,8 +177,8 @@ export default function ClientDashboardPage() {
   const completedEdits = projects.filter(
     (p) => p.editMode === "تم الانتهاء منه"
   ).length;
-  const completedFilming = projects.filter(
-    (p) => p.filmingStatus === "تم الانتهاء منه"
+  const completedFilming = projects.filter((p) =>
+    isFilmingCompleted(p.filmingStatus)
   ).length;
 
   const openAddProjectModal = () => {

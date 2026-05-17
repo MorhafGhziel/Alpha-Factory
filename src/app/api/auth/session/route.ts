@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     console.error("Error fetching session:", error);
     return NextResponse.json(
       { error: "Failed to fetch session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

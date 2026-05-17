@@ -38,6 +38,9 @@ type Invoice = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** UI-only: hide invoice details and payment; show disabled message on expand */
+const INVOICES_DISABLED_FOR_ACCOUNT = true;
+
 function formatDate(d: Date) {
   const dd = d.getDate().toString().padStart(2, "0");
   const mm = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -699,6 +702,41 @@ export default function ClientInvoicesPage() {
     }
   }, [expanded, databaseInvoices, invoices, paidMap]);
 
+  if (INVOICES_DISABLED_FOR_ACCOUNT) {
+    return (
+      <div className="min-h-screen text-white md:py-20 py-10">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="w-full text-center md:mb-16 mb-10">
+            <h1 className="text-5xl bg-gradient-to-l from-white to-black bg-clip-text text-transparent font-light">
+              الفواتير
+            </h1>
+          </div>
+          <div
+            className="rounded-2xl border border-[#333336] bg-[#0F0F0F] px-6 py-12 text-center"
+            dir="rtl"
+          >
+            <svg
+              className="mx-auto mb-4 h-12 w-12 text-gray-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+              />
+            </svg>
+            <p className="text-lg sm:text-xl text-gray-300">
+              هذه الفاتورة معطلة لهذا الحساب
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen text-white md:py-20 py-10">
       <div className="max-w-6xl mx-auto">
@@ -892,6 +930,31 @@ export default function ClientInvoicesPage() {
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                         className="overflow-hidden"
                       >
+                        {INVOICES_DISABLED_FOR_ACCOUNT ? (
+                          <div
+                            className="px-4 sm:px-6 py-8 text-center"
+                            dir="rtl"
+                          >
+                            <div className="mx-auto max-w-md rounded-xl border border-[#333336] bg-[#141414] px-6 py-8">
+                              <svg
+                                className="mx-auto mb-4 h-10 w-10 text-gray-500"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                                />
+                              </svg>
+                              <p className="text-base sm:text-lg text-gray-300">
+                                هذه الفاتورة معطلة لهذا الحساب
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
                         <div className="px-4 sm:px-6 pb-6">
                           {showPaidBannerFor === id && (
                             <div
@@ -1200,6 +1263,7 @@ export default function ClientInvoicesPage() {
                             </div>
                           </div>
                         </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
