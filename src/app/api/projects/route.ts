@@ -7,11 +7,16 @@ import { sendClientProjectNotification } from "../../../lib/email";
 interface CreateProjectRequest {
   title: string;
   type: string;
-  filmingStatus: string;
+  filmingStatus?: string;
   fileLinks?: string;
+  designLinks?: string;
   notes?: string;
-  date: string;
+  date?: string;
   voiceNoteUrl?: string;
+  hasThumbnail?: boolean;
+  hasPoster?: boolean;
+  ownerClientId?: string;
+  submitType?: "draft" | "production";
   // Optional status overrides for enhancement projects
   editMode?: string;
   designMode?: string;
@@ -34,11 +39,16 @@ export async function POST(req: NextRequest) {
     const {
       title,
       type,
-      filmingStatus,
+      filmingStatus: filmingStatusInput,
       fileLinks,
+      designLinks,
       notes,
-      date,
+      date: dateInput,
       voiceNoteUrl,
+      hasThumbnail = false,
+      hasPoster = false,
+      ownerClientId,
+      submitType = "production",
       editMode,
       designMode,
       reviewMode,
@@ -46,12 +56,19 @@ export async function POST(req: NextRequest) {
     }: CreateProjectRequest = await req.json();
 
     // Validate required fields
-    if (!title || !type || !filmingStatus || !date) {
+    if (!title?.trim() || !type?.trim()) {
       return NextResponse.json(
-        { error: "Missing required fields: title, type, filmingStatus, date" },
-        { status: 400 }
+        { error: "Missing required fields: title, type" },
+        { status: 400 },
       );
     }
+
+    const isDraft = submitType === "draft";
+    const filmingStatus =
+      filmingStatusInput ||
+      (isDraft ? "مسودة" : "لم يتم الانتهاء منه");
+    const date =
+      dateInput || new Date().toISOString().split("T")[0];
 
     // Get user with group information
     const user = await prisma.user.findUnique({
@@ -87,21 +104,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse date if provided
+    // Resolve project owner (seat) — must be a client in the same group
+    let projectClientId = user.id;
+    if (ownerClientId && ownerClientId !== user.id) {
+      if (!user.groupId) {
+        return NextResponse.json(
+          { error: "Cannot assign project to another seat without a group" },
+          { status: 400 },
+        );
+      }
+      const seatOwner = await prisma.user.findFirst({
+        where: {
+          id: ownerClientId,
+          groupId: user.groupId,
+          role: "client",
+        },
+        select: { id: true },
+      });
+      if (!seatOwner) {
+        return NextResponse.json(
+          { error: "Invalid seat selection" },
+          { status: 400 },
+        );
+      }
+      projectClientId = seatOwner.id;
+    }
+
     const parsedStartDate = date ? new Date(date) : null;
 
     // Create the project
     const project = await prisma.project.create({
       data: {
-        title,
-        type,
+        title: title.trim(),
+        type: type.trim(),
         filmingStatus,
-        fileLinks,
-        notes,
+        fileLinks: fileLinks?.trim() || null,
+        designLinks: designLinks?.trim() || null,
+        notes: notes?.trim() || null,
+        hasThumbnail: Boolean(hasThumbnail),
+        hasPoster: Boolean(hasPoster),
         date,
         startDate: parsedStartDate,
         endDate: null,
-        clientId: user.id,
+        clientId: projectClientId,
         groupId: user.groupId,
         // Use provided status overrides or fall back to defaults
         editMode: editMode || undefined, // Will use database default if not provided
@@ -157,12 +202,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Send Telegram notification to the group
-    if (user.group?.telegramChatId) {
+    // Send Telegram notification to the group (skip for drafts)
+    if (!isDraft && user.group?.telegramChatId) {
       console.log(
         `📱 Attempting to send Telegram notification to chat ID: ${user.group.telegramChatId}`
       );
       try {
+        const ownerUser = await prisma.user.findUnique({
+          where: { id: projectClientId },
+          select: { name: true },
+        });
+
         const notificationSent = await sendNewProjectNotification(
           user.group.telegramChatId,
           {
@@ -170,8 +220,15 @@ export async function POST(req: NextRequest) {
             type,
             filmingStatus,
             date,
-            clientName: user.name,
-            notes,
+            clientName: ownerUser?.name || user.name,
+            notes: [
+              notes,
+              hasThumbnail ? "✅ مطلوب: صورة مصغرة" : null,
+              hasPoster ? "✅ مطلوب: ملصق دعائي (بوستر)" : null,
+              designLinks ? `روابط التصميم: ${designLinks}` : null,
+            ]
+              .filter(Boolean)
+              .join("\n"),
             fileLinks,
             voiceNoteUrl,
           }
@@ -197,8 +254,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Send email notification to client only if filming is completed
-    if (filmingStatus === "تم الانتـــهاء مــنه") {
+    // Send email notification to client only if filming is completed (not drafts)
+    if (
+      !isDraft &&
+      filmingStatus === "تم الانتـــهاء مــنه"
+    ) {
       try {
         await sendClientProjectNotification({
           clientName: user.name,

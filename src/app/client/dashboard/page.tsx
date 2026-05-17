@@ -200,11 +200,14 @@ export default function ClientDashboardPage() {
   const handleAddProject = async (projectData: {
     title: string;
     type: string;
-    filmingStatus: string;
     fileLinks: string;
+    designLinks: string;
     notes: string;
-    date: string;
+    hasThumbnail: boolean;
+    hasPoster: boolean;
+    ownerClientId: string;
     voiceNoteUrl?: string;
+    submitType: "draft" | "production";
   }) => {
     try {
       const response = await fetch("/api/projects", {

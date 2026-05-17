@@ -111,6 +111,8 @@ model Project {
   designLinks      String?
   documentation    String?
   videoDuration    String?
+  hasThumbnail     Boolean   @default(false)
+  hasPoster        Boolean   @default(false)
   clientId         String
   groupId          String?
   editorId         String?

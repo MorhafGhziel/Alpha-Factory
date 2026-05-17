@@ -59,6 +59,8 @@ export interface Project {
   designLinks?: string;
   documentation?: string;
   videoDuration?: string;
+  hasThumbnail?: boolean;
+  hasPoster?: boolean;
 
   // Relations
   clientId: string;
