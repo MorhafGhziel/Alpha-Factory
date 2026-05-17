@@ -13,6 +13,7 @@ export interface SidebarItem {
   isSpacer?: boolean;
   onClick?: () => void;
   hasNotification?: boolean;
+  avatarUrl?: string | null;
 }
 
 interface SidebarProps {
@@ -58,7 +59,9 @@ export default function Sidebar({
       <div key={item.path || index} className="relative group">
         <button
           onClick={handleClick}
-          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
+          className={`w-12 h-12 flex items-center justify-center transition-colors cursor-pointer overflow-hidden ${
+            item.avatarUrl ? "rounded-full p-0" : "rounded-lg"
+          } ${
             isActive
               ? "bg-[#222224]"
               : isSignOut
@@ -97,7 +100,14 @@ export default function Sidebar({
                 strokeLinejoin="round"
               />
             </svg>
-          ) : (
+          ) : item.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.avatarUrl}
+              alt={item.alt}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : item.icon ? (
             <Image
               src={item.icon}
               alt={item.alt}
@@ -105,7 +115,7 @@ export default function Sidebar({
               height={iconSize}
               className="w-auto h-auto"
             />
-          )}
+          ) : null}
         </button>
         {/* Notification Badge */}
         {item.hasNotification && (

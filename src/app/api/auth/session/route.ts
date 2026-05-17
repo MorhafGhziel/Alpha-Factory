@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
         role: true,
         username: true,
         emailVerified: true,
+        image: true,
       },
     });
 
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
         role: user.role,
         username: user.username,
         emailVerified: user.emailVerified,
+        image: user.image,
       },
     });
   } catch (error) {

@@ -11,6 +11,7 @@ export interface MobileMenuItem {
   text: string;
   isBorder?: boolean;
   onClick?: () => void;
+  avatarUrl?: string | null;
 }
 
 interface MobileMenuProps {
@@ -121,6 +122,13 @@ export default function MobileMenu({
                   strokeLinejoin="round"
                 />
               </svg>
+            ) : item.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.avatarUrl}
+                alt={item.alt}
+                className="w-8 h-8 rounded-full object-cover shrink-0"
+              />
             ) : (
               <Image
                 src={item.icon}

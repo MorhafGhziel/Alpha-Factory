@@ -6,6 +6,7 @@ import { createNewTeam, removeTeamById, TeamContext } from "@/src/utils";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
+import { useProfileImage } from "@/src/hooks/useProfileImage";
 
 export default function AdminLayoutClient({
   children,
@@ -17,6 +18,7 @@ export default function AdminLayoutClient({
   const [userRole, setUserRole] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const profileImage = useProfileImage();
 
   const addTeam = (team: Omit<TeamGroup, "id" | "createdAt">) => {
     const newTeam = createNewTeam(team);
@@ -86,6 +88,7 @@ export default function AdminLayoutClient({
               icon: "/icons/Profile.svg",
               alt: "Profile",
               text: "الملف الشخصي",
+              avatarUrl: profileImage,
             },
             ...(userRole === "owner" ? [
               {
@@ -147,6 +150,7 @@ export default function AdminLayoutClient({
                 icon: "/icons/Profile.svg",
                 alt: "Profile",
                 tooltip: "الملف الشخصي",
+                avatarUrl: profileImage,
               }
             ];
             

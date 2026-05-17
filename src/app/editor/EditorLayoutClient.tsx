@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "@/components/ui/Sidebar";
 import MobileMenu from "@/components/ui/MobileMenu";
 import Header from "@/components/ui/Header";
+import { useProfileImage } from "@/src/hooks/useProfileImage";
 
 export default function EditorLayoutClient({
   children,
@@ -13,6 +14,7 @@ export default function EditorLayoutClient({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const profileImage = useProfileImage();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -54,6 +56,7 @@ export default function EditorLayoutClient({
             icon: "/icons/Profile.svg",
             alt: "Profile",
             text: "الملف الشخصي",
+            avatarUrl: profileImage,
           },
           {
             path: "",
@@ -99,6 +102,7 @@ export default function EditorLayoutClient({
             icon: "/icons/Profile.svg",
             alt: "Profile",
             tooltip: "الملف الشخصي",
+            avatarUrl: profileImage,
           },
           {
             path: "",

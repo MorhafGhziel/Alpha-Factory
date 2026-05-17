@@ -8,6 +8,7 @@ import ComingSoonModal from "@/components/ComingSoonModal";
 import OverdueRestriction from "@/components/OverdueRestriction";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { useInvoiceNotifications } from "@/src/contexts/InvoiceNotificationContext";
+import { useProfileImage } from "@/src/hooks/useProfileImage";
 
 export default function ClientLayoutClient({
   children,
@@ -23,6 +24,7 @@ export default function ClientLayoutClient({
   
   // Invoice notification hook
   const { hasNewInvoice, markInvoiceNotificationAsSeen, showNotificationForNewActivity } = useInvoiceNotifications();
+  const profileImage = useProfileImage();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -79,6 +81,7 @@ export default function ClientLayoutClient({
               icon: "/icons/Profile.svg",
               alt: "Profile",
               text: "الملف الشخصي",
+              avatarUrl: profileImage,
             },
             {
               path: "",
@@ -150,6 +153,7 @@ export default function ClientLayoutClient({
               icon: "/icons/Profile.svg",
               alt: "Profile",
               tooltip: "الملف الشخصي",
+              avatarUrl: profileImage,
             },
             {
               path: "",

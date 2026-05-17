@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { authClient } from "../../../lib/auth-client";
 import { useEffect, useState } from "react";
 import SignOutButton from "@/components/ui/SignOutButton";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
 
 export default function EditorProfilePage() {
   const [session, setSession] = useState<unknown>(null);
@@ -34,39 +34,7 @@ export default function EditorProfilePage() {
   }
   return (
     <div className="min-h-screen flex flex-col items-center md:justify-center space-y-6 sm:space-y-8 px-4 sm:px-0 py-20 md:py-0">
-      {/* Profile Picture */}
-      <motion.div
-        className="flex flex-col items-center space-y-3 sm:space-y-4"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-          duration: 0.6,
-        }}
-      >
-        <motion.div
-          className="md:w-20 w-16 md:h-20 h-16 sm:w-24 sm:h-24 bg-[#222224] rounded-full flex items-center justify-center"
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 20,
-            delay: 0.2,
-            duration: 0.8,
-          }}
-        >
-          <Image
-            src="/icons/Profile.svg"
-            alt="Profile"
-            width={48}
-            height={48}
-            className="md:w-20 w-16 h-auto sm:w-24"
-          />
-        </motion.div>
-      </motion.div>
+      <ProfileAvatar />
 
       {/* Input Fields */}
       <motion.div
