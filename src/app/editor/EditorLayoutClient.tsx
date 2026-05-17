@@ -68,12 +68,12 @@ export default function EditorLayoutClient({
             alt: "Dashboard",
             text: "لوحة المتابعة",
           },
-          {
-            path: "/editor/community",
-            icon: "/icons/News.svg",
-            alt: "Community",
-            text: "المجتمع",
-          },
+          // {
+          //   path: "/editor/community",
+          //   icon: "/icons/News.svg",
+          //   alt: "Community",
+          //   text: "المجتمع",
+          // },
           {
             path: "",
             icon: "",
@@ -113,12 +113,12 @@ export default function EditorLayoutClient({
             alt: "Dashboard",
             tooltip: "لوحة المتابعة",
           },
-          {
-            path: "/editor/community",
-            icon: "/icons/News.svg",
-            alt: "Community",
-            tooltip: "المجتمع",
-          },
+          // {
+          //   path: "/editor/community",
+          //   icon: "/icons/News.svg",
+          //   alt: "Community",
+          //   tooltip: "المجتمع",
+          // },
           { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
           {
             path: "",

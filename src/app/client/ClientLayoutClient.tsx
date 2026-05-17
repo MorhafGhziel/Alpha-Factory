@@ -105,12 +105,12 @@ export default function ClientLayoutClient({
               alt: "Invoices",
               text: "الفواتير",
             },
-            {
-              path: "/client/community",
-              icon: "/icons/News.svg",
-              alt: "Community",
-              text: "المجتمع",
-            },
+            // {
+            //   path: "/client/community",
+            //   icon: "/icons/News.svg",
+            //   alt: "Community",
+            //   text: "المجتمع",
+            // },
             {
               path: "",
               icon: "/icons/Plus.svg",
@@ -177,12 +177,12 @@ export default function ClientLayoutClient({
               tooltip: "الفواتير",
               hasNotification: hasNewInvoice,
             },
-            {
-              path: "/client/community",
-              icon: "/icons/News.svg",
-              alt: "Community",
-              tooltip: "المجتمع",
-            },
+            // {
+            //   path: "/client/community",
+            //   icon: "/icons/News.svg",
+            //   alt: "Community",
+            //   tooltip: "المجتمع",
+            // },
             {
               path: "",
               icon: "/icons/Plus.svg",

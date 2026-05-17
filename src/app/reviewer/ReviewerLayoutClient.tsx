@@ -68,12 +68,12 @@ export default function ReviewerLayoutClient({
             alt: "Dashboard",
             text: "لوحة المتابعة",
           },
-          {
-            path: "/reviewer/community",
-            icon: "/icons/News.svg",
-            alt: "Community",
-            text: "المجتمع",
-          },
+          // {
+          //   path: "/reviewer/community",
+          //   icon: "/icons/News.svg",
+          //   alt: "Community",
+          //   text: "المجتمع",
+          // },
           {
             path: "",
             icon: "",
@@ -113,12 +113,12 @@ export default function ReviewerLayoutClient({
             alt: "Dashboard",
             tooltip: "لوحة المتابعة",
           },
-          {
-            path: "/reviewer/community",
-            icon: "/icons/News.svg",
-            alt: "Community",
-            tooltip: "المجتمع",
-          },
+          // {
+          //   path: "/reviewer/community",
+          //   icon: "/icons/News.svg",
+          //   alt: "Community",
+          //   tooltip: "المجتمع",
+          // },
           { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
           {
             path: "",

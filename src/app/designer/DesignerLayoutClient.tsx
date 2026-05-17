@@ -68,12 +68,12 @@ export default function DesignerLayoutClient({
             alt: "Dashboard",
             text: "لوحة المتابعة",
           },
-          {
-            path: "/designer/community",
-            icon: "/icons/News.svg",
-            alt: "Community",
-            text: "المجتمع",
-          },
+          // {
+          //   path: "/designer/community",
+          //   icon: "/icons/News.svg",
+          //   alt: "Community",
+          //   text: "المجتمع",
+          // },
           {
             path: "",
             icon: "",
@@ -113,12 +113,12 @@ export default function DesignerLayoutClient({
             alt: "Dashboard",
             tooltip: "لوحة المتابعة",
           },
-          {
-            path: "/designer/community",
-            icon: "/icons/News.svg",
-            alt: "Community",
-            tooltip: "المجتمع",
-          },
+          // {
+          //   path: "/designer/community",
+          //   icon: "/icons/News.svg",
+          //   alt: "Community",
+          //   tooltip: "المجتمع",
+          // },
           { path: "", icon: "", alt: "", tooltip: "", isSpacer: true },
           {
             path: "",
