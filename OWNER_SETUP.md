@@ -2,7 +2,7 @@
 
 This guide explains how to set up and use the new **Owner** role in Alpha Factory, which provides comprehensive admin panel access for account management.
 
-## What's New
+## What's New.
 
 ### Owner Role
 
